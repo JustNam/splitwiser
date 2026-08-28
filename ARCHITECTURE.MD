@@ -22,13 +22,10 @@ src/
   app/           # Next.js App Router (pages, api routes)
   api/           # API service classes (e.g., <feature>.js)
   adapters/      # Data transformation adapters (snake_case ↔ camelCase)
-  atoms/         # Atomic UI components (e.g., button/, input/)
   components/    # Shared React components (e.g., AuthProvider.jsx)
   modules/       # Feature modules (e.g., <feature-a>/, <feature-b>/)
-  store/         # RxJS-based global state (e.g., auth.module.js)
   hooks/         # Custom React hooks (e.g., useAuth.js)
   services/      # App-wide services (e.g., notification.service.js)
-  partials/      # Shared partial UI (e.g., select-categories/)
   lib/           # External library configurations (e.g., supabase/)
   constants/     # Enums, static values, theme
   styles/        # Global SCSS, Tailwind config
@@ -52,26 +49,23 @@ src/modules/<feature>/
   components/
     detail/
       index.jsx
-      partials/
-        product-info/
-          index.jsx
-          style.module.scss
+      product-info/
+        index.jsx
+        style.module.scss
     list/
       index.jsx
   routes.js
-  routes.path.js
 ```
 
 - **Each feature module** is self-contained: components, routes, logic.
 - **Component folders** contain `index.jsx` and `style.module.scss`.
-- **Partial components** for reusable UI within a feature.
 
 ---
 
-## Example: Atomic Component
+## Example: Component
 
 ```jsx
-// src/atoms/button/index.jsx
+// src/components/Button/index.jsx
 import clsx from 'clsx'
 import { forwardRef } from 'react'
 import Style from './style.module.scss'
@@ -80,10 +74,6 @@ export const Button = forwardRef(({ className, ...props }, ref) => (
   <button ref={ref} className={clsx(Style.button, className)} {...props} />
 ))
 ```
-
-**Atoms vs Components:**
-- **Atoms**: Pure UI, no business logic, highly reusable (button, input)
-- **Components**: Complex/composed UI, business logic allowed, app-wide scope (providers, layouts)
 
 - **Naming**: Use PascalCase for components, folder matches component name.
 - **Styling**: Use SCSS modules for encapsulation.
@@ -118,11 +108,10 @@ Uses **Supabase Authentication** with SSR and secure cookie-based session manage
 - Server-side session management with `@supabase/ssr`
 - Cookie-based authentication (HttpOnly, secure)
 - Route protection via `getUser()` check in each protected layout/page (Server Component), redirecting to login if unauthenticated
-- RxJS store for client-side auth state (`src/store/modules/auth.module.js`)
 
 **Main Components:**
 - `src/lib/supabase/` - Server and client Supabase configurations
-- `src/hooks/useAuth.js` - Authentication hook using `useBehaviorMapper`
+- `src/hooks/useAuth.js` - Authentication hook
 - `src/app/api/auth/` - Authentication API endpoints
 
 For detailed implementation guide, see `@docs/AUTHENTICATION.md`.
