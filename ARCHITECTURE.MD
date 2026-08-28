@@ -1,0 +1,226 @@
+# Project Architecture
+
+## Overview
+
+
+---
+
+## Main Technologies
+
+- **Next.js 16** (App Router, React 19)
+- **SCSS Modules** and **TailwindCSS** (utility-first, themeable)
+- **MUI elements** 
+- **Supabase** (authentication, database with SSR support)
+- **Axios** (API requests, interceptors)
+
+---
+
+## Directory Structure & Naming Conventions
+
+```
+src/
+  app/           # Next.js App Router (pages, api routes)
+  api/           # API service classes (e.g., <feature>.js)
+  adapters/      # Data transformation adapters (snake_case ↔ camelCase)
+  atoms/         # Atomic UI components (e.g., button/, input/)
+  components/    # Shared React components (e.g., AuthProvider.jsx)
+  modules/       # Feature modules (e.g., <feature-a>/, <feature-b>/)
+  store/         # RxJS-based global state (e.g., auth.module.js)
+  hooks/         # Custom React hooks (e.g., useAuth.js)
+  services/      # App-wide services (e.g., notification.service.js)
+  partials/      # Shared partial UI (e.g., select-categories/)
+  lib/           # External library configurations (e.g., supabase/)
+  constants/     # Enums, static values, theme
+  styles/        # Global SCSS, Tailwind config
+  router/        # Route definitions, helpers
+  data/          # Mock data for development
+```
+
+**Best Practices:**
+- **Folders**: Use lowercase and dashes for folders (`product-info/`, `order-list/`).
+- **Files**: Use camelCase for files, PascalCase for React components (`ProductInfo.jsx`).
+- **SCSS Modules**: Name as `style.module.scss` in each component folder.
+- **Enums**: Prefix with `E` (e.g., `EOrderStatus`).
+- **Constants**: Use uppercase with underscores (`API_URL`).
+
+---
+
+## Example: Feature Module Structure
+
+```
+src/modules/<feature>/
+  components/
+    detail/
+      index.jsx
+      partials/
+        product-info/
+          index.jsx
+          style.module.scss
+    list/
+      index.jsx
+  routes.js
+  routes.path.js
+```
+
+- **Each feature module** is self-contained: components, routes, logic.
+- **Component folders** contain `index.jsx` and `style.module.scss`.
+- **Partial components** for reusable UI within a feature.
+
+---
+
+## Example: Atomic Component
+
+```jsx
+// src/atoms/button/index.jsx
+import clsx from 'clsx'
+import { forwardRef } from 'react'
+import Style from './style.module.scss'
+
+export const Button = forwardRef(({ className, ...props }, ref) => (
+  <button ref={ref} className={clsx(Style.button, className)} {...props} />
+))
+```
+
+**Atoms vs Components:**
+- **Atoms**: Pure UI, no business logic, highly reusable (button, input)
+- **Components**: Complex/composed UI, business logic allowed, app-wide scope (providers, layouts)
+
+- **Naming**: Use PascalCase for components, folder matches component name.
+- **Styling**: Use SCSS modules for encapsulation.
+
+---
+
+
+### Providers & Context
+
+**Global Infrastructure Providers** (`src/components/`): For app-wide concerns that need to wrap the entire application tree:
+- `AuthProvider.jsx` - Authentication state and methods
+
+**Feature-Scoped Providers** (`src/modules/*/`): For state that's specific to a feature module:
+- Use React Context for feature-local state that doesn't require reactive patterns
+- Place in feature module directory structure
+
+**Provider Usage Pattern**:
+```jsx
+// Global layout composition
+<AuthProvider>
+  {children}
+</AuthProvider>
+```
+
+---
+
+## Authentication
+
+Uses **Supabase Authentication** with SSR and secure cookie-based session management.
+
+**Key Features:**
+- Server-side session management with `@supabase/ssr`
+- Cookie-based authentication (HttpOnly, secure)
+- Route protection via `getUser()` check in each protected layout/page (Server Component), redirecting to login if unauthenticated
+- RxJS store for client-side auth state (`src/store/modules/auth.module.js`)
+
+**Main Components:**
+- `src/lib/supabase/` - Server and client Supabase configurations
+- `src/hooks/useAuth.js` - Authentication hook using `useBehaviorMapper`
+- `src/app/api/auth/` - Authentication API endpoints
+
+For detailed implementation guide, see `@docs/AUTHENTICATION.md`.
+
+---
+
+## Services
+
+- **App-wide utilities** in `src/services/` for reusable business logic.
+- **Static methods** on classes, kebab-case naming with `.service.js` suffix.
+- **Module-local utilities** in `src/modules/<feature>/utils/` — pure functions scoped to a single feature module.
+
+---
+
+## API/Data Fetching
+
+### Client-Side API Services (`src/api/`)
+- **API service classes** (e.g., `<Feature>Api`, `Public<Feature>Api`)
+- **Frontend HTTP clients** that call external APIs (Supabase edge functions)
+- Use `adminAxios`/`publicAxios` with auth interceptors
+- **Adapters** automatically convert between database snake_case and frontend camelCase
+
+### Server-Side API Routes (`src/app/api/`)
+- **Next.js API endpoints** that your app serves (App Router convention: `app/api/*` → HTTP endpoints)
+- **Server-side logic** for auth, session management, and local processing
+- **Auth routes** (`auth/signin`, `auth/signup`) handle Supabase cookies and server validation
+
+```js
+// src/api/<feature>.js
+export class FeatureApi {
+  static async list() {
+    const response = await axios.get('/api/<feature>')
+    const frontendData = featureAdapter.listToFrontend(response.data.data || response.data)
+    return { data: frontendData }
+  }
+
+  static async create(data) {
+    const dbData = featureAdapter.createRequestToDatabase(data)
+    const response = await axios.post('/api/<feature>', dbData)
+    const responseData = response.data.data || response.data
+    const frontendData = featureAdapter.toFrontend(responseData)
+    return { data: frontendData }
+  }
+}
+```
+
+---
+
+## Routing
+
+The application uses **centralized route constants** in `src/constants/routes.js` to ensure consistent URL patterns across all features.
+
+### Route Patterns
+
+**Feature-based organization**: Each main feature follows a consistent pattern:
+- **List pages**: `/{feature}/list` - displays all items in a table/grid
+- **Detail pages**: `/{feature}/{id}` - shows individual item details
+- **Create pages**: `/{feature}/create` - forms for creating new items
+
+**Examples:**
+- Feature list: `/<feature>/list`
+- Specific item: `/<feature>/123`
+- Create item: `/<feature>/create`
+
+### Implementation
+
+Routes are defined as constants for consistency and IDE autocomplete:
+
+```js
+// Centralized navigation
+router.push(ROUTES.FEATURE.LIST)
+router.push(ROUTES.FEATURE.DETAIL(itemId))
+router.push(`${ROUTES.FEATURE.DETAIL(itemId)}?mode=edit`)
+```
+
+**Protected layouts/pages** use these route constants for authentication-based redirects, ensuring consistent behavior across the application.
+
+---
+
+## Styling
+
+- **SCSS modules** for component styles (`style.module.scss`).
+- **TailwindCSS** for utility classes.
+- **Variables** in `src/styles/_variables.scss` for theme consistency.
+- **Naming**: Use BEM or utility classes, avoid global selectors.
+
+---
+
+## Example: Naming Conventions
+
+| Entity         | Convention         | Example                        |
+|----------------|-------------------|--------------------------------|
+| Component      | PascalCase        | `ProductInfo.jsx`              |
+| Hook           | camelCase, use*   | `useAuth.js`                   |
+| Enum           | Prefix with E     | `EOrderStatus`                 |
+| Constant       | UPPER_SNAKE_CASE  | `API_URL`                      |
+| Service        | kebab-case        | `editor-conversion.service.js` |
+| SCSS Module    | kebab-case        | `style.module.scss`            |
+| Folder         | kebab-case        | `product-info/`                |
+
+---
