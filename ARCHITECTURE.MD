@@ -23,14 +23,10 @@ src/
   api/           # API service classes (e.g., <feature>.js)
   adapters/      # Data transformation adapters (snake_case ↔ camelCase)
   components/    # Shared React components (e.g., AuthProvider.jsx)
-  modules/       # Feature modules (e.g., <feature-a>/, <feature-b>/)
   hooks/         # Custom React hooks (e.g., useAuth.js)
-  services/      # App-wide services (e.g., notification.service.js)
-  lib/           # External library configurations (e.g., supabase/)
-  constants/     # Enums, static values, theme
+  services/      # App-wide services and external library configs (e.g., notification.service.js, supabase/)
+  constants/     # Enums, static values, theme, route constants
   styles/        # Global SCSS, Tailwind config
-  router/        # Route definitions, helpers
-  data/          # Mock data for development
 ```
 
 **Best Practices:**
@@ -42,22 +38,20 @@ src/
 
 ---
 
-## Example: Feature Module Structure
+## Example: Feature Structure
 
 ```
-src/modules/<feature>/
+src/app/<feature>/
+  page.jsx
+  [id]/
+    page.jsx
   components/
-    detail/
+    product-info/
       index.jsx
-      product-info/
-        index.jsx
-        style.module.scss
-    list/
-      index.jsx
-  routes.js
+      style.module.scss
 ```
 
-- **Each feature module** is self-contained: components, routes, logic.
+- **Each feature** lives under its own route segment in `app/`, with local components colocated.
 - **Component folders** contain `index.jsx` and `style.module.scss`.
 
 ---
@@ -86,9 +80,9 @@ export const Button = forwardRef(({ className, ...props }, ref) => (
 **Global Infrastructure Providers** (`src/components/`): For app-wide concerns that need to wrap the entire application tree:
 - `AuthProvider.jsx` - Authentication state and methods
 
-**Feature-Scoped Providers** (`src/modules/*/`): For state that's specific to a feature module:
+**Feature-Scoped Providers**: For state that's specific to one feature:
 - Use React Context for feature-local state that doesn't require reactive patterns
-- Place in feature module directory structure
+- Place alongside the feature's route segment in `app/`
 
 **Provider Usage Pattern**:
 ```jsx
@@ -110,7 +104,7 @@ Uses **Supabase Authentication** with SSR and secure cookie-based session manage
 - Route protection via `getUser()` check in each protected layout/page (Server Component), redirecting to login if unauthenticated
 
 **Main Components:**
-- `src/lib/supabase/` - Server and client Supabase configurations
+- `src/services/supabase/` - Server and client Supabase configurations
 - `src/hooks/useAuth.js` - Authentication hook
 - `src/app/api/auth/` - Authentication API endpoints
 
@@ -120,9 +114,9 @@ For detailed implementation guide, see `@docs/AUTHENTICATION.md`.
 
 ## Services
 
-- **App-wide utilities** in `src/services/` for reusable business logic.
+- **App-wide utilities** in `src/services/` for reusable business logic and external library configuration.
 - **Static methods** on classes, kebab-case naming with `.service.js` suffix.
-- **Module-local utilities** in `src/modules/<feature>/utils/` — pure functions scoped to a single feature module.
+- **Feature-local utilities** colocated with the feature's route segment in `app/`.
 
 ---
 
