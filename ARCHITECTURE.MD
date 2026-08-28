@@ -25,7 +25,7 @@ src/
   components/    # Shared React components (e.g., AuthProvider.jsx)
   hooks/         # Custom React hooks (e.g., useAuth.js)
   services/      # App-wide services and external library configs (e.g., notification.service.js, supabase/)
-  constants/     # Enums, static values, theme, route constants
+  constants/     # Enums, static values, theme
   styles/        # Global SCSS, Tailwind config
 ```
 
@@ -108,8 +108,6 @@ Uses **Supabase Authentication** with SSR and secure cookie-based session manage
 - `src/hooks/useAuth.js` - Authentication hook
 - `src/app/api/auth/` - Authentication API endpoints
 
-For detailed implementation guide, see `@docs/AUTHENTICATION.md`.
-
 ---
 
 ## Services
@@ -151,37 +149,6 @@ export class FeatureApi {
   }
 }
 ```
-
----
-
-## Routing
-
-The application uses **centralized route constants** in `src/constants/routes.js` to ensure consistent URL patterns across all features.
-
-### Route Patterns
-
-**Feature-based organization**: Each main feature follows a consistent pattern:
-- **List pages**: `/{feature}/list` - displays all items in a table/grid
-- **Detail pages**: `/{feature}/{id}` - shows individual item details
-- **Create pages**: `/{feature}/create` - forms for creating new items
-
-**Examples:**
-- Feature list: `/<feature>/list`
-- Specific item: `/<feature>/123`
-- Create item: `/<feature>/create`
-
-### Implementation
-
-Routes are defined as constants for consistency and IDE autocomplete:
-
-```js
-// Centralized navigation
-router.push(ROUTES.FEATURE.LIST)
-router.push(ROUTES.FEATURE.DETAIL(itemId))
-router.push(`${ROUTES.FEATURE.DETAIL(itemId)}?mode=edit`)
-```
-
-**Protected layouts/pages** use these route constants for authentication-based redirects, ensuring consistent behavior across the application.
 
 ---
 
