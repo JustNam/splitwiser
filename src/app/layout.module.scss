@@ -1,0 +1,23 @@
+/* The mobile shell. Every screen renders inside this.
+
+   On a phone it's simply the whole screen. On a desktop browser the
+   max-width stops the column stretching across a 27" monitor — the app still
+   works there, it just stays phone-shaped. */
+
+.app {
+  width: 100%;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--surface-page);
+
+  display: flex;
+  flex-direction: column;
+
+  /* Screens with a pinned bottom button (Home's "Log a session", B2's "Save
+     session") should use `position: sticky; bottom: 0` inside their own
+     scroll container — NOT `position: fixed`. `fixed` positions against the
+     viewport, not against this element, so on a wide screen the bar would
+     span the full window instead of sitting inside the column. */
+  position: relative;
+}

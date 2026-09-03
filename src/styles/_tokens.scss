@@ -1,0 +1,199 @@
+/* Sociolla Uniform — design tokens
+   Copied verbatim from the CourtTab v5 prototype (the .html design canvas).
+   Kept as CSS custom properties (not SCSS $variables) on purpose: they must be
+   readable at runtime by both SCSS modules and the MUI theme. */
+
+:root {
+  /* ============================================================
+     Base palette — brand spec. Don't reference these in components;
+     use the semantic aliases further down.
+     ============================================================ */
+
+  /* ---- Neutrals ---- */
+  --neutral-900: #231f20;
+  --neutral-500: #aab1ba;
+  --neutral-400: #cccccc;
+  --neutral-300: #e5e5e5;
+  --neutral-200: #f1f1f1;
+  --neutral-100: #f8f8f8;
+  --neutral-white: #ffffff;
+
+  /* ---- Transparent (black-based scrims) ---- */
+  --transparent-800: #000000cc;
+  --transparent-700: #090000b2;
+  --transparent-500: #09000080;
+  --transparent-400: #09000066;
+  --transparent-200: #09000033;
+
+  /* ---- Charcoal (warm neutral) ---- */
+  --charcoal-700: #423c39;
+  --charcoal-500: #716a68;
+  --charcoal-400: #8c8582;
+  --charcoal-200: #c5bebb;
+  --charcoal-100: #faf2ef;
+
+  /* ---- Flamingo (primary brand) ---- */
+  --flamingo-700: #b32656;
+  --flamingo-600: #da2a52;
+  --flamingo-400: #f384a7;
+  --flamingo-300: #ffa2cb;
+  --flamingo-100: #fcdde8;
+  --flamingo-50: #fff9fb;
+
+  /* ---- Rossie (soft accent) ---- */
+  --rossie-800: #894d51;
+  --rossie-700: #f47e7e;
+  --rossie-500: #ffc6cc;
+  --rossie-300: #ffe7e9;
+  --rossie-200: #fff3f3;
+  --rossie-100: #fbf7f8;
+
+  /* ---- Semantic raw ---- */
+  --semantic-red: #dc0034;
+  --semantic-green-500: #538e3b;
+  --semantic-green-300: #49c14a;
+  --semantic-green-100: #bbe3bb;
+
+  /* ============================================================
+     Semantic aliases — reference THESE in components
+     ============================================================ */
+
+  /* Brand */
+  --brand-primary: var(--flamingo-600);
+  --brand-primary-strong: var(--flamingo-700);
+  --brand-secondary: var(--flamingo-400);
+  --brand-tint: var(--flamingo-100);
+
+  /* Text */
+  --text-strong: var(--neutral-900);
+  --text-body: var(--charcoal-700);
+  --text-muted: var(--charcoal-500);
+  --text-label: var(--charcoal-400);
+  --text-placeholder: var(--neutral-400);
+  --text-on-brand: var(--neutral-white);
+  --text-inverse: var(--neutral-white);
+
+  /* Surfaces */
+  --surface-page: var(--neutral-white);
+  --surface-subtle: var(--neutral-100);
+  --surface-muted: var(--neutral-200);
+  --surface-card: var(--neutral-white);
+  --surface-warm: var(--charcoal-100);
+  --surface-tint: var(--flamingo-50);
+
+  /* Borders */
+  --border-default: var(--neutral-300);
+  --border-strong: var(--neutral-900);
+  --border-subtle: var(--neutral-200);
+  --border-error: var(--semantic-red);
+
+  /* Feedback */
+  --feedback-error: var(--semantic-red);
+  --feedback-success: var(--semantic-green-500);
+  --feedback-success-tint: var(--semantic-green-100);
+
+  /* Scrims / overlays */
+  --scrim-strong: var(--transparent-800);
+  --scrim: var(--transparent-500);
+  --scrim-weak: var(--transparent-200);
+
+  /* ============================================================
+     Typography — single family: Lato. Weights 300/400/700/900.
+     --font-lato is injected by next/font in app/layout.js
+     ============================================================ */
+  --font-sans: var(--font-lato), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  --font-body: var(--font-sans);
+
+  /* Weights */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-bold: 700;
+  --fw-black: 900;
+
+  /* Font-size scale (px) */
+  --fs-10: 10px;
+  --fs-12: 12px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --fs-40: 40px;
+  --fs-48: 48px;
+
+  /* Line heights */
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.6;
+
+  /* Letter spacing */
+  --ls-tight: -0.01em;
+  --ls-normal: 0;
+  --ls-wide: 0.04em;
+
+  /* Semantic text roles — these are `font` shorthands.
+     Use as:  font: var(--text-h3);   NOT  font-size: var(--text-h3); */
+  --text-display: var(--fw-black) var(--fs-40) / var(--lh-tight) var(--font-sans);
+  --text-h1: var(--fw-bold) var(--fs-32) / var(--lh-tight) var(--font-sans);
+  --text-h2: var(--fw-bold) var(--fs-24) / var(--lh-snug) var(--font-sans);
+  --text-h3: var(--fw-bold) var(--fs-18) / var(--lh-snug) var(--font-sans);
+  --text-body-lg: var(--fw-regular) var(--fs-16) / var(--lh-normal) var(--font-sans);
+  --text-body-md: var(--fw-regular) var(--fs-14) / var(--lh-normal) var(--font-sans);
+  --text-caption: var(--fw-regular) var(--fs-12) / var(--lh-normal) var(--font-sans);
+  --text-micro: var(--fw-regular) var(--fs-10) / var(--lh-normal) var(--font-sans);
+
+  /* ============================================================
+     Spacing, radius, elevation — 4px base unit
+     ============================================================ */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+
+  /* Radius — single value brand-wide */
+  --radius: 4px;
+  --radius-sm: 4px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* Control heights (button + input sizing ladder) */
+  --control-h-20: 20px;
+  --control-h-24: 24px;
+  --control-h-32: 32px;
+  --control-h-36: 36px;
+  --control-h-40: 40px;
+
+  /* Elevation — soft, low shadows */
+  --shadow-xs: 0 1px 2px rgba(9, 0, 0, 0.06);
+  --shadow-sm: 0 1px 3px rgba(9, 0, 0, 0.08), 0 1px 2px rgba(9, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(9, 0, 0, 0.1);
+  --shadow-lg: 0 8px 28px rgba(9, 0, 0, 0.14);
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 3px var(--flamingo-100);
+
+  /* ============================================================
+     App-specific (not from the design system)
+     ============================================================ */
+
+  /* The design is drawn at 390px. On a phone the app just fills the screen;
+     this cap only stops the column stretching absurdly wide on a desktop
+     browser. It is a max, not a fixed width. */
+  --app-max-width: 480px;
+
+  /* Safe areas — the iPhone notch and the home-bar strip. Resolves to 0 on
+     every device that doesn't have them, so it's always safe to add. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}

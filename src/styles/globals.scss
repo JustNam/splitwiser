@@ -1,0 +1,43 @@
+@use "./tokens";
+
+/* Minimal reset — same one the prototype uses.
+   We deliberately do NOT use MUI's <CssBaseline />: two resets fighting each
+   other is a debugging tax, and this one is 3 lines. */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  /* 100dvh, not 100vh: on mobile browsers 100vh includes the space under the
+     address bar, so a "full height" screen ends up taller than what you can
+     actually see and the page scrolls when it shouldn't. */
+  min-height: 100dvh;
+}
+
+body {
+  min-height: 100dvh;
+  font: var(--text-body-md);
+  color: var(--text-strong);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+
+  /* A mobile page must never scroll sideways. If it ever does, something
+     inside is wider than the screen — this makes that a visible bug, not a
+     silent one you only notice on a real phone. */
+  overflow-x: hidden;
+}
+
+/* Buttons and inputs don't inherit the page font by default. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
