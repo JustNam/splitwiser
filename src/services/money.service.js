@@ -70,6 +70,6 @@ export function formatVnd(amount) {
  */
 export function displayName(member, accounts) {
   // your code here
-  const account = accounts.find((a) => a.id === member.accoundId) 
+  const account = accounts.find((a) => a.id === member.accoundId)
   return member.name
 }
