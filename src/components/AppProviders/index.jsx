@@ -2,23 +2,24 @@
 
 import { ThemeProvider } from '@mui/material/styles'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter'
+import { AuthProvider } from '@/components/AuthProvider'
 import { theme } from '@/constants/theme'
 
 /**
- * Everything MUI needs, in one client component.
+ * Every app-wide provider, in one client component — so layout.jsx can stay a
+ * Server Component while these use React context, which is client-only.
  *
- * Why this file exists at all: `layout.js` is a Server Component, and
- * ThemeProvider uses React context — which only works on the client. So we
- * park the providers here, mark this file 'use client', and let layout.js
- * stay a server component.
- *
- * AppRouterCacheProvider makes Emotion (MUI's styling engine) emit its CSS
- * during server rendering, so the first paint isn't unstyled.
+ * Order, outermost first: AppRouterCacheProvider (makes Emotion emit its CSS
+ * during server render, so the first paint isn't unstyled) → ThemeProvider,
+ * which needs that cache → AuthProvider, innermost so anything it renders can
+ * use the theme.
  */
 export function AppProviders({ children }) {
   return (
     <AppRouterCacheProvider options={{ key: 'mui' }}>
-      <ThemeProvider theme={theme}>{children}</ThemeProvider>
+      <ThemeProvider theme={theme}>
+        <AuthProvider>{children}</AuthProvider>
+      </ThemeProvider>
     </AppRouterCacheProvider>
   )
 }

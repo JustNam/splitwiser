@@ -21,8 +21,8 @@ const lato = Lato({
 })
 
 export const metadata = {
-  title: 'CourtTab',
-  description: 'Log badminton sessions and split the cost with your group.',
+  title: 'Splitwiser',
+  description: 'Log game sessions and split the cost with your group.',
 }
 
 export const viewport = {

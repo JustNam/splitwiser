@@ -19,9 +19,10 @@
 src/
   app/           # Next.js App Router (pages)
   api/           # API service classes (e.g., <feature>.js)
-  components/    # Shared React components (e.g., AuthProvider.jsx)
+  components/    # Shared React components (e.g., AuthProvider/)
   hooks/         # Custom React hooks (e.g., useAuth.js)
   lib/           # External library configurations (e.g., supabase/)
+  services/      # Pure helpers with no I/O (e.g., money.service.js)
   constants/     # Static values, theme
   styles/        # Global SCSS, Tailwind config
 ```
@@ -30,8 +31,14 @@ src/
 
 - **Folders**: Use lowercase and dashes for folders (`product-info/`, `order-list/`).
 - **Files**: Use camelCase for files, PascalCase for React components (`ProductInfo.jsx`).
-- **SCSS Modules**: Name as `style.module.scss` in each component folder.
+- **SCSS Modules**: Name as `style.module.scss` in each component folder;
+  route-level styles are `page.module.scss` / `layout.module.scss`, next to the
+  file they style.
 - **Constants**: Use uppercase with underscores (`API_URL`).
+
+**`api/` vs `services/`**: `api/` talks to the outside world and its methods are
+`async`. `services/` is pure functions — same input, same output, no network, no
+React. If it can fail, it belongs in `api/`.
 
 ---
 

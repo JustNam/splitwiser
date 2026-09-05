@@ -1,0 +1,81 @@
+/* Every value here is a token from styles/_tokens.scss. No raw hex, no raw px —
+   that's what makes a brand change a one-file change. */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+
+  /* 44px, not the 40px control ladder: this is a thumb target on a phone.
+     Anything smaller gets mis-tapped. */
+  min-height: 44px;
+  padding: 0 var(--space-20);
+
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: var(--fw-bold) var(--fs-16) / var(--lh-tight) var(--font-sans);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+
+  transition: background-color 120ms ease, border-color 120ms ease,
+    color 120ms ease;
+
+  &:focus-visible {
+    /* :focus-visible, not :focus — this shows the ring for keyboard users
+       without flashing it at everyone who taps. */
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.primary {
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
+
+  /* Hover only where hover is real. On a touchscreen, :hover sticks after a
+     tap — the button stays dark until you touch something else. */
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--brand-primary-strong);
+    }
+  }
+}
+
+.secondary {
+  background: var(--surface-page);
+  border-color: var(--border-default);
+  color: var(--text-body);
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--surface-subtle);
+    }
+  }
+}
+
+.text {
+  min-height: var(--control-h-36);
+  padding: 0 var(--space-8);
+  background: none;
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      color: var(--brand-primary-strong);
+      text-decoration: underline;
+    }
+  }
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+}

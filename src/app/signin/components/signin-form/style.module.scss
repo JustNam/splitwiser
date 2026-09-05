@@ -1,0 +1,17 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.error {
+  /* A tinted block rather than bare red text: at 12px on a phone, red-on-white
+     alone is easy to miss, and it fails contrast for some kinds of colour
+     blindness. The background does the work the colour can't. */
+  padding: var(--space-12);
+  border: 1px solid var(--border-error);
+  border-radius: var(--radius);
+  background: var(--rossie-200);
+  color: var(--feedback-error);
+  font: var(--text-body-md);
+}

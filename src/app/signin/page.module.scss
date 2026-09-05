@@ -1,0 +1,65 @@
+/* The signin screen shell.
+
+   Deliberately near-identical to signup/page.module.scss. Two short files that
+   each own one route beat one shared file that both routes have to agree on —
+   and if a third auth screen ever shows up (reset password), that's the moment
+   to lift this into an app/(auth)/layout.jsx route group. Not before. */
+
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  /* The safe-area values matter here because this screen has no top bar — the
+     wordmark would otherwise sit under the notch. */
+  padding: calc(var(--safe-top) + var(--space-48)) var(--space-24)
+    calc(var(--safe-bottom) + var(--space-24));
+  gap: var(--space-32);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.wordmark {
+  color: var(--brand-primary);
+  font: var(--fw-black) var(--fs-20) / var(--lh-tight) var(--font-sans);
+  letter-spacing: var(--ls-tight);
+}
+
+.title {
+  font: var(--text-h1);
+  color: var(--text-strong);
+}
+
+.pitch {
+  font: var(--text-body-lg);
+  color: var(--text-muted);
+}
+
+.footer {
+  /* margin-top:auto pins this to the bottom of the flex column, so the link
+     sits near the thumb on a tall phone instead of floating mid-screen. */
+  margin-top: auto;
+  font: var(--text-body-md);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--focus-ring);
+  }
+}

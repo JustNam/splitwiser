@@ -1,0 +1,48 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+/* A field plus its own hint text, grouped so the gap between them is tight
+   while the gap between fields stays at --space-20. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.hint {
+  /* 14px, not a token: this lines the hint up with MUI's own helperText, which
+     sits 14px in from the edge of an outlined input. Borrowing someone else's
+     measurement, so it doesn't belong on our 4px scale. */
+  padding-inline: 14px;
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.error {
+  padding: var(--space-12);
+  border: 1px solid var(--border-error);
+  border-radius: var(--radius);
+  background: var(--rossie-200);
+  color: var(--feedback-error);
+  font: var(--text-body-md);
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-16);
+  border: 1px solid var(--semantic-green-100);
+  border-radius: var(--radius);
+  background: var(--feedback-success-tint);
+  color: var(--text-body);
+  font: var(--text-body-md);
+}
+
+.noticeTitle {
+  font: var(--text-h3);
+  color: var(--feedback-success);
+}
