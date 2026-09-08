@@ -1,0 +1,102 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.title {
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  /* min-width:0 lets a long subtitle shrink and ellipsize instead of pushing
+     the amount off the row — a flex item won't shrink below its content
+     width without it. */
+  min-width: 0;
+  flex: 1;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+.edited {
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-label);
+  font: var(--text-micro);
+  font-weight: var(--fw-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.subtitle {
+  font: var(--text-caption);
+  color: var(--text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.total {
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--text-placeholder);
+  font: var(--text-body-lg);
+  line-height: 1;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-16);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.emptyTitle {
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+.emptyText {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}

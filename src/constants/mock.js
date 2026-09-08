@@ -137,15 +137,26 @@ export const ledger = [
 
 /**
  * What the above adds up to, from Trân's (m1) point of view in group g1.
- * Use this to check your Home screen in Step 4 — if your numbers differ,
- * the bug is in your code, not in this file:
+ * Use this to check your Home screen — if your numbers differ, the bug is in
+ * your code, not in this file.
  *
- *   Triết (m2)  → you owe 7.500đ          (cl2 share)
- *   Thắng (m3)  → owes you 90.000đ        (cl1 share)
- *   Lý    (m4)  → owes you 90.000đ        (cl1 share)
- *   Nam   (m5)  → you owe 67.500đ         (cl3 share)  ← GUEST
+ * Home shows the NET per person, not one row per cost line. Netting is the
+ * whole point: Trân and Triết owe each other across two different cost lines,
+ * and nobody wants to see both. So one row, with the two parts spelled out
+ * underneath (that's the "157.500đ lent − 7.500đ owed" line in the wireframe).
  *
- *   Owed to you  180.000đ
- *   You owe       75.000đ
- *   Net         +105.000đ
+ *              they owe you    you owe them    NET
+ *   Triết (m2)      90.000đ         7.500đ     owes you  82.500đ
+ *   Thắng (m3)      90.000đ              0     owes you  90.000đ
+ *   Lý    (m4)      90.000đ              0     owes you  90.000đ
+ *   Nam   (m5)            0        67.500đ     you owe   67.500đ   ← GUEST
+ *
+ *   Owed to you  262.500đ
+ *   You owe       67.500đ
+ *   Net         +195.000đ
+ *
+ * Careful with Triết: he is a participant on BOTH cost lines of session s1 —
+ * he owes 90.000đ on cl1 (Trân paid the courts) and is owed 7.500đ on cl2 (he
+ * paid the shuttles). Counting only one of the two is the easy mistake, and it
+ * is exactly what an earlier version of this comment got wrong.
  */

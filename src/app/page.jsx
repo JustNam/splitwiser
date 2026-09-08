@@ -1,24 +1,77 @@
-import { formatVnd, displayName } from '@/services/money.service'
-import { members, accounts } from '@/constants/mock'
+import { groupBalances } from '@/services/balance.service'
+import { sessionSummaries } from '@/services/session.service'
+import {
+  members,
+  accounts,
+  ledger,
+  groups,
+  sessions,
+  costLines,
+  participants,
+  CURRENT_MEMBER_ID,
+  CURRENT_GROUP_ID,
+} from '@/constants/mock'
+import { Button } from '@/components/Button'
+import { BalanceList } from './components/balance-list'
+import { SessionList } from './components/session-list'
+import Style from './page.module.scss'
 
+export const metadata = {
+  title: 'SplitWiser',
+}
+
+/**
+ * B1 · Home
+ *
+ * Still reading from constants/mock.js, not Supabase. The screen is being
+ * built against fixed data on purpose: the numbers are known (see the bottom
+ * of mock.js), so anything wrong on screen is a rendering bug, never a data
+ * one. The swap to `api/` happens once the layout is settled.
+ *
+ * Sessions list and the group switcher dropdown are the next two pieces.
+ */
 export default function HomePage() {
-  const checks = [
-    ['formatVnd(90000)', formatVnd(90000), '90.000đ'],
-    ['formatVnd(7500)', formatVnd(7500), '7.500đ'],
-    ['formatVnd(105000)', formatVnd(105000), '105.000đ'],
-    ['formatVnd(0)', formatVnd(0), '0đ'],
-    ['displayName(m1) roster', displayName(members[0], accounts), 'Trân'],
-    ['displayName(m5) guest', displayName(members[4], accounts), 'Nam'],
-  ]
+  const groupMembers = members.filter((m) => m.groupId === CURRENT_GROUP_ID)
+  const group = groups.find((g) => g.id === CURRENT_GROUP_ID)
+
+  const { rows } = groupBalances({
+    ledger,
+    members: groupMembers,
+    accounts,
+    myMemberId: CURRENT_MEMBER_ID,
+  })
+
+  const sessionRows = sessionSummaries({
+    sessions,
+    costLines,
+    participants,
+    members,
+    accounts,
+    groupId: CURRENT_GROUP_ID,
+  })
 
   return (
-    <main style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <h1>Step 4a checks</h1>
-      {checks.map(([label, got, want]) => (
-        <div key={label}>
-          {got === want ? '✅' : '❌'} {label} → got <b>{String(got)}</b>, want <b>{want}</b>
-        </div>
-      ))}
+    <main className={Style.page}>
+      {/* Which group you're looking at has to be visible at all times — one
+          account can belong to several, and logging a session into the wrong
+          one is the mistake this line exists to prevent. */}
+      <header className={Style.topBar}>
+        <p className={Style.groupName}>{group.name}</p>
+      </header>
+
+      <BalanceList rows={rows} memberCount={groupMembers.length} />
+
+      <SessionList rows={sessionRows} />
+
+      {/* Not wired yet — the routes arrive with B2 and B5. Kept visible
+          because "New session" is the one action this screen exists to lead
+          to, and its placement is part of what's being reviewed. */}
+      <footer className={Style.actions}>
+        <Button fullWidth>New session</Button>
+        <Button variant="secondary" fullWidth>
+          Settle up
+        </Button>
+      </footer>
     </main>
   )
 }

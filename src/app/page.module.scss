@@ -1,0 +1,33 @@
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-24);
+  padding: calc(var(--safe-top) + var(--space-16)) var(--space-16)
+    calc(var(--safe-bottom) + var(--space-16));
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.groupName {
+  font: var(--text-h2);
+  color: var(--text-strong);
+}
+
+.actions {
+  /* Pins the buttons to the bottom of the column while the page is still
+     short. Once the sessions list makes it scroll, this becomes
+     `position: sticky; bottom: 0` with a background — see the note in
+     layout.module.scss about sticky vs fixed. */
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-top: var(--space-8);
+}

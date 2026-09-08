@@ -1,75 +1,58 @@
 /**
  * Money and name formatting.
  *
- * Everything in here is a PURE FUNCTION: it takes arguments, returns a value,
- * and touches nothing else. No React, no useState, no reading from outside.
- * Give it the same input twice and you get the same answer twice.
+ * Pure functions only: same input → same output, no React, no I/O. Anything
+ * that can fail belongs in `api/` instead.
  *
- * (Naming note: ARCHITECTURE.MD says services are `<name>.service.js` with
- * static methods on a class. Following the filename, skipping the class —
- * wrapping four standalone functions in a class buys nothing here. Say the
- * word if you'd rather keep it uniform with the rest of the codebase.)
+ * Deviates from ARCHITECTURE.MD on one point: services there are a class with
+ * static methods. Two standalone functions gain nothing from the wrapper.
  */
 
 // ---------------------------------------------------------------------------
-// TODO 1 — formatVnd
+// formatVnd
 // ---------------------------------------------------------------------------
 /**
- * Turn an integer number of đồng into something a human reads.
+ * Integer đồng → the string a human reads.
  *
- *   formatVnd(90000)   →  "90.000đ"
- *   formatVnd(7500)    →  "7.500đ"
- *   formatVnd(105000)  →  "105.000đ"
- *   formatVnd(0)       →  "0đ"
+ *   90000 → "90.000đ"    7500 → "7.500đ"    0 → "0đ"
  *
- * Hint: JavaScript can do the dots for you —
- *
- *   new Intl.NumberFormat('vi-VN').format(90000)   // "90.000"
- *
- * `Intl` is built into the browser. 'vi-VN' means "format this the Vietnamese
- * way", which is why the separator is "." and not ",". Then add the đ.
+ * 'vi-VN' is what makes the thousands separator "." rather than ",".
  *
  * @param {number} amount - whole đồng, e.g. 90000
  * @returns {string}
  */
 export function formatVnd(amount) {
-  // your code here
   const formatted = new Intl.NumberFormat('vi-VN').format(amount)
   return `${formatted}đ`
 }
 
 // ---------------------------------------------------------------------------
-// TODO 2 — displayName
+// displayName
 // ---------------------------------------------------------------------------
 /**
  * A member's name as shown on screen.
  *
- * Remember the rule from the database design: a roster member's `name` is
- * always null, because their name lives on their Account — that way there is
- * only ever one place a name can be, so two places can't disagree. A guest has
- * no Account, so their name sits directly on the member row.
+ * The rule from the database design — a name lives in exactly one place, so
+ * two places can never disagree:
  *
- *   displayName(m1, accounts)  →  "Trân"    // roster: name is null → look in accounts
- *   displayName(m5, accounts)  →  "Nam"     // guest:  name is on the member itself
+ *   roster → `member.name` is ALWAYS null; the name lives on their account
+ *   guest  → no account, so the name sits on the member row itself
  *
- * Two pieces of JavaScript you need:
+ *   displayName(m1, accounts) → "Trân"   // roster: name comes from accounts
+ *   displayName(m5, accounts) → "Nam"    // guest:  name is on the member
  *
- *   accounts.find(a => a.id === 'a1')
- *     Walks the array and hands back the FIRST item where your test is true.
- *     Returns undefined if nothing matches — so `?.name` rather than `.name`,
- *     or it crashes on a missing account.
+ * That null is what makes the two branches sort themselves out, with no check
+ * on `member.type`.
  *
- *   member.name ?? somethingElse
- *     "?? " means "use the left side unless it is null or undefined".
- *     Use ?? and not || here: || also rejects "" and 0, which would be wrong
- *     the day someone's name or amount is legitimately empty.
+ * `??` and not `||`: `||` also rejects "" and 0 — harmless for a name, fatal
+ * the day the same habit reaches money, where 0đ is a legitimate amount.
+ * `?.` because `.find()` returns undefined when nothing matches.
  *
  * @param {object} member - a row from members[]
  * @param {object[]} accounts - the accounts[] array
  * @returns {string}
  */
 export function displayName(member, accounts) {
-  // your code here
-  const account = accounts.find((a) => a.id === member.accoundId)
-  return member.name
+  const account = accounts.find((a) => a.id === member.accountId)
+  return member.name ?? account?.name
 }
