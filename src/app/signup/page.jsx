@@ -3,7 +3,7 @@ import { SignupForm } from './components/signup-form'
 import Style from './page.module.scss'
 
 export const metadata = {
-  title: 'Create an account · CourtTab',
+  title: 'Create an account · SplitWiser',
 }
 
 /**
@@ -17,7 +17,7 @@ export default function SignupPage() {
   return (
     <main className={Style.page}>
       <header className={Style.header}>
-        <p className={Style.wordmark}>CourtTab</p>
+        <p className={Style.wordmark}>SplitWiser</p>
         <h1 className={Style.title}>Create your account</h1>
         <p className={Style.pitch}>
           Takes a minute. After this you can join your group with an invite

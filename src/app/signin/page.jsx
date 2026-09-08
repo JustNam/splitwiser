@@ -3,7 +3,7 @@ import { SigninForm } from './components/signin-form'
 import Style from './page.module.scss'
 
 export const metadata = {
-  title: 'Sign in · CourtTab',
+  title: 'Sign in · SplitWiser',
 }
 
 /**
@@ -17,7 +17,7 @@ export default function SigninPage() {
   return (
     <main className={Style.page}>
       <header className={Style.header}>
-        <p className={Style.wordmark}>Splitwiser</p>
+        <p className={Style.wordmark}>SplitWiser</p>
         <h1 className={Style.title}>Welcome back</h1>
         <p className={Style.pitch}>
           Log a game session, split the cost, and see who owes who —

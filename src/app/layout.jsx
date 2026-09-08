@@ -21,7 +21,7 @@ const lato = Lato({
 })
 
 export const metadata = {
-  title: 'Splitwiser',
+  title: 'SplitWiser',
   description: 'Log game sessions and split the cost with your group.',
 }
 
