@@ -1,5 +1,5 @@
 -- ===========================================================================
--- CourtTab — schema v3
+-- SplitWiser — schema v3
 -- Source: Splitwise - Personal Notes/CourtTab_Database_Design.md
 -- Target: Supabase / PostgreSQL 15+
 --
@@ -34,7 +34,12 @@ create table accounts (
 --
 -- security definer + a pinned search_path: the trigger fires in the auth
 -- schema's context and needs our permission to write public.accounts.
-create function handle_new_user() returns trigger
+--
+-- `create or replace` chu khong phai `create`: replace sua function TAI CHO,
+-- nen bat ky trigger nao dang tro vao no van chay binh thuong. Nguoc lai,
+-- `drop function ... cascade` se keo theo ca trigger. Bai hoc rut ra khi
+-- migrate project that (xem supabase/migrations/).
+create or replace function public.handle_new_user() returns trigger
 language plpgsql
 security definer
 set search_path = public
@@ -181,7 +186,7 @@ create index ledger_creditor_idx      on ledger (creditor_id);
 
 -- Append-only is the foundation of every balance calculation. With RLS off,
 -- this trigger is the only place it can be enforced.
-create function ledger_block_mutation() returns trigger
+create or replace function ledger_block_mutation() returns trigger
 language plpgsql as $$
 begin
   raise exception
