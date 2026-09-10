@@ -1,4 +1,13 @@
 /**
+ * Reference dataset — the five-person worked example from the design docs,
+ * with the expected balances at the bottom of the file.
+ *
+ * NOT imported by the app any more: every screen reads Supabase. It stays as
+ * the written-down definition of the shapes api/ has to produce, and as the
+ * numbers the services are checked against.
+ */
+
+/**
  * Fake data — the FE-only stand-in for the database.
  *
  * Shapes follow the 7 tables in CourtTab_Database_Design.md exactly, but in

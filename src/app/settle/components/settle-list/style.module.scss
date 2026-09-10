@@ -1,0 +1,259 @@
+.subtitle {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+/* --- One person's debts -------------------------------------------------- */
+
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+.guest {
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  font: var(--text-micro);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.selectAll {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: var(--control-h-32);
+  font: var(--text-caption);
+  font-weight: var(--fw-bold);
+  color: var(--brand-primary);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+/* --- A single debt ------------------------------------------------------- */
+
+.item,
+.readOnlyItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 60px;
+  padding: 0 var(--space-12);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.item {
+  cursor: pointer;
+}
+
+.box {
+  /* accent-color paints a native checkbox in the brand colour — no custom
+     box, so it keeps its focus ring and keyboard behaviour. */
+  flex: none;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.itemInfo {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.itemLabel {
+  font: var(--text-body-md);
+  color: var(--text-strong);
+}
+
+.itemSub {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.itemAmount {
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.owingNote {
+  padding: var(--space-12) 0 var(--space-6);
+  font: var(--text-caption);
+  color: var(--text-label);
+}
+
+/* --- Net ----------------------------------------------------------------- */
+
+.netBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-12);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.netLabel {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.netText {
+  font: var(--text-body-lg);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+/* --- Nothing to settle --------------------------------------------------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-24) 0;
+}
+
+.emptyTitle {
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.emptyBody {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+/* --- Bottom bar ---------------------------------------------------------- */
+
+.bar {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-page);
+}
+
+.barSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.barTotal {
+  font: var(--text-h3);
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+/* --- Confirm sheet ------------------------------------------------------- */
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-16);
+}
+
+.confirmTitle {
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.confirmList {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.confirmRow,
+.confirmTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  min-height: 46px;
+  font: var(--text-body-md);
+  color: var(--text-strong);
+}
+
+.confirmRow {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.confirmTotalRow {
+  font-weight: var(--fw-bold);
+}
+
+.confirmTotal {
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+/* Error red on a confirmation, not grey: the ledger has no UPDATE, so this
+   really is the last chance to stop. */
+.warning {
+  font: var(--text-caption);
+  color: var(--feedback-error);
+}
+
+.goBack {
+  border: 0;
+  background: none;
+  min-height: 44px;
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* --- Shared ------------------------------------------------------------- */
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}

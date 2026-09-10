@@ -1,0 +1,221 @@
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: var(--control-h-40);
+  height: var(--control-h-40);
+  margin-left: calc(var(--space-12) * -1);
+  color: var(--text-strong);
+  font: var(--text-h3);
+  text-decoration: none;
+}
+
+.title {
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.lede {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+/* --- Amount ------------------------------------------------------------- */
+
+.amountBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.amountLabel {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+.amountInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--border-strong);
+  background: none;
+  padding: 0 0 var(--space-8);
+  font: var(--fw-black) var(--fs-32) / var(--lh-tight) var(--font-sans);
+  letter-spacing: var(--ls-tight);
+  color: var(--text-strong);
+  outline: none;
+
+  &::placeholder {
+    color: var(--text-placeholder);
+  }
+
+  &:focus {
+    border-bottom-color: var(--brand-primary);
+  }
+}
+
+/* --- Sections ----------------------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.sectionTitle {
+  font: var(--text-caption);
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.sectionMeta {
+  font: var(--text-caption);
+  color: var(--text-placeholder);
+}
+
+/* --- Who played --------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: none;
+  font: var(--text-body-md);
+  color: var(--text-body);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.chipOn {
+  border-color: var(--brand-primary);
+  background: var(--surface-tint);
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}
+
+/* --- Preview ------------------------------------------------------------ */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  min-height: 44px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.rowName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+  font: var(--text-body-md);
+  color: var(--text-strong);
+}
+
+.outTag {
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  font: var(--text-micro);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+/* Unchanged rows stay quiet so the ones that move are the ones you read. */
+.change {
+  font: var(--text-caption);
+  color: var(--text-placeholder);
+  white-space: nowrap;
+}
+
+.changed {
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+/* --- Warning ------------------------------------------------------------ */
+
+.warnBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border: 1px solid var(--border-error);
+  border-radius: var(--radius);
+  background: var(--surface-tint);
+}
+
+.warnText {
+  font: var(--text-caption);
+  color: var(--text-strong);
+}
+
+/* --- Footer ------------------------------------------------------------- */
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-top: var(--space-12);
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.blocked {
+  font: var(--text-caption);
+  color: var(--feedback-error);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}
