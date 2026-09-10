@@ -1,0 +1,88 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}
+
+.created {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.createdTag {
+  color: var(--feedback-success);
+  font: var(--text-micro);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.createdName {
+  font: var(--text-h2);
+  color: var(--text-strong);
+}
+
+.codeBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-16);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+}
+
+.codeLabel {
+  font: var(--text-micro);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.code {
+  font: var(--text-h2);
+  font-weight: var(--fw-black);
+  color: var(--brand-primary);
+
+  /* The code gets read off a screen and typed by hand, so the characters need
+     to stay far apart. */
+  letter-spacing: var(--ls-wide);
+}
+
+.linkText {
+  font: var(--text-caption);
+  color: var(--text-muted);
+
+  /* An invite link has no spaces to break at, so it would otherwise stretch
+     the card wider than the phone. */
+  word-break: break-all;
+}
+
+.goHome {
+  align-self: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+  font: var(--text-body-md);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--text-strong);
+    text-decoration: underline;
+  }
+}

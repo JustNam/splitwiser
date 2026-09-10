@@ -1,0 +1,171 @@
+.title {
+  font: var(--text-h2);
+  color: var(--text-strong);
+}
+
+.banner {
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius);
+  background: var(--feedback-success-tint);
+  font: var(--text-caption);
+  color: var(--text-strong);
+}
+
+/* --- Sections ----------------------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.sectionTitle {
+  font: var(--text-caption);
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.sectionMeta {
+  font: var(--text-caption);
+  color: var(--text-placeholder);
+}
+
+/* --- Members ------------------------------------------------------------ */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 56px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.rowInfo {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rowName {
+  font: var(--text-body-md);
+  color: var(--text-strong);
+}
+
+.rowSub {
+  font: var(--text-caption);
+  color: var(--text-muted);
+
+  /* An email is long and has nothing to wrap at. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.guest {
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  font: var(--text-micro);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+/* --- Invite ------------------------------------------------------------- */
+
+.inviteBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-16);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+}
+
+.code {
+  font: var(--fw-black) var(--fs-24) / var(--lh-tight) var(--font-sans);
+  color: var(--brand-primary);
+
+  /* Read off a screen and typed by hand, so the characters stay far apart. */
+  letter-spacing: var(--ls-wide);
+}
+
+.linkText {
+  font: var(--text-caption);
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.inviteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border-radius: var(--radius);
+  background: var(--surface-tint);
+}
+
+.confirmText {
+  font: var(--text-caption);
+  color: var(--feedback-error);
+}
+
+/* --- Shared ------------------------------------------------------------- */
+
+.note {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}
+
+.actions {
+  margin-top: auto;
+  padding-top: var(--space-16);
+}
+
+.signOut {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 44px;
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--feedback-error);
+  }
+}

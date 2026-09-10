@@ -1,0 +1,74 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}
+
+.done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.doneTag {
+  color: var(--feedback-success);
+  font: var(--text-micro);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.doneName {
+  font: var(--text-h2);
+  color: var(--text-strong);
+}
+
+.cta {
+  margin-top: var(--space-16);
+  display: grid;
+  place-items: center;
+  height: var(--control-h-40);
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--brand-primary-strong);
+  }
+}
+
+/* The second door for someone arriving on an invite link without an account.
+   Quieter than .cta because signing in is the more common of the two. */
+.secondary {
+  display: grid;
+  place-items: center;
+  height: var(--control-h-40);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--surface-warm);
+  }
+}

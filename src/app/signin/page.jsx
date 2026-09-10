@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { SigninForm } from './components/signin-form'
 import Style from './page.module.scss'
@@ -25,7 +26,13 @@ export default function SigninPage() {
         </p>
       </header>
 
-      <SigninForm />
+      {/* The form reads ?next= from the URL, which isn't known when this
+          page is prerendered — Next requires a Suspense boundary around
+          anything that does. fallback={null} because the form is the
+          screen; a spinner would only flash. */}
+      <Suspense fallback={null}>
+        <SigninForm />
+      </Suspense>
 
       <p className={Style.footer}>
         New here?{' '}

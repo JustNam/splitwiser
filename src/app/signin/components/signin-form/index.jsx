@@ -8,15 +8,20 @@
  */
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import TextField from '@mui/material/TextField'
 import { AuthApi } from '@/api/auth'
 import { Button } from '@/components/Button'
+import { readNextPath } from '@/lib/next-path'
 import Style from './style.module.scss'
 
 export function SigninForm() {
   // From 'next/navigation' — NOT 'next/router', which is the Pages Router one.
   const router = useRouter()
+
+  // Where to land afterwards. Usually Home; the invite link sends people
+  // back to /join with their code still in the URL.
+  const nextPath = readNextPath(useSearchParams())
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,7 +48,7 @@ export function SigninForm() {
 
     // No setSubmitting(false) on success on purpose: let the navigation take
     // the screen away instead of flickering the button back to life.
-    router.push('/')
+    router.push(nextPath)
   }
 
   const canSubmit = email.trim() !== '' && password !== '' && !submitting
