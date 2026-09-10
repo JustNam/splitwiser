@@ -19,6 +19,30 @@
   color: var(--text-strong);
 }
 
+/* Styled to read as the title it replaces, not as a form control. The native
+   arrow is left in place — it is the only thing saying this is tappable. */
+.groupSelect {
+  max-width: 70%;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: var(--text-h2);
+  color: var(--text-strong);
+  cursor: pointer;
+}
+
+.topBarLink {
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--brand-primary);
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .actions {
   /* Pins the buttons to the bottom of the column while the page is still
      short. Once the sessions list makes it scroll, this becomes
@@ -30,4 +54,82 @@
   flex-direction: column;
   gap: var(--space-8);
   padding-top: var(--space-8);
+}
+
+/* --- No group yet: what a brand-new account lands on ------------------- */
+
+.noGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-24) var(--space-16);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+  text-align: center;
+}
+
+.noGroupTitle {
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.noGroupText {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+/* Links styled as buttons. A <Link> rather than a <Button> because these
+   navigate — a screen reader should announce them as links, and they should
+   open in a new tab on a middle click. */
+.primaryLink,
+.secondaryLink {
+  display: grid;
+  place-items: center;
+  height: var(--control-h-40);
+  border-radius: var(--radius-pill);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+}
+
+.primaryLink {
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
+
+  &:hover {
+    background: var(--brand-primary-strong);
+  }
+}
+
+.secondaryLink {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+
+  &:hover {
+    background: var(--surface-warm);
+  }
+}
+
+/* --- Signed out / failed states ---------------------------------------- */
+
+.empty {
+  margin: auto;
+  font: var(--text-body-lg);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }

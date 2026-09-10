@@ -26,6 +26,12 @@
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--border-default);
+    background: var(--surface-subtle);
+  }
 }
 
 .info {

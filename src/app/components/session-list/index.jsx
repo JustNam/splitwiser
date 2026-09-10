@@ -1,11 +1,13 @@
+import Link from 'next/link'
 import { formatVnd } from '@/services/money.service'
 import Style from './style.module.scss'
 
 /**
  * The Sessions block on Home — recent sessions, newest first.
  *
- * Rows aren't links yet; B3 (session detail) doesn't exist. The chevron is
- * there because its presence is part of what the layout is being judged on.
+ * Each row links to B3. The <Link> wraps the whole row rather than sitting
+ * inside it, so the entire card is the tap target — a 60px row with a 20px
+ * link in it is the kind of thing that only annoys people on phones.
  */
 export function SessionList({ rows }) {
   if (rows.length === 0) {
@@ -28,19 +30,21 @@ export function SessionList({ rows }) {
 
       <ul className={Style.list}>
         {rows.map((row) => (
-          <li key={row.id} className={Style.row}>
-            <div className={Style.info}>
-              <p className={Style.date}>
-                {row.dateLabel}
-                {row.isEdited && <span className={Style.edited}>Edited</span>}
-              </p>
-              <p className={Style.subtitle}>{row.subtitle}</p>
-            </div>
+          <li key={row.id}>
+            <Link href={`/session/${row.id}`} className={Style.row}>
+              <span className={Style.info}>
+                <span className={Style.date}>
+                  {row.dateLabel}
+                  {row.isEdited && <span className={Style.edited}>Edited</span>}
+                </span>
+                <span className={Style.subtitle}>{row.subtitle}</span>
+              </span>
 
-            <p className={Style.total}>{formatVnd(row.total)}</p>
-            <span className={Style.chevron} aria-hidden="true">
-              ›
-            </span>
+              <span className={Style.total}>{formatVnd(row.total)}</span>
+              <span className={Style.chevron} aria-hidden="true">
+                ›
+              </span>
+            </Link>
           </li>
         ))}
       </ul>

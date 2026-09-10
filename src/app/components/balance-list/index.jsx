@@ -17,7 +17,11 @@ export function BalanceList({ rows, memberCount }) {
     <section className={Style.section}>
       <header className={Style.header}>
         <h2 className={Style.title}>Balances</h2>
-        <p className={Style.meta}>{memberCount} people</p>
+        {/* A brand-new group has exactly one member, and "1 people" is the
+            kind of detail that makes an app feel unfinished. */}
+        <p className={Style.meta}>
+          {memberCount} {memberCount === 1 ? 'person' : 'people'}
+        </p>
       </header>
 
       {rows.length === 0 ? (
