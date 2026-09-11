@@ -38,7 +38,13 @@
   padding: var(--space-12) var(--space-16);
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
+  text-decoration: none;
   border-radius: var(--radius);
+
+  &:hover {
+    border-color: var(--border-default);
+    background: var(--surface-subtle);
+  }
 }
 
 .phrase {

@@ -10,10 +10,14 @@
  *      exactly this much".
  *   2. Each debt is paid in full. There is no amount field anywhere on the
  *      screen, and the total is displayed, never typed.
+ *
+ * ?member= narrows the screen to one person, which is where tapping a balance
+ * row on Home lands. Only a filter over the same data — the maths, the
+ * ticking and the write are identical either way.
  */
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Dialog from '@mui/material/Dialog'
 import { GroupsApi } from '@/api/groups'
@@ -21,13 +25,14 @@ import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
-import { formatVnd } from '@/services/money.service'
+import { displayName, formatVnd } from '@/services/money.service'
 import { payableDebts } from '@/services/settle.service'
 import Style from './style.module.scss'
 
 export function SettleList() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const memberFilter = useSearchParams().get('member')
 
   const [state, setState] = useState({ status: 'loading' })
 
@@ -97,7 +102,7 @@ export function SettleList() {
 
   const { group, snapshot } = state
 
-  const { owedByMe, owedToMe, net } = payableDebts({
+  const all = payableDebts({
     ledger: snapshot.ledger,
     members: snapshot.members,
     accounts: snapshot.accounts,
@@ -105,6 +110,30 @@ export function SettleList() {
     costLines: snapshot.costLines,
     myMemberId: group.myMemberId,
   })
+
+  // Looked up from the roster rather than from the rows below, because the
+  // rows are empty in exactly the case the name is still needed: a person you
+  // are square with.
+  const person = memberFilter
+    ? snapshot.members.find((member) => member.id === memberFilter)
+    : null
+
+  // An id that matches nobody is ignored rather than obeyed. Filtering on it
+  // would empty the screen and then say "you're not owing anyone", which is a
+  // statement about every debt you have, not about a broken link.
+  const personName = person ? displayName(person, snapshot.accounts) : null
+  const matches = (row) => !personName || row.memberId === memberFilter
+
+  const owedByMe = all.owedByMe.filter(matches)
+  const owedToMe = all.owedToMe.filter(matches)
+
+  // Recomputed from what is on screen, not taken from payableDebts(): while
+  // filtered, "Net" has to mean net with this person, or the number under the
+  // list contradicts the list.
+  const net =
+    owedToMe.reduce((running, item) => running + item.amount, 0) -
+    owedByMe.reduce((running, owedGroup) => running + owedGroup.total, 0)
+
 
   // The debts flattened out of their per-person groups, each carrying who it
   // is owed to. The groups are for reading; this list is for counting.
@@ -156,10 +185,13 @@ export function SettleList() {
   if (owedByMe.length === 0 && owedToMe.length === 0) {
     return (
       <div className={Style.empty}>
-        <p className={Style.emptyTitle}>You’re not owing anyone</p>
+        <p className={Style.emptyTitle}>
+          {personName ? `Nothing to pay ${personName}` : 'You’re not owing anyone'}
+        </p>
         <p className={Style.emptyBody}>
-          Everything on your side is settled. Balances update for everyone the
-          moment either side marks an item paid.
+          {personName
+            ? 'Nothing outstanding between the two of you.'
+            : 'Everything on your side is settled. Balances update for everyone the moment either side marks an item paid.'}
         </p>
       </div>
     )
@@ -167,8 +199,12 @@ export function SettleList() {
 
   return (
     <>
+      <h1 className={Style.title}>{personName ?? 'Pay someone'}</h1>
+
       <p className={Style.subtitle}>
-        Tick the debts you’ve paid. Each one is paid in full — untick to pay less.
+        {personName
+          ? `Every item between you and ${personName}. Tick the ones you’ve actually paid — each is paid in full.`
+          : 'Tick the debts you’ve paid. Each one is paid in full — untick to pay less.'}
       </p>
 
       {owedByMe.map((owedGroup) => (
@@ -232,9 +268,17 @@ export function SettleList() {
       )}
 
       <div className={Style.netBox}>
-        <p className={Style.netLabel}>Net across everyone</p>
+        <p className={Style.netLabel}>
+          {personName ? `Net with ${personName}` : 'Net across everyone'}
+        </p>
         <p className={Style.netText}>
-          {net >= 0 ? `You’re owed ${formatVnd(net)}` : `You owe ${formatVnd(-net)}`}
+          {personName
+            ? net >= 0
+              ? `${personName} owes you ${formatVnd(net)}`
+              : `You owe ${personName} ${formatVnd(-net)}`
+            : net >= 0
+              ? `You’re owed ${formatVnd(net)}`
+              : `You owe ${formatVnd(-net)}`}
         </p>
       </div>
 

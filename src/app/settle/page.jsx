@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { SettleList } from './components/settle-list'
 import Style from './page.module.scss'
@@ -9,10 +10,9 @@ export const metadata = {
 /**
  * B5 · Settle up
  *
- * The spec also reaches this screen by tapping one person on Home, which
- * filters it to that person. Not built yet — the unfiltered list is the same
- * screen with nothing hidden, so filtering is an addition rather than a
- * rewrite.
+ * Reached two ways: the Settle up button on Home, which lists every debt, and
+ * tapping one person there, which filters to them. The heading changes with
+ * it, so it lives in the client component rather than here.
  */
 export default function SettlePage() {
   return (
@@ -21,10 +21,14 @@ export default function SettlePage() {
         <Link href="/" className={Style.back} aria-label="Back">
           ←
         </Link>
-        <h1 className={Style.title}>Pay someone</h1>
       </header>
 
-      <SettleList />
+      {/* The filter is read from ?member=, which isn't known when this page is
+          prerendered — Next requires a Suspense boundary around anything that
+          reads the query string. */}
+      <Suspense fallback={null}>
+        <SettleList />
+      </Suspense>
     </main>
   )
 }

@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import Link from 'next/link'
 import { formatVnd } from '@/services/money.service'
 import Style from './style.module.scss'
 
@@ -45,21 +46,25 @@ export function BalanceList({ rows, memberCount }) {
 function BalanceRow({ row }) {
   const owedToMe = row.direction === 'they-owe-me'
 
-  // One line, one number. Where the number comes from is B5's job — it can
-  // show each debt against its own session and cost line, which is the
-  // answer someone actually wants when they doubt a total. The row becomes a
-  // link to it once that screen exists.
+  // One line, one number — and a link to where the number comes from. B5
+  // shows each debt against its own session and cost line, which is the
+  // answer someone actually wants when they doubt a total.
+  //
+  // The <Link> wraps the whole row rather than sitting inside it, so the
+  // entire card is the tap target.
   return (
-    <li className={Style.row}>
-      <p className={Style.phrase}>
-        {owedToMe ? 'You lent ' : 'You owe '}
-        <span className={Style.name}>{row.name}</span>
-        {row.isGuest && <span className={Style.guest}>Guest</span>}
-      </p>
+    <li>
+      <Link href={`/settle?member=${row.memberId}`} className={Style.row}>
+        <span className={Style.phrase}>
+          {owedToMe ? 'You lent ' : 'You owe '}
+          <span className={Style.name}>{row.name}</span>
+          {row.isGuest && <span className={Style.guest}>Guest</span>}
+        </span>
 
-      <p className={clsx(Style.amount, owedToMe ? Style.lent : Style.owed)}>
-        {formatVnd(row.amount)}
-      </p>
+        <span className={clsx(Style.amount, owedToMe ? Style.lent : Style.owed)}>
+          {formatVnd(row.amount)}
+        </span>
+      </Link>
     </li>
   )
 }

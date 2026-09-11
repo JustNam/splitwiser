@@ -29,8 +29,8 @@ import { formatSessionDate } from './session.service'
  *     items: Array<{ id: string, costLineId: string, label: string,
  *                    sub: string, amount: number }>,
  *   }>,
- *   owedToMe: Array<{ id: string, who: string, label: string, sub: string,
- *                     amount: number }>,
+ *   owedToMe: Array<{ id: string, memberId: string, who: string,
+ *                     label: string, sub: string, amount: number }>,
  *   net: number,
  * }}
  */
@@ -99,7 +99,7 @@ export function payableDebts({
     }
 
     if (net < 0) {
-      owedToMe.push({ ...item, who: displayName(other, accounts) })
+      owedToMe.push({ ...item, memberId: otherId, who: displayName(other, accounts) })
       continue
     }
 
