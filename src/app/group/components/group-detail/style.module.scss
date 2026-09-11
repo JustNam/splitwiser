@@ -169,3 +169,28 @@
     color: var(--feedback-error);
   }
 }
+
+/* --- Other groups -------------------------------------------------------- */
+
+.otherActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.actionLink {
+  display: grid;
+  place-items: center;
+  height: var(--control-h-40);
+  padding: 0 var(--space-16);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--surface-warm);
+  }
+}

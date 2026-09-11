@@ -84,12 +84,21 @@ export default function HomePage() {
   if (!user) {
     return (
       <main className={Style.page}>
-        <p className={Style.empty}>
-          <Link href="/signin" className={Style.link}>
-            Sign in
-          </Link>{' '}
-          to see your groups.
-        </p>
+        <div className={Style.empty}>
+          <p>
+            <Link href="/signin" className={Style.link}>
+              Sign in
+            </Link>{' '}
+            to see your groups.
+          </p>
+          <p className={Style.emptySub}>
+            No account yet?{' '}
+            <Link href="/signup" className={Style.link}>
+              Create one
+            </Link>
+            .
+          </p>
+        </div>
       </main>
     )
   }

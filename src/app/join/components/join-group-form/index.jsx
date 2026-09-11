@@ -15,6 +15,7 @@ import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { useAuth } from '@/hooks/useAuth'
+import { writeCurrentGroupId } from '@/lib/current-group'
 import { withNextPath } from '@/lib/next-path'
 import Style from './style.module.scss'
 
@@ -49,6 +50,10 @@ export function JoinGroupForm() {
       setSubmitting(false)
       return
     }
+
+    // The group you just joined is the one you meant to open. Home reads
+    // this, so without it “Go to group” quietly shows the previous one.
+    writeCurrentGroupId(data.id)
 
     setJoined(data)
     setSubmitting(false)

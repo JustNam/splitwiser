@@ -114,9 +114,16 @@
 
 .empty {
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
   font: var(--text-body-lg);
   color: var(--text-muted);
   text-align: center;
+}
+
+.emptySub {
+  font: var(--text-body-md);
 }
 
 .error {

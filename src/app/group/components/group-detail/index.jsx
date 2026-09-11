@@ -235,6 +235,22 @@ export function GroupDetail() {
 
       <p className={Style.note}>Anyone in the group can log and edit sessions.</p>
 
+      {/* Both of these used to live only on Home's no-group state, which made
+          them unreachable the moment you were in a group — including joining a
+          SECOND group by invite code. They belong on the screen about groups. */}
+      <section className={Style.section}>
+        <h2 className={Style.sectionTitle}>Other groups</h2>
+
+        <div className={Style.otherActions}>
+          <Link href="/group/new" className={Style.actionLink}>
+            New group
+          </Link>
+          <Link href="/join" className={Style.actionLink}>
+            Join with a code
+          </Link>
+        </div>
+      </section>
+
       {/* Not in the C1 wireframe — the prototype keeps Sign out in Home's
           overflow menu, which doesn't exist yet. It goes here because without
           it there is no way out of an account at all. */}
