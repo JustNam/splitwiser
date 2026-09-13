@@ -81,11 +81,22 @@ export function sessionSummaries({
       return {
         id: session.id,
         date: session.date,
+        createdAt: session.createdAt,
         dateLabel: formatSessionDate(session.date),
         total,
         subtitle: notes ? `${notes} · ${who}` : who,
         isEdited: Boolean(session.updatedAt),
       }
     })
-    .sort((a, b) => b.date.localeCompare(a.date))
+    // Newest first. `date` is the day the game was played and is what people
+    // think in, so it decides; createdAt only breaks a tie between two games
+    // on the same day, which date alone leaves in an order that can change
+    // from one page load to the next.
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        // ?? '' because constants/mock.js has no createdAt, and a service
+        // should not throw on data that is merely older than it is.
+        (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
+    )
 }
