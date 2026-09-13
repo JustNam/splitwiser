@@ -1,0 +1,30 @@
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.chip {
+  /* 44px: ticking five people is the most-repeated action on New session, so
+     it stays a comfortable target rather than a tidy one. */
+  min-height: 44px;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: none;
+  font: var(--text-body-md);
+  color: var(--text-body);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.selected {
+  border-color: var(--brand-primary);
+  background: var(--surface-tint);
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}

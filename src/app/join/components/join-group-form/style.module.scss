@@ -33,20 +33,3 @@
   color: var(--text-strong);
 }
 
-/* The second door for someone arriving on an invite link without an account.
-   Quieter than .cta because signing in is the more common of the two. */
-.secondary {
-  display: grid;
-  place-items: center;
-  height: var(--control-h-40);
-  border-radius: var(--radius-pill);
-  background: var(--surface-muted);
-  color: var(--text-strong);
-  font: var(--text-body-md);
-  font-weight: var(--fw-bold);
-  text-decoration: none;
-
-  &:hover {
-    background: var(--surface-warm);
-  }
-}

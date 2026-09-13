@@ -76,9 +76,9 @@ export function JoinGroupForm() {
 
         <LinkButton href={withNextPath('/signin', returnTo)}>Sign in</LinkButton>
 
-        <Link href={withNextPath('/signup', returnTo)} className={Style.secondary}>
+        <LinkButton variant="secondary" href={withNextPath('/signup', returnTo)}>
           Create an account
-        </Link>
+        </LinkButton>
       </div>
     )
   }

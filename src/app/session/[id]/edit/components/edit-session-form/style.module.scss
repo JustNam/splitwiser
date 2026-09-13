@@ -33,37 +33,6 @@
   gap: var(--space-12);
 }
 
-/* --- Who played --------------------------------------------------------- */
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-}
-
-.chip {
-  min-height: 44px;
-  padding: 0 var(--space-16);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-pill);
-  background: none;
-  font: var(--text-body-md);
-  color: var(--text-body);
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}
-
-.chipOn {
-  border-color: var(--brand-primary);
-  background: var(--surface-tint);
-  color: var(--brand-primary);
-  font-weight: var(--fw-bold);
-}
-
 /* --- Preview ------------------------------------------------------------ */
 
 .rows {

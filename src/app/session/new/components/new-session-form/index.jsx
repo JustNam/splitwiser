@@ -23,12 +23,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { InvitesApi } from '@/api/invites'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
+import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
@@ -532,21 +536,25 @@ export function NewSessionForm() {
         disabled={submitting}
       />
 
-      <TextField
-        select
-        label="Paid by"
-        value={payerId}
-        onChange={(event) => setPayerId(event.target.value)}
-        fullWidth
-        disabled={submitting}
-      >
-        {members.map((member) => (
-          <MenuItem key={member.id} value={member.id}>
-            {nameOf(member)}
-            {member.type === 'guest' ? ' (guest)' : ''}
-          </MenuItem>
-        ))}
-      </TextField>
+      {/* A Select, not a TextField with `select` set. MUI offers that shortcut
+          and it renders identically, but the code should say which of the two
+          a control is: one is typed into, the other is chosen from. */}
+      <FormControl fullWidth disabled={submitting}>
+        <InputLabel id="payer-label">Paid by</InputLabel>
+        <Select
+          labelId="payer-label"
+          label="Paid by"
+          value={payerId}
+          onChange={(event) => setPayerId(event.target.value)}
+        >
+          {members.map((member) => (
+            <MenuItem key={member.id} value={member.id}>
+              {nameOf(member)}
+              {member.type === 'guest' ? ' (guest)' : ''}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       <TextField
         label="What for"
@@ -597,26 +605,22 @@ export function NewSessionForm() {
           />
         )}
 
-        <div className={Style.chips}>
+        <ChipGroup>
           {visible.map((member) => (
-            <button
+            <Chip
               key={member.id}
-              type="button"
+              selected={Boolean(present[member.id])}
               onClick={() => toggle(member.id)}
-              // aria-pressed is what tells a screen reader this is a toggle
-              // rather than a button that does something.
-              aria-pressed={Boolean(present[member.id])}
-              className={clsx(Style.chip, present[member.id] && Style.chipOn)}
               disabled={submitting}
             >
               {nameOf(member)}
-            </button>
+            </Chip>
           ))}
 
           {visible.length === 0 && (
             <p className={Style.hint}>Nobody here by that name.</p>
           )}
-        </div>
+        </ChipGroup>
 
         {pendingGuests.length > 0 && (
           <p className={Style.hint}>
@@ -710,20 +714,21 @@ export function NewSessionForm() {
           <SectionHeader>Split</SectionHeader>
         </header>
 
-        <TextField
-          select
-          label="How"
-          value={method}
-          onChange={(event) => changeMethod(event.target.value)}
-          fullWidth
-          disabled={submitting}
-        >
-          {SPLIT_METHODS.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
+        <FormControl fullWidth disabled={submitting}>
+          <InputLabel id="split-label">How</InputLabel>
+          <Select
+            labelId="split-label"
+            label="How"
+            value={method}
+            onChange={(event) => changeMethod(event.target.value)}
+          >
+            {SPLIT_METHODS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         {total <= 0 || participants.length === 0 ? (
           <p className={Style.hint}>

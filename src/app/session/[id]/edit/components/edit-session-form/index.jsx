@@ -25,6 +25,7 @@ import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
+import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
@@ -325,20 +326,18 @@ export function EditSessionForm() {
           Who played
         </SectionHeader>
 
-        <div className={Style.chips}>
+        <ChipGroup>
           {members.map((member) => (
-            <button
+            <Chip
               key={member.id}
-              type="button"
+              selected={Boolean(present[member.id])}
               onClick={() => toggle(member.id)}
-              aria-pressed={Boolean(present[member.id])}
-              className={clsx(Style.chip, present[member.id] && Style.chipOn)}
               disabled={submitting}
             >
               {nameOf(member)}
-            </button>
+            </Chip>
           ))}
-        </div>
+        </ChipGroup>
       </section>
 
       <section className={Style.section}>
