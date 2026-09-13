@@ -38,7 +38,16 @@ import {
   lastPlayedByMember,
   latestLineUp,
 } from '@/services/session.service'
-import { SPLIT_EQUAL, computeSplit } from '@/services/split.service'
+import {
+  SPLIT_ADJUSTED,
+  SPLIT_EQUAL,
+  SPLIT_EXACT,
+  SPLIT_PERCENT,
+  SPLIT_SHARES,
+  computeSplit,
+  distribute,
+  leftToAssign,
+} from '@/services/split.service'
 import Style from './style.module.scss'
 
 /**
@@ -52,6 +61,51 @@ function todayIso() {
   const now = new Date()
   const pad = (value) => String(value).padStart(2, '0')
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+const SPLIT_METHODS = [
+  { value: SPLIT_EQUAL, label: 'Equally' },
+  { value: SPLIT_EXACT, label: 'By exact amounts' },
+  { value: SPLIT_PERCENT, label: 'By percentage' },
+  { value: SPLIT_SHARES, label: 'By shares' },
+  { value: SPLIT_ADJUSTED, label: 'Equally, adjusted' },
+]
+
+/**
+ * What each method starts from when you switch to it: the equal split, said
+ * in that method's own units. Switching never breaks a split that was already
+ * correct — it just hands you the controls to change it.
+ */
+function seedInputs(method, participantIds, total) {
+  const ones = participantIds.map(() => 1)
+  const seed = {}
+
+  if (method === SPLIT_EXACT) {
+    const amounts = distribute(total, ones)
+    participantIds.forEach((id, i) => {
+      seed[id] = amounts[i]
+    })
+  }
+
+  if (method === SPLIT_PERCENT) {
+    // distribute(100, ...) rather than Math.floor(100 / n): three people get
+    // 34/33/33, which is 100. Flooring gives 33/33/33, and the screen would
+    // open already refusing to save.
+    const percents = distribute(100, ones)
+    participantIds.forEach((id, i) => {
+      seed[id] = percents[i]
+    })
+  }
+
+  if (method === SPLIT_SHARES) {
+    for (const id of participantIds) seed[id] = 1
+  }
+
+  if (method === SPLIT_ADJUSTED) {
+    for (const id of participantIds) seed[id] = 0
+  }
+
+  return seed
 }
 
 export function NewSessionForm() {
@@ -92,6 +146,13 @@ export function NewSessionForm() {
   // "Paid by" select — only ever treats an id as an opaque string, so a
   // placeholder works everywhere a real one does, right up to the save.
   const [pendingGuests, setPendingGuests] = useState([])
+
+  const [method, setMethod] = useState(SPLIT_EQUAL)
+
+  // memberId -> a number whose MEANING is set by `method`: đồng, percent,
+  // share count, or đồng to add on top of an equal share. Cleared whenever
+  // the method changes, because 50 does not mean the same thing twice.
+  const [inputs, setInputs] = useState({})
 
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -207,7 +268,7 @@ export function NewSessionForm() {
   // preview of what will be stored — it IS what gets stored.
   const shares =
     total > 0 && participantIds.length > 0
-      ? computeSplit({ total, participantIds, method: SPLIT_EQUAL })
+      ? computeSplit({ total, participantIds, method, inputs })
       : {}
 
   const shareAmounts = Object.values(shares)
@@ -220,6 +281,53 @@ export function NewSessionForm() {
     .filter((member) => shares[member.id] > baseShare)
     .map(nameOf)
 
+  const inputTotal = participantIds.reduce(
+    (running, id) => running + (inputs[id] ?? 0),
+    0
+  )
+  const remaining = leftToAssign(total, shares)
+
+  /**
+   * Each method is wrong in its own way, so each is checked on its own terms.
+   *
+   * Percent is the one that catches people out: distribute() shares the total
+   * in PROPORTION to the weights, so 30/30/30 still hands out every đồng and
+   * leftToAssign() reports nothing left. The error is in the percentages, not
+   * in the money, so that is where it has to be caught.
+   *
+   * Shares never fail to add up either — any positive weights work — so the
+   * only bad case is everyone on zero.
+   */
+  const splitProblem =
+    method === SPLIT_EQUAL
+      ? null
+      : method === SPLIT_PERCENT
+        ? inputTotal === 100
+          ? null
+          : `Percentages add up to ${inputTotal}%, not 100%.`
+        : method === SPLIT_SHARES
+          ? inputTotal > 0
+            ? null
+            : 'Give at least one person a share.'
+          : remaining === 0
+            ? null
+            : remaining > 0
+              ? `${formatVnd(remaining)} is not assigned to anyone yet.`
+              : `The split is ${formatVnd(-remaining)} over the total.`
+
+  // What the line under the rows says. Not always a remainder: with shares
+  // there is nothing to run out of, so it reports the rate instead.
+  const splitReadout =
+    method === SPLIT_PERCENT
+      ? `Assigned ${inputTotal}%`
+      : method === SPLIT_SHARES
+        ? `Per share ${formatVnd(inputTotal > 0 ? Math.floor(total / inputTotal) : 0)}`
+        : remaining === 0
+          ? 'All assigned'
+          : remaining > 0
+            ? `Left to assign ${formatVnd(remaining)}`
+            : `Over by ${formatVnd(-remaining)}`
+
   // Ordered by which fix comes first, so the message points at the next thing
   // to do rather than the last thing missing.
   const blockedText =
@@ -229,7 +337,7 @@ export function NewSessionForm() {
         ? 'Tick at least one person who played.'
         : payerId === ''
           ? 'Choose who paid.'
-          : null
+          : splitProblem
 
   function handleAmountChange(event) {
     // Strip everything that isn't a digit, so a pasted "300.000đ" becomes
@@ -239,6 +347,35 @@ export function NewSessionForm() {
 
   function toggle(memberId) {
     setPresent((current) => ({ ...current, [memberId]: !current[memberId] }))
+  }
+
+  function changeMethod(nextMethod) {
+    setMethod(nextMethod)
+    setInputs(seedInputs(nextMethod, participantIds, total))
+  }
+
+  function setInput(memberId, value) {
+    setInputs((current) => ({ ...current, [memberId]: value }))
+  }
+
+  /**
+   * Spread whatever is missing across everyone, in this method's own units:
+   * đồng for exact and adjusted, percentage points for percent. Always lands
+   * exactly on target, because distribute() hands out the remainder rather
+   * than rounding it away — and it copes with a negative gap, which is what
+   * "over by" needs.
+   */
+  function splitTheRest() {
+    const gap = method === SPLIT_PERCENT ? 100 - inputTotal : remaining
+    const spread = distribute(gap, participantIds.map(() => 1))
+
+    setInputs((current) => {
+      const next = { ...current }
+      participantIds.forEach((id, i) => {
+        next[id] = (next[id] ?? 0) + spread[i]
+      })
+      return next
+    })
   }
 
   function setAll(value) {
@@ -575,10 +712,28 @@ export function NewSessionForm() {
       <section className={Style.section}>
         <header className={Style.sectionHeader}>
           <h2 className={Style.sectionTitle}>Split</h2>
-          <p className={Style.sectionMeta}>Equally</p>
         </header>
 
-        {total > 0 && participants.length > 0 ? (
+        <TextField
+          select
+          label="How"
+          value={method}
+          onChange={(event) => changeMethod(event.target.value)}
+          fullWidth
+          disabled={submitting}
+        >
+          {SPLIT_METHODS.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        {total <= 0 || participants.length === 0 ? (
+          <p className={Style.hint}>
+            Enter an amount and tick who played to see the split.
+          </p>
+        ) : method === SPLIT_EQUAL ? (
           <>
             <p className={Style.splitSentence}>
               {formatVnd(baseShare)} each for {participants.map(nameOf).join(', ')}.
@@ -591,9 +746,40 @@ export function NewSessionForm() {
             )}
           </>
         ) : (
-          <p className={Style.hint}>
-            Enter an amount and tick who played to see the split.
-          </p>
+          <>
+            <div className={Style.splitRows}>
+              {participants.map((member) => (
+                <SplitRow
+                  key={member.id}
+                  name={nameOf(member)}
+                  method={method}
+                  value={inputs[member.id] ?? 0}
+                  onChange={(value) => setInput(member.id, value)}
+                  output={formatVnd(shares[member.id] ?? 0)}
+                  disabled={submitting}
+                />
+              ))}
+            </div>
+
+            <div className={Style.splitFoot}>
+              <p className={clsx(Style.readout, splitProblem && Style.readoutBad)}>
+                {splitReadout}
+              </p>
+
+              {/* Nothing to balance with shares: any positive weights divide
+                  the total exactly, so there is never a remainder. */}
+              {method !== SPLIT_SHARES && (
+                <button
+                  type="button"
+                  className={Style.splitAction}
+                  onClick={splitTheRest}
+                  disabled={submitting}
+                >
+                  Split the rest evenly
+                </button>
+              )}
+            </div>
+          </>
         )}
       </section>
 
@@ -618,5 +804,69 @@ export function NewSessionForm() {
         </Button>
       </footer>
     </form>
+  )
+}
+
+/**
+ * One person's line in a non-equal split.
+ *
+ * The control changes with the method, but the shape does not: name on the
+ * left, what you set in the middle, what it comes to on the right. Shares get
+ * a stepper rather than a text field because the numbers are 1, 2, maybe 3,
+ * and typing is the wrong tool for a number you nudge.
+ */
+function SplitRow({ name, method, value, onChange, output, disabled }) {
+  // Digits only — except for `adjusted`, where a minus sign is the whole
+  // point: it is the method for "everyone equally, but Nam owes 20.000đ less".
+  function handleText(event) {
+    const raw = event.target.value
+    const signed = method === SPLIT_ADJUSTED && raw.trim().startsWith('-')
+    const digits = raw.replace(/[^0-9]/g, '')
+    const size = digits === '' ? 0 : Number(digits)
+    onChange(signed ? -size : size)
+  }
+
+  return (
+    <div className={Style.splitRow}>
+      <span className={Style.splitName}>{name}</span>
+
+      {method === SPLIT_SHARES ? (
+        <span className={Style.stepper}>
+          <button
+            type="button"
+            className={Style.stepperButton}
+            onClick={() => onChange(Math.max(0, value - 1))}
+            disabled={disabled}
+            aria-label={`One less share for ${name}`}
+          >
+            −
+          </button>
+          <span className={Style.stepperValue}>{value}</span>
+          <button
+            type="button"
+            className={Style.stepperButton}
+            onClick={() => onChange(value + 1)}
+            disabled={disabled}
+            aria-label={`One more share for ${name}`}
+          >
+            +
+          </button>
+        </span>
+      ) : (
+        <span className={Style.splitField}>
+          <input
+            className={Style.splitInput}
+            value={method === SPLIT_ADJUSTED && value > 0 ? `+${value}` : String(value)}
+            onChange={handleText}
+            inputMode="numeric"
+            disabled={disabled}
+            aria-label={`${name}'s share`}
+          />
+          {method === SPLIT_PERCENT && <span className={Style.suffix}>%</span>}
+        </span>
+      )}
+
+      <span className={Style.splitOutput}>{output}</span>
+    </div>
   )
 }
