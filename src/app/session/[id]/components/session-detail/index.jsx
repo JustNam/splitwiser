@@ -17,6 +17,10 @@ import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { formatVnd } from '@/services/money.service'
 import { sessionDetail } from '@/services/session-detail.service'
+import { PageHeader } from '@/components/PageHeader'
+import { SectionHeader } from '@/components/SectionHeader'
+import { TextLink } from '@/components/TextLink'
+import { LinkButton } from '@/components/LinkButton'
 import Style from './style.module.scss'
 
 export function SessionDetail() {
@@ -69,11 +73,7 @@ export function SessionDetail() {
   if (!user) {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        first.
+        You need to <TextLink href="/signin">sign in</TextLink> first.
       </p>
     )
   }
@@ -106,23 +106,17 @@ export function SessionDetail() {
 
   return (
     <>
-      <div className={Style.titleBlock}>
-        <div className={Style.titleRow}>
-          <h1 className={Style.title}>{detail.dateLabel}</h1>
-          {/* The wireframe puts Edit in the header. It lives here instead,
-              because the header is a Server Component and this is where the
-              session id is known. */}
-          <Link href={`/session/${detail.id}/edit`} className={Style.edit}>
-            Edit
-          </Link>
-        </div>
-        <p className={Style.meta}>
-          {formatVnd(detail.total)} · {detail.meta}
-        </p>
-      </div>
+      <PageHeader
+        title={detail.dateLabel}
+        action={<TextLink href={`/session/${detail.id}/edit`}>Edit</TextLink>}
+      />
+
+      <p className={Style.meta}>
+        {formatVnd(detail.total)} · {detail.meta}
+      </p>
 
       <section className={Style.section}>
-        <h2 className={Style.sectionTitle}>Costs</h2>
+        <SectionHeader>Costs</SectionHeader>
 
         <div className={Style.rows}>
           {detail.lines.map((line) => (
@@ -138,13 +132,15 @@ export function SessionDetail() {
       </section>
 
       <section className={Style.section}>
-        <header className={Style.sectionHeader}>
-          <h2 className={Style.sectionTitle}>Who played</h2>
-          <p className={Style.sectionMeta}>
-            {detail.people.length}{' '}
-            {detail.people.length === 1 ? 'person' : 'people'}
-          </p>
-        </header>
+        <SectionHeader
+          meta={
+            <>
+              {detail.people.length} {detail.people.length === 1 ? 'person' : 'people'}
+            </>
+          }
+        >
+          Who played
+        </SectionHeader>
 
         <div className={Style.rows}>
           {detail.people.map((person) => (
@@ -172,7 +168,7 @@ export function SessionDetail() {
           whole data design was built around. */}
       {detail.edits.length > 0 && (
         <section className={Style.section}>
-          <h2 className={Style.sectionTitle}>Edits</h2>
+          <SectionHeader>Edits</SectionHeader>
 
           <div className={Style.rows}>
             {detail.edits.map((edit) => (
@@ -184,8 +180,8 @@ export function SessionDetail() {
           </div>
 
           <p className={Style.note}>
-            The original numbers above are what was first recorded. Edits are
-            listed separately — nothing is overwritten.
+            The original numbers above are what was first recorded. Edits are listed
+            separately — nothing is overwritten.
           </p>
         </section>
       )}
@@ -193,9 +189,7 @@ export function SessionDetail() {
       <p className={Style.trail}>{detail.trail}</p>
 
       <footer className={Style.actions}>
-        <Link href="/settle" className={Style.primaryLink}>
-          Pay my share
-        </Link>
+        <LinkButton href="/settle">Pay my share</LinkButton>
       </footer>
     </>
   )

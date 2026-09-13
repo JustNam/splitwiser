@@ -22,7 +22,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import clsx from 'clsx'
 import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
@@ -30,6 +29,9 @@ import { GroupsApi } from '@/api/groups'
 import { InvitesApi } from '@/api/invites'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
+import { SectionHeader } from '@/components/SectionHeader'
+import { TextButton } from '@/components/TextButton'
+import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName, formatVnd } from '@/services/money.service'
@@ -206,11 +208,8 @@ export function NewSessionForm() {
   if (!user) {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        before you can log a session.
+        You need to <TextLink href="/signin">sign in</TextLink> before you can log a
+        session.
       </p>
     )
   }
@@ -246,7 +245,9 @@ export function NewSessionForm() {
     const bNew = b.id.startsWith('new:')
     if (aNew !== bNew) return aNew ? -1 : 1
 
-    const byDate = (lastPlayed.get(b.id) ?? '').localeCompare(lastPlayed.get(a.id) ?? '')
+    const byDate = (lastPlayed.get(b.id) ?? '').localeCompare(
+      lastPlayed.get(a.id) ?? ''
+    )
     if (byDate !== 0) return byDate
 
     return nameOf(a).localeCompare(nameOf(b))
@@ -258,7 +259,9 @@ export function NewSessionForm() {
 
   const query = search.trim().toLowerCase()
   const visible =
-    query === '' ? ordered : ordered.filter((m) => nameOf(m).toLowerCase().includes(query))
+    query === ''
+      ? ordered
+      : ordered.filter((m) => nameOf(m).toLowerCase().includes(query))
 
   const lastSession = data.sessions[0]
 
@@ -367,7 +370,10 @@ export function NewSessionForm() {
    */
   function splitTheRest() {
     const gap = method === SPLIT_PERCENT ? 100 - inputTotal : remaining
-    const spread = distribute(gap, participantIds.map(() => 1))
+    const spread = distribute(
+      gap,
+      participantIds.map(() => 1)
+    )
 
     setInputs((current) => {
       const next = { ...current }
@@ -455,7 +461,10 @@ export function NewSessionForm() {
         InvitesApi.send({ email: guest.email, groupId: data.group.id })
       }
 
-      setData((current) => ({ ...current, members: [...current.members, member] }))
+      setData((current) => ({
+        ...current,
+        members: [...current.members, member],
+      }))
       setPendingGuests((current) => current.filter((row) => row.id !== guest.id))
       setPresent((current) => ({ ...current, [member.id]: true }))
     }
@@ -506,24 +515,22 @@ export function NewSessionForm() {
         disabled={submitting}
       />
 
-      <div className={Style.amountBlock}>
-        <label className={Style.amountLabel} htmlFor="amount">
-          Amount
-        </label>
-        {/* Not a MUI field: this is the one number the whole screen is about,
-            and the design gives it its own oversized treatment. */}
-        <input
-          id="amount"
-          className={Style.amountInput}
-          value={amountText === '' ? '' : formatVnd(total)}
-          onChange={handleAmountChange}
-          // A numeric keypad on a phone. type="number" gives one too, but it
-          // also allows "e", "-" and spinner arrows.
-          inputMode="numeric"
-          placeholder="0đ"
-          disabled={submitting}
-        />
-      </div>
+      {/* A TextField like every other entry on the screen. It was a bare
+          <input> with its own label above it, sitting directly under a MUI
+          Date field with a floating one — two ways of labelling a box, six
+          pixels apart. The size is what makes it the headline, not the
+          markup. */}
+      <TextField
+        label="Amount"
+        value={amountText === '' ? '' : formatVnd(total)}
+        onChange={handleAmountChange}
+        placeholder="0đ"
+        // A numeric keypad on a phone. type="number" gives one too, but it
+        // also allows "e", "-" and spinner arrows.
+        inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
+        fullWidth
+        disabled={submitting}
+      />
 
       <TextField
         select
@@ -551,33 +558,26 @@ export function NewSessionForm() {
       />
 
       <section className={Style.section}>
-        <header className={Style.sectionHeader}>
-          <h2 className={Style.sectionTitle}>Who played</h2>
-          <p className={Style.sectionMeta}>
-            {participants.length} of {members.length}
-          </p>
-        </header>
+        <SectionHeader
+          meta={
+            <>
+              {participants.length} of {members.length}
+            </>
+          }
+        >
+          Who played
+        </SectionHeader>
 
         {/* Both, not a single toggle: with a long roster you sometimes want to
             start from nobody and sometimes from everybody, and a toggle makes
             you guess which one it will do. */}
         <div className={Style.pickRow}>
-          <button
-            type="button"
-            className={Style.pickAction}
-            onClick={() => setAll(true)}
-            disabled={submitting}
-          >
+          <TextButton onClick={() => setAll(true)} disabled={submitting}>
             Everyone
-          </button>
-          <button
-            type="button"
-            className={Style.pickAction}
-            onClick={() => setAll(false)}
-            disabled={submitting}
-          >
+          </TextButton>
+          <TextButton onClick={() => setAll(false)} disabled={submitting}>
             Nobody
-          </button>
+          </TextButton>
 
           {lastSession && (
             <p className={Style.pickNote}>
@@ -587,11 +587,12 @@ export function NewSessionForm() {
         </div>
 
         {searchable && (
-          <input
-            className={Style.searchInput}
+          <TextField
+            label="Search names"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search names"
+            size="small"
+            fullWidth
             disabled={submitting}
           />
         )}
@@ -620,8 +621,8 @@ export function NewSessionForm() {
         {pendingGuests.length > 0 && (
           <p className={Style.hint}>
             {pendingGuests.map((guest) => guest.name).join(', ')}{' '}
-            {pendingGuests.length === 1 ? 'joins' : 'join'} the group when you save
-            this session.
+            {pendingGuests.length === 1 ? 'joins' : 'join'} the group when you save this
+            session.
           </p>
         )}
 
@@ -630,30 +631,30 @@ export function NewSessionForm() {
         {addingGuest ? (
           <div className={Style.guestBlock}>
             <div className={Style.guestRow}>
-              <input
-                className={Style.guestInput}
+              <TextField
+                label="Name"
                 value={guestName}
                 onChange={(event) => {
                   setGuestName(event.target.value)
                   setGuestClash(null)
                 }}
-                placeholder="Name"
-                disabled={submitting}
+                size="small"
                 autoFocus
+                disabled={submitting}
               />
-              <input
-                className={Style.guestInput}
+              <TextField
+                label="Email (optional)"
                 value={guestEmail}
                 onChange={(event) => setGuestEmail(event.target.value)}
-                placeholder="Email (optional)"
-                inputMode="email"
+                inputProps={{ inputMode: 'email' }}
+                size="small"
                 disabled={submitting}
               />
             </div>
 
             <p className={Style.hint}>
-              Email is optional, but worth adding: we’ll invite them, and when
-              they sign up everything they owe or are owed comes with them.
+              Email is optional, but worth adding: we’ll invite them, and when they sign
+              up everything they owe or are owed comes with them.
             </p>
 
             <div className={Style.guestActions}>
@@ -678,14 +679,9 @@ export function NewSessionForm() {
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            className={Style.addGuestLink}
-            onClick={() => setAddingGuest(true)}
-            disabled={submitting}
-          >
+          <TextButton onClick={() => setAddingGuest(true)} disabled={submitting}>
             + Add a guest
-          </button>
+          </TextButton>
         )}
 
         {guestClash && (
@@ -711,7 +707,7 @@ export function NewSessionForm() {
 
       <section className={Style.section}>
         <header className={Style.sectionHeader}>
-          <h2 className={Style.sectionTitle}>Split</h2>
+          <SectionHeader>Split</SectionHeader>
         </header>
 
         <TextField
@@ -769,14 +765,9 @@ export function NewSessionForm() {
               {/* Nothing to balance with shares: any positive weights divide
                   the total exactly, so there is never a remainder. */}
               {method !== SPLIT_SHARES && (
-                <button
-                  type="button"
-                  className={Style.splitAction}
-                  onClick={splitTheRest}
-                  disabled={submitting}
-                >
+                <TextButton onClick={splitTheRest} disabled={submitting}>
                   Split the rest evenly
-                </button>
+                </TextButton>
               )}
             </div>
           </>
@@ -854,13 +845,19 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
         </span>
       ) : (
         <span className={Style.splitField}>
-          <input
-            className={Style.splitInput}
+          {/* No visible label: the row already carries the person's name, and
+              a floating label in each row would repeat it five times. The
+              name is passed to the field so a screen reader gets it too. */}
+          <TextField
             value={method === SPLIT_ADJUSTED && value > 0 ? `+${value}` : String(value)}
             onChange={handleText}
-            inputMode="numeric"
+            inputProps={{
+              inputMode: 'numeric',
+              'aria-label': `${name}'s share`,
+              className: Style.splitInputText,
+            }}
+            size="small"
             disabled={disabled}
-            aria-label={`${name}'s share`}
           />
           {method === SPLIT_PERCENT && <span className={Style.suffix}>%</span>}
         </span>

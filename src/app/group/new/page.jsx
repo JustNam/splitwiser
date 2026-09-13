@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import { CreateGroupForm } from './components/create-group-form'
+import { PageHeader } from '@/components/PageHeader'
+import { TextLink } from '@/components/TextLink'
 import Style from './page.module.scss'
 
 export const metadata = {
@@ -15,20 +16,12 @@ export const metadata = {
 export default function NewGroupPage() {
   return (
     <main className={Style.page}>
-      <header className={Style.header}>
-        <Link href="/" className={Style.back} aria-label="Back">
-          ←
-        </Link>
-        <h1 className={Style.title}>New group</h1>
-      </header>
+      <PageHeader title="New group" />
 
       <CreateGroupForm />
 
       <p className={Style.footer}>
-        Have an invite code?{' '}
-        <Link href="/join" className={Style.link}>
-          Join a group
-        </Link>
+        Have an invite code? <TextLink href="/join">Join a group</TextLink>
       </p>
     </main>
   )

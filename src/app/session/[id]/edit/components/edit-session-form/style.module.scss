@@ -5,65 +5,17 @@
   gap: var(--space-16);
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-}
-
-.back {
-  display: grid;
-  place-items: center;
-  width: var(--control-h-40);
-  height: var(--control-h-40);
-  margin-left: calc(var(--space-12) * -1);
-  color: var(--text-strong);
-  font: var(--text-h3);
-  text-decoration: none;
-}
-
-.title {
-  font: var(--text-h3);
-  color: var(--text-strong);
-}
-
 .lede {
   font: var(--text-body-md);
   color: var(--text-muted);
 }
 
-/* --- Amount ------------------------------------------------------------- */
-
-.amountBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.amountLabel {
-  font: var(--text-body-md);
-  color: var(--text-muted);
-}
-
 .amountInput {
-  width: 100%;
-  box-sizing: border-box;
-  border: 0;
-  border-bottom: 1px solid var(--border-strong);
-  background: none;
-  padding: 0 0 var(--space-8);
-  font: var(--fw-black) var(--fs-32) / var(--lh-tight) var(--font-sans);
+  /* Applied to the <input> inside MUI's field, so it only sets type — the box,
+     the label and the focus ring all come from the field. */
+  font: var(--fw-black) var(--fs-24) / var(--lh-tight) var(--font-sans);
   letter-spacing: var(--ls-tight);
   color: var(--text-strong);
-  outline: none;
-
-  &::placeholder {
-    color: var(--text-placeholder);
-  }
-
-  &:focus {
-    border-bottom-color: var(--brand-primary);
-  }
 }
 
 /* --- Sections ----------------------------------------------------------- */
@@ -79,18 +31,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-12);
-}
-
-.sectionTitle {
-  font: var(--text-caption);
-  color: var(--text-label);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-
-.sectionMeta {
-  font: var(--text-caption);
-  color: var(--text-placeholder);
 }
 
 /* --- Who played --------------------------------------------------------- */
@@ -215,7 +155,3 @@
   color: var(--feedback-error);
 }
 
-.link {
-  color: var(--brand-primary);
-  font-weight: var(--fw-bold);
-}

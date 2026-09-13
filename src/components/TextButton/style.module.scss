@@ -1,0 +1,39 @@
+.button {
+  border: 0;
+  background: none;
+  padding: 0;
+
+  /* 44px even though it looks like text: it is still a tap target on a phone,
+     and the caption type would otherwise give it a ~16px hit area. */
+  min-height: 44px;
+
+  font: var(--text-caption);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.brand {
+  color: var(--brand-primary);
+}
+
+.quiet {
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    color: var(--text-strong);
+  }
+}
+
+.danger {
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    color: var(--feedback-error);
+  }
+}

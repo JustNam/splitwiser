@@ -31,18 +31,6 @@
   cursor: pointer;
 }
 
-.topBarLink {
-  font: var(--text-body-md);
-  font-weight: var(--fw-bold);
-  color: var(--brand-primary);
-  text-decoration: none;
-  white-space: nowrap;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
 .actions {
   /* Pins the buttons to the bottom of the column while the page is still
      short. Once the sessions list makes it scroll, this becomes
@@ -83,25 +71,6 @@
    open in a new tab on a middle click. */
 .primaryLink,
 .secondaryLink {
-  display: grid;
-  place-items: center;
-  height: var(--control-h-40);
-  border-radius: var(--radius-pill);
-  font: var(--text-body-md);
-  font-weight: var(--fw-bold);
-  text-decoration: none;
-}
-
-.primaryLink {
-  background: var(--brand-primary);
-  color: var(--text-on-brand);
-
-  &:hover {
-    background: var(--brand-primary-strong);
-  }
-}
-
-.secondaryLink {
   background: var(--surface-muted);
   color: var(--text-strong);
 
@@ -131,12 +100,3 @@
   color: var(--feedback-error);
 }
 
-.link {
-  color: var(--brand-primary);
-  font-weight: var(--fw-bold);
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}

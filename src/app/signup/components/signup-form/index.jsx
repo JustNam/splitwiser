@@ -125,8 +125,8 @@ export function SignupForm() {
           disabled={submitting}
         />
         <p className={Style.hint}>
-          This is the name everyone sees, in every group. There are no
-          per-group nicknames.
+          This is the name everyone sees, in every group. There are no per-group
+          nicknames.
         </p>
       </div>
 

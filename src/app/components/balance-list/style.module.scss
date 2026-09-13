@@ -107,16 +107,3 @@
   color: var(--text-strong);
 }
 
-/* Centred and quiet: it is a way out of the block, not a call to action. */
-.seeAll {
-  align-self: center;
-  padding: var(--space-8);
-  font: var(--text-body-md);
-  font-weight: var(--fw-bold);
-  color: var(--brand-primary);
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}

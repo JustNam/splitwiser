@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { NewSessionForm } from './components/new-session-form'
+import { PageHeader } from '@/components/PageHeader'
 import Style from './page.module.scss'
 
 export const metadata = {
@@ -17,12 +17,7 @@ export const metadata = {
 export default function NewSessionPage() {
   return (
     <main className={Style.page}>
-      <header className={Style.header}>
-        <Link href="/" className={Style.back} aria-label="Back">
-          ←
-        </Link>
-        <h1 className={Style.title}>New session</h1>
-      </header>
+      <PageHeader title="New session" />
 
       <NewSessionForm />
     </main>

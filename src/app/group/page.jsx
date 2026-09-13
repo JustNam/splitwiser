@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { GroupDetail } from './components/group-detail'
 import Style from './page.module.scss'
 
@@ -18,12 +17,6 @@ export const metadata = {
 export default function GroupPage() {
   return (
     <main className={Style.page}>
-      <header className={Style.header}>
-        <Link href="/" className={Style.back} aria-label="Back">
-          ←
-        </Link>
-      </header>
-
       <GroupDetail />
     </main>
   )

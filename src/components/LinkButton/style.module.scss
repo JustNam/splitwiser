@@ -1,0 +1,39 @@
+.link {
+  display: grid;
+  place-items: center;
+  height: var(--control-h-40);
+  padding: 0 var(--space-16);
+  border-radius: var(--radius-pill);
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
+
+  &:hover {
+    background: var(--brand-primary-strong);
+  }
+}
+
+.secondary {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+
+  &:hover {
+    background: var(--surface-warm);
+  }
+}
+
+/* No fill at all — for a link sitting under a block rather than beside one,
+   like "See all 12". */
+.quiet {
+  background: none;
+  color: var(--brand-primary);
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

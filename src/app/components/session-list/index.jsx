@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { SectionHeader } from '@/components/SectionHeader'
 import { formatVnd } from '@/services/money.service'
+import { LinkButton } from '@/components/LinkButton'
 import Style from './style.module.scss'
 
 /**
@@ -16,7 +18,7 @@ export function SessionList({ rows, limit, seeAllHref }) {
   if (rows.length === 0) {
     return (
       <section className={Style.section}>
-        <h2 className={Style.title}>Sessions</h2>
+        <SectionHeader>Sessions</SectionHeader>
         <div className={Style.empty}>
           <p className={Style.emptyTitle}>No sessions yet</p>
           <p className={Style.emptyText}>
@@ -29,7 +31,7 @@ export function SessionList({ rows, limit, seeAllHref }) {
 
   return (
     <section className={Style.section}>
-      <h2 className={Style.title}>Sessions</h2>
+      <SectionHeader>Sessions</SectionHeader>
 
       <ul className={Style.list}>
         {shown.map((row) => (
@@ -53,9 +55,9 @@ export function SessionList({ rows, limit, seeAllHref }) {
       </ul>
 
       {hidden > 0 && seeAllHref && (
-        <Link href={seeAllHref} className={Style.seeAll}>
+        <LinkButton variant="quiet" href={seeAllHref}>
           See all {rows.length}
-        </Link>
+        </LinkButton>
       )}
     </section>
   )

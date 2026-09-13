@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
+import { LinkButton } from '@/components/LinkButton'
 import { useAuth } from '@/hooks/useAuth'
 import { writeCurrentGroupId } from '@/lib/current-group'
 import { withNextPath } from '@/lib/next-path'
@@ -73,9 +74,7 @@ export function JoinGroupForm() {
           Sign in to join this group — you’ll come right back here.
         </p>
 
-        <Link href={withNextPath('/signin', returnTo)} className={Style.cta}>
-          Sign in
-        </Link>
+        <LinkButton href={withNextPath('/signin', returnTo)}>Sign in</LinkButton>
 
         <Link href={withNextPath('/signup', returnTo)} className={Style.secondary}>
           Create an account
@@ -94,9 +93,7 @@ export function JoinGroupForm() {
         <p className={Style.doneTag}>You’re in</p>
         <p className={Style.doneName}>{joined.name}</p>
 
-        <Link href="/" className={Style.cta}>
-          Go to group
-        </Link>
+        <LinkButton href="/">Go to group</LinkButton>
       </div>
     )
   }

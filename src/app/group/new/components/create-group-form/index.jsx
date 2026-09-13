@@ -15,6 +15,8 @@ import Link from 'next/link'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
+import { LinkButton } from '@/components/LinkButton'
+import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { writeCurrentGroupId } from '@/lib/current-group'
 import Style from './style.module.scss'
@@ -99,11 +101,8 @@ export function CreateGroupForm() {
   if (!isAuthenticated) {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        before you can create a group.
+        You need to <TextLink href="/signin">sign in</TextLink> before you can create a
+        group.
       </p>
     )
   }
@@ -130,9 +129,9 @@ export function CreateGroupForm() {
           {copied ? 'Copied ✓' : 'Copy invite link'}
         </Button>
 
-        <Link href="/" className={Style.goHome}>
+        <LinkButton variant="quiet" href="/">
           Go to group
-        </Link>
+        </LinkButton>
       </div>
     )
   }

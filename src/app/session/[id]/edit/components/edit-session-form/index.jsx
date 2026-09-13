@@ -25,6 +25,9 @@ import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
+import { SectionHeader } from '@/components/SectionHeader'
+import { PageHeader } from '@/components/PageHeader'
+import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName, formatVnd } from '@/services/money.service'
@@ -106,11 +109,7 @@ export function EditSessionForm() {
   if (!user) {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        first.
+        You need to <TextLink href="/signin">sign in</TextLink> first.
       </p>
     )
   }
@@ -171,9 +170,7 @@ export function EditSessionForm() {
 
   // Everyone the edit touches: who plays now, plus anyone who used to and
   // doesn't any more. The second half is what makes a removal visible.
-  const touchedIds = [
-    ...new Set([...currentById.keys(), ...participantIds]),
-  ]
+  const touchedIds = [...new Set([...currentById.keys(), ...participantIds])]
 
   const preview = touchedIds.map((memberId) => {
     const was = currentById.get(memberId)?.amount ?? 0
@@ -219,7 +216,9 @@ export function EditSessionForm() {
     const parts = []
 
     if (date !== session.date) {
-      parts.push(`Date: ${formatSessionDate(session.date)} → ${formatSessionDate(date)}`)
+      parts.push(
+        `Date: ${formatSessionDate(session.date)} → ${formatSessionDate(date)}`
+      )
     }
 
     if (total !== line.amount) {
@@ -284,16 +283,11 @@ export function EditSessionForm() {
 
   return (
     <form className={Style.form} onSubmit={handleSubmit} noValidate>
-      <header className={Style.header}>
-        <Link href={`/session/${session.id}`} className={Style.back} aria-label="Back">
-          ←
-        </Link>
-        <h1 className={Style.title}>Edit session</h1>
-      </header>
+      <PageHeader backHref={`/session/${session.id}`} title="Edit session" />
 
       <p className={Style.lede}>
-        {current.dateLabel} · change anything below. Everyone’s share is worked
-        out for you.
+        {current.dateLabel} · change anything below. Everyone’s share is worked out for
+        you.
       </p>
 
       <TextField
@@ -306,23 +300,16 @@ export function EditSessionForm() {
         disabled={submitting}
       />
 
-      <div className={Style.amountBlock}>
-        <label className={Style.amountLabel} htmlFor="amount">
-          Amount
-        </label>
-        <input
-          id="amount"
-          className={Style.amountInput}
-          value={amountText === '' ? '' : formatVnd(total)}
-          onChange={handleAmountChange}
-          inputMode="numeric"
-          placeholder="0đ"
-          disabled={submitting}
-        />
-        {total !== line.amount && (
-          <p className={Style.hint}>Was {formatVnd(line.amount)}</p>
-        )}
-      </div>
+      <TextField
+        label="Amount"
+        value={amountText === '' ? '' : formatVnd(total)}
+        onChange={handleAmountChange}
+        placeholder="0đ"
+        inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
+        helperText={total !== line.amount ? `Was ${formatVnd(line.amount)}` : undefined}
+        fullWidth
+        disabled={submitting}
+      />
 
       <TextField
         label="What for"
@@ -334,10 +321,9 @@ export function EditSessionForm() {
       />
 
       <section className={Style.section}>
-        <header className={Style.sectionHeader}>
-          <h2 className={Style.sectionTitle}>Who played</h2>
-          <p className={Style.sectionMeta}>{participants.length} playing</p>
-        </header>
+        <SectionHeader meta={<>{participants.length} playing</>}>
+          Who played
+        </SectionHeader>
 
         <div className={Style.chips}>
           {members.map((member) => (
@@ -356,7 +342,7 @@ export function EditSessionForm() {
       </section>
 
       <section className={Style.section}>
-        <h2 className={Style.sectionTitle}>What changes</h2>
+        <SectionHeader>What changes</SectionHeader>
 
         <div className={Style.rows}>
           {preview.map((row) => (
@@ -374,8 +360,8 @@ export function EditSessionForm() {
         </div>
 
         <p className={Style.hint}>
-          The original numbers stay recorded. This is saved as a separate edit,
-          shown on the session with your name on it.
+          The original numbers stay recorded. This is saved as a separate edit, shown on
+          the session with your name on it.
         </p>
       </section>
 
@@ -384,8 +370,8 @@ export function EditSessionForm() {
           {warnings.map((row) => (
             <p key={row.memberId} className={Style.warnText}>
               {row.name} already paid {formatVnd(row.paid)}. Their share becomes{' '}
-              {formatVnd(row.next)}, so {formatVnd(row.paid - row.next)} comes back
-              to them — it shows up as a debt for whoever paid the bill.
+              {formatVnd(row.next)}, so {formatVnd(row.paid - row.next)} comes back to
+              them — it shows up as a debt for whoever paid the bill.
             </p>
           ))}
         </section>

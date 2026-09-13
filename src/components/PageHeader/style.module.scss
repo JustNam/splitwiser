@@ -1,0 +1,34 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  width: var(--control-h-40);
+  height: var(--control-h-40);
+
+  /* Pulls the arrow to the page edge while the tap target stays 40px. An icon
+     button looks inset otherwise. */
+  margin-left: calc(var(--space-12) * -1);
+
+  color: var(--text-strong);
+  font: var(--text-h3);
+  text-decoration: none;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-h3);
+  color: var(--text-strong);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.action {
+  margin-left: auto;
+}

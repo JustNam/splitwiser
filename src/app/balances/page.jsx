@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { AllBalances } from './components/all-balances'
+import { PageHeader } from '@/components/PageHeader'
 import Style from './page.module.scss'
 
 export const metadata = {
@@ -15,11 +15,7 @@ export const metadata = {
 export default function BalancesPage() {
   return (
     <main className={Style.page}>
-      <header className={Style.header}>
-        <Link href="/" className={Style.back} aria-label="Back">
-          ←
-        </Link>
-      </header>
+      <PageHeader title="Balances" />
 
       <AllBalances />
     </main>

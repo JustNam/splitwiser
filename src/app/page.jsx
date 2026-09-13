@@ -21,6 +21,8 @@ import { groupBalances } from '@/services/balance.service'
 import { sessionSummaries } from '@/services/session.service'
 import { BalanceList } from './components/balance-list'
 import { SessionList } from './components/session-list'
+import { TextLink } from '@/components/TextLink'
+import { LinkButton } from '@/components/LinkButton'
 import Style from './page.module.scss'
 
 const HOME_ROW_LIMIT = 5
@@ -88,17 +90,10 @@ export default function HomePage() {
       <main className={Style.page}>
         <div className={Style.empty}>
           <p>
-            <Link href="/signin" className={Style.link}>
-              Sign in
-            </Link>{' '}
-            to see your groups.
+            <TextLink href="/signin">Sign in</TextLink> to see your groups.
           </p>
           <p className={Style.emptySub}>
-            No account yet?{' '}
-            <Link href="/signup" className={Style.link}>
-              Create one
-            </Link>
-            .
+            No account yet? <TextLink href="/signup">Create one</TextLink>.
           </p>
         </div>
       </main>
@@ -129,18 +124,16 @@ export default function HomePage() {
         <div className={Style.noGroup}>
           <p className={Style.noGroupTitle}>You’re not in a group yet</p>
           <p className={Style.noGroupText}>
-            Start one and share the invite link, or join a group with a code
-            someone sent you.
+            Start one and share the invite link, or join a group with a code someone
+            sent you.
           </p>
         </div>
 
         <footer className={Style.actions}>
-          <Link href="/group/new" className={Style.primaryLink}>
-            New group
-          </Link>
-          <Link href="/join" className={Style.secondaryLink}>
+          <LinkButton href="/group/new">New group</LinkButton>
+          <LinkButton variant="secondary" href="/join">
             Join with a code
-          </Link>
+          </LinkButton>
         </footer>
       </main>
     )
@@ -188,20 +181,16 @@ export default function HomePage() {
 
         {/* The wireframe puts this behind a "..." menu together with Sign out.
             A plain link until there is a third thing to put in a menu. */}
-        <Link href="/group" className={Style.topBarLink}>
-          Group
-        </Link>
+        <TextLink href="/group">Group</TextLink>
       </header>
 
       <HomeBody group={group} snapshot={snapshot} />
 
       <footer className={Style.actions}>
-        <Link href="/session/new" className={Style.primaryLink}>
-          New session
-        </Link>
-        <Link href="/settle" className={Style.secondaryLink}>
+        <LinkButton href="/session/new">New session</LinkButton>
+        <LinkButton variant="secondary" href="/settle">
           Settle up
-        </Link>
+        </LinkButton>
       </footer>
     </main>
   )

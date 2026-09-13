@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { SigninForm } from './components/signin-form'
+import { TextLink } from '@/components/TextLink'
 import Style from './page.module.scss'
 
 export const metadata = {
@@ -21,8 +21,8 @@ export default function SigninPage() {
         <p className={Style.wordmark}>SplitWiser</p>
         <h1 className={Style.title}>Welcome back</h1>
         <p className={Style.pitch}>
-          Log a game session, split the cost, and see who owes who —
-          without anyone having to do the maths.
+          Log a game session, split the cost, and see who owes who — without anyone
+          having to do the maths.
         </p>
       </header>
 
@@ -35,10 +35,7 @@ export default function SigninPage() {
       </Suspense>
 
       <p className={Style.footer}>
-        New here?{' '}
-        <Link href="/signup" className={Style.link}>
-          Create an account
-        </Link>
+        New here? <TextLink href="/signup">Create an account</TextLink>
       </p>
     </main>
   )

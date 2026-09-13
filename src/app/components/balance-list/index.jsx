@@ -1,6 +1,8 @@
 import clsx from 'clsx'
 import Link from 'next/link'
 import { formatVnd } from '@/services/money.service'
+import { LinkButton } from '@/components/LinkButton'
+import { SectionHeader } from '@/components/SectionHeader'
 import Style from './style.module.scss'
 
 /**
@@ -22,14 +24,15 @@ export function BalanceList({ rows, memberCount, limit, seeAllHref }) {
   const hidden = rows.length - shown.length
   return (
     <section className={Style.section}>
-      <header className={Style.header}>
-        <h2 className={Style.title}>Balances</h2>
-        {/* A brand-new group has exactly one member, and "1 people" is the
-            kind of detail that makes an app feel unfinished. */}
-        <p className={Style.meta}>
-          {memberCount} {memberCount === 1 ? 'person' : 'people'}
-        </p>
-      </header>
+      <SectionHeader
+        meta={
+          <>
+            {memberCount} {memberCount === 1 ? 'person' : 'people'}
+          </>
+        }
+      >
+        Balances
+      </SectionHeader>
 
       {rows.length === 0 ? (
         // Not an empty state so much as an achievement — hence the tag rather
@@ -49,9 +52,9 @@ export function BalanceList({ rows, memberCount, limit, seeAllHref }) {
           {/* The count is in the link because "See all" alone doesn't say
               whether it is worth the tap. */}
           {hidden > 0 && seeAllHref && (
-            <Link href={seeAllHref} className={Style.seeAll}>
+            <LinkButton variant="quiet" href={seeAllHref}>
               See all {rows.length}
-            </Link>
+            </LinkButton>
           )}
         </>
       )}

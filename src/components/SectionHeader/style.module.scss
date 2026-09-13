@@ -1,0 +1,22 @@
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+/* Small, uppercase and wide-tracked rather than a smaller heading size: it
+   labels the block below it rather than announcing it, so it should read as
+   furniture and let the content carry the weight. */
+.title {
+  font: var(--text-caption);
+  font-weight: var(--fw-bold);
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.meta {
+  font: var(--text-caption);
+  color: var(--text-placeholder);
+}

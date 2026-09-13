@@ -5,10 +5,10 @@
  * passed.
  */
 
-import Link from 'next/link'
 import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
 import { sessionSummaries } from '@/services/session.service'
 import { SessionList } from '@/app/components/session-list'
+import { TextLink } from '@/components/TextLink'
 import Style from './style.module.scss'
 
 export function AllSessions() {
@@ -19,11 +19,7 @@ export function AllSessions() {
   if (state.status === 'signed-out') {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        first.
+        You need to <TextLink href="/signin">sign in</TextLink> first.
       </p>
     )
   }

@@ -1,8 +1,3 @@
-.title {
-  font: var(--text-h2);
-  color: var(--text-strong);
-}
-
 .subtitle {
   font: var(--text-body-md);
   color: var(--text-muted);
@@ -43,23 +38,6 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
-}
-
-.selectAll {
-  border: 0;
-  background: none;
-  padding: 0;
-  min-height: var(--control-h-32);
-  font: var(--text-caption);
-  font-weight: var(--fw-bold);
-  color: var(--brand-primary);
-  cursor: pointer;
-  white-space: nowrap;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
 }
 
 /* --- A single debt ------------------------------------------------------- */
@@ -246,16 +224,6 @@
   color: var(--feedback-error);
 }
 
-.goBack {
-  border: 0;
-  background: none;
-  min-height: 44px;
-  font: var(--text-body-md);
-  font-weight: var(--fw-bold);
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
 /* --- Shared ------------------------------------------------------------- */
 
 .error {
@@ -263,7 +231,3 @@
   color: var(--feedback-error);
 }
 
-.link {
-  color: var(--brand-primary);
-  font-weight: var(--fw-bold);
-}

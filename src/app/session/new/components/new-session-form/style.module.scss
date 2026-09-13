@@ -5,38 +5,12 @@
   gap: var(--space-20);
 }
 
-/* --- Amount: the one number the screen is about ------------------------- */
-
-.amountBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.amountLabel {
-  font: var(--text-body-md);
-  color: var(--text-muted);
-}
-
 .amountInput {
-  width: 100%;
-  box-sizing: border-box;
-  border: 0;
-  border-bottom: 1px solid var(--border-strong);
-  background: none;
-  padding: 0 0 var(--space-8);
-  font: var(--fw-black) var(--fs-32) / var(--lh-tight) var(--font-sans);
+  /* Applied to the <input> inside MUI's field, so it only sets type — the box,
+     the label and the focus ring all come from the field. */
+  font: var(--fw-black) var(--fs-24) / var(--lh-tight) var(--font-sans);
   letter-spacing: var(--ls-tight);
   color: var(--text-strong);
-  outline: none;
-
-  &::placeholder {
-    color: var(--text-placeholder);
-  }
-
-  &:focus {
-    border-bottom-color: var(--brand-primary);
-  }
 }
 
 /* --- Section (Who played / Split) --------------------------------------- */
@@ -52,16 +26,6 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-12);
-}
-
-.sectionTitle {
-  font: var(--text-body-md);
-  color: var(--text-muted);
-}
-
-.sectionMeta {
-  font: var(--text-caption);
-  color: var(--text-placeholder);
 }
 
 /* --- Who played --------------------------------------------------------- */
@@ -105,64 +69,13 @@
   gap: var(--space-12);
 }
 
-.pickAction {
-  border: 0;
-  background: none;
-  padding: 0;
-  min-height: var(--control-h-32);
-  font: var(--text-caption);
-  font-weight: var(--fw-bold);
-  color: var(--brand-primary);
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}
-
 .pickNote {
   margin-left: auto;
   font: var(--text-caption);
   color: var(--text-placeholder);
 }
 
-.searchInput {
-  width: 100%;
-  box-sizing: border-box;
-  height: 40px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius);
-  background: none;
-  padding: 0 var(--space-12);
-  font: var(--text-body-md);
-  outline: none;
-
-  &:focus {
-    border-color: var(--brand-primary);
-  }
-}
-
 /* --- Adding a guest ------------------------------------------------------- */
-
-/* A link, not a button: it reveals a form rather than doing anything, and a
-   solid button here would compete with Save session for attention. */
-.addGuestLink {
-  align-self: flex-start;
-  border: 0;
-  background: none;
-  padding: 0;
-  min-height: 44px;
-  font: var(--text-body-md);
-  font-weight: var(--fw-bold);
-  color: var(--brand-primary);
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}
 
 .guestBlock {
   display: flex;
@@ -184,29 +97,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-8);
-}
-
-.guestInput {
-  flex: 1;
-
-  /* Not 0: below this the two fields shrink into slivers rather than wrapping
-     onto a second line. */
-  min-width: 140px;
-  box-sizing: border-box;
-  height: 44px;
-
-  /* Dashed, not solid: this field adds someone who isn't in the group yet,
-     and the border says so before the label is read. */
-  border: 1px dashed var(--border-default);
-  border-radius: var(--radius);
-  background: none;
-  padding: 0 var(--space-12);
-  font: var(--text-body-md);
-  outline: none;
-
-  &:focus {
-    border-color: var(--brand-primary);
-  }
 }
 
 .clash {
@@ -285,11 +175,6 @@
   color: var(--feedback-error);
 }
 
-.link {
-  color: var(--brand-primary);
-  font-weight: var(--fw-bold);
-}
-
 /* --- Split rows ----------------------------------------------------------- */
 
 .splitRows {
@@ -316,28 +201,17 @@
   text-overflow: ellipsis;
 }
 
+/* Inside MUI's field: fixes the column width so the amounts line up down
+   the list, which is how you spot the one that is wrong. */
+.splitInputText {
+  width: 76px;
+  text-align: right;
+}
+
 .splitField {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-}
-
-.splitInput {
-  width: 100px;
-  box-sizing: border-box;
-  height: 40px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius);
-  background: none;
-  padding: 0 var(--space-8);
-  text-align: right;
-  font: var(--text-body-md);
-  color: var(--text-strong);
-  outline: none;
-
-  &:focus {
-    border-color: var(--brand-primary);
-  }
 }
 
 .suffix {
@@ -404,19 +278,3 @@
   color: var(--feedback-error);
 }
 
-.splitAction {
-  border: 0;
-  background: none;
-  padding: 0;
-  min-height: 36px;
-  font: var(--text-caption);
-  font-weight: var(--fw-bold);
-  color: var(--brand-primary);
-  cursor: pointer;
-  white-space: nowrap;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}

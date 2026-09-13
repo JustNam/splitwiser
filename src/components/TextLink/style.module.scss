@@ -1,0 +1,9 @@
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

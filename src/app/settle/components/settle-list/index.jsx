@@ -23,11 +23,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import Dialog from '@mui/material/Dialog'
 import { GroupsApi } from '@/api/groups'
 import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
+import { PageHeader } from '@/components/PageHeader'
+import { TextButton } from '@/components/TextButton'
+import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName, formatVnd } from '@/services/money.service'
@@ -83,11 +85,7 @@ export function SettleList() {
   if (!user) {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        first.
+        You need to <TextLink href="/signin">sign in</TextLink> first.
       </p>
     )
   }
@@ -196,7 +194,9 @@ export function SettleList() {
     return (
       <div className={Style.empty}>
         <p className={Style.emptyTitle}>
-          {personName ? `Nothing to settle with ${personName}` : 'Everything is settled'}
+          {personName
+            ? `Nothing to settle with ${personName}`
+            : 'Everything is settled'}
         </p>
         <p className={Style.emptyBody}>
           {personName
@@ -209,7 +209,7 @@ export function SettleList() {
 
   return (
     <>
-      <h1 className={Style.title}>{personName ?? 'Settle up'}</h1>
+      <PageHeader title={personName ?? 'Settle up'} />
 
       <p className={Style.subtitle}>
         {personName
@@ -319,14 +319,13 @@ export function SettleList() {
             {submitting ? 'Recording…' : 'Yes, it’s settled'}
           </Button>
 
-          <button
-            type="button"
-            className={Style.goBack}
+          <TextButton
+            tone="quiet"
             onClick={() => setConfirmOpen(false)}
             disabled={submitting}
           >
             Go back
-          </button>
+          </TextButton>
         </div>
       </Dialog>
     </>
@@ -345,14 +344,9 @@ function DebtGroup({ entry, heading, checked, onToggle, onSelectAll, disabled })
           {heading}
           {entry.isGuest && <span className={Style.guest}>Guest</span>}
         </p>
-        <button
-          type="button"
-          className={Style.selectAll}
-          onClick={() => onSelectAll(entry)}
-          disabled={disabled}
-        >
+        <TextButton onClick={() => onSelectAll(entry)} disabled={disabled}>
           Select all
-        </button>
+        </TextButton>
       </header>
 
       {entry.items.map((item) => (

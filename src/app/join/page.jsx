@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { JoinGroupForm } from './components/join-group-form'
+import { PageHeader } from '@/components/PageHeader'
+import { TextLink } from '@/components/TextLink'
 import Style from './page.module.scss'
 
 export const metadata = {
@@ -18,22 +19,14 @@ export const metadata = {
 export default function JoinPage() {
   return (
     <main className={Style.page}>
-      <header className={Style.header}>
-        <Link href="/" className={Style.back} aria-label="Back">
-          ←
-        </Link>
-        <h1 className={Style.title}>Join a group</h1>
-      </header>
+      <PageHeader title="Join a group" />
 
       <Suspense fallback={null}>
         <JoinGroupForm />
       </Suspense>
 
       <p className={Style.footer}>
-        No group yet?{' '}
-        <Link href="/group/new" className={Style.link}>
-          Create a group
-        </Link>
+        No group yet? <TextLink href="/group/new">Create a group</TextLink>
       </p>
     </main>
   )

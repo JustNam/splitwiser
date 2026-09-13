@@ -5,10 +5,10 @@
  * passed. Whatever the row looks like there, it looks like here.
  */
 
-import Link from 'next/link'
 import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
 import { groupBalances } from '@/services/balance.service'
 import { BalanceList } from '@/app/components/balance-list'
+import { TextLink } from '@/components/TextLink'
 import Style from './style.module.scss'
 
 export function AllBalances() {
@@ -19,11 +19,7 @@ export function AllBalances() {
   if (state.status === 'signed-out') {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        first.
+        You need to <TextLink href="/signin">sign in</TextLink> first.
       </p>
     )
   }

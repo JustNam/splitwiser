@@ -13,6 +13,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
+import { SectionHeader } from '@/components/SectionHeader'
+import { PageHeader } from '@/components/PageHeader'
+import { TextButton } from '@/components/TextButton'
+import { LinkButton } from '@/components/LinkButton'
+import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName } from '@/services/money.service'
@@ -61,11 +66,7 @@ export function GroupDetail() {
   if (!user) {
     return (
       <p className={Style.error} role="alert">
-        You need to{' '}
-        <Link href="/signin" className={Style.link}>
-          sign in
-        </Link>{' '}
-        first.
+        You need to <TextLink href="/signin">sign in</TextLink> first.
       </p>
     )
   }
@@ -97,7 +98,8 @@ export function GroupDetail() {
       // A roster member's email is on their account; a guest's sits on the
       // member row, waiting for them to sign up with it.
       email:
-        member.email ?? accounts.find((account) => account.id === member.accountId)?.email,
+        member.email ??
+        accounts.find((account) => account.id === member.accountId)?.email,
     }))
     .sort((a, b) => Number(a.isGuest) - Number(b.isGuest))
 
@@ -134,7 +136,10 @@ export function GroupDetail() {
 
     // Only the code changed, so only the code is replaced — reloading the
     // whole screen would throw away the members list for nothing.
-    setState((current) => ({ ...current, group: { ...current.group, ...data } }))
+    setState((current) => ({
+      ...current,
+      group: { ...current.group, ...data },
+    }))
     setConfirming(false)
     setChanged(true)
     setCopied(false)
@@ -148,20 +153,23 @@ export function GroupDetail() {
 
   return (
     <>
-      <h1 className={Style.title}>{group.name}</h1>
+      <PageHeader title={group.name} />
 
       {changed && (
         <p className={Style.banner}>New code created. The old link no longer works.</p>
       )}
 
       <section className={Style.section}>
-        <header className={Style.sectionHeader}>
-          <h2 className={Style.sectionTitle}>Members</h2>
-          <p className={Style.sectionMeta}>
-            {accountCount} {accountCount === 1 ? 'account' : 'accounts'} ·{' '}
-            {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
-          </p>
-        </header>
+        <SectionHeader
+          meta={
+            <>
+              {accountCount} {accountCount === 1 ? 'account' : 'accounts'} ·{' '}
+              {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
+            </>
+          }
+        >
+          Members
+        </SectionHeader>
 
         <div className={Style.rows}>
           {rows.map((row) => (
@@ -187,7 +195,7 @@ export function GroupDetail() {
       </section>
 
       <section className={Style.section}>
-        <h2 className={Style.sectionTitle}>Invite</h2>
+        <SectionHeader>Invite</SectionHeader>
 
         <div className={Style.inviteBox}>
           <p className={Style.code}>{group.inviteCode}</p>
@@ -246,15 +254,15 @@ export function GroupDetail() {
           them unreachable the moment you were in a group — including joining a
           SECOND group by invite code. They belong on the screen about groups. */}
       <section className={Style.section}>
-        <h2 className={Style.sectionTitle}>Other groups</h2>
+        <SectionHeader>Other groups</SectionHeader>
 
         <div className={Style.otherActions}>
-          <Link href="/group/new" className={Style.actionLink}>
+          <LinkButton variant="secondary" href="/group/new">
             New group
-          </Link>
-          <Link href="/join" className={Style.actionLink}>
+          </LinkButton>
+          <LinkButton variant="secondary" href="/join">
             Join with a code
-          </Link>
+          </LinkButton>
         </div>
       </section>
 
@@ -262,9 +270,9 @@ export function GroupDetail() {
           overflow menu, which doesn't exist yet. It goes here because without
           it there is no way out of an account at all. */}
       <footer className={Style.actions}>
-        <button type="button" className={Style.signOut} onClick={handleSignOut}>
+        <TextButton tone="danger" onClick={handleSignOut}>
           Sign out
-        </button>
+        </TextButton>
       </footer>
     </>
   )

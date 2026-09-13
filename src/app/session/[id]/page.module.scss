@@ -7,18 +7,3 @@
     calc(var(--safe-bottom) + var(--space-16));
 }
 
-.header {
-  display: flex;
-  align-items: center;
-}
-
-.back {
-  display: grid;
-  place-items: center;
-  width: var(--control-h-40);
-  height: var(--control-h-40);
-  margin-left: calc(var(--space-12) * -1);
-  color: var(--text-strong);
-  font: var(--text-h3);
-  text-decoration: none;
-}

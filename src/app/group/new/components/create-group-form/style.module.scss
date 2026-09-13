@@ -14,11 +14,6 @@
   color: var(--feedback-error);
 }
 
-.link {
-  color: var(--brand-primary);
-  font-weight: var(--fw-bold);
-}
-
 .created {
   display: flex;
   flex-direction: column;
@@ -74,15 +69,3 @@
   word-break: break-all;
 }
 
-.goHome {
-  align-self: center;
-  padding: var(--space-8);
-  color: var(--text-muted);
-  font: var(--text-body-md);
-  text-decoration: none;
-
-  &:hover {
-    color: var(--text-strong);
-    text-decoration: underline;
-  }
-}
