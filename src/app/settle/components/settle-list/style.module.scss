@@ -64,8 +64,7 @@
 
 /* --- A single debt ------------------------------------------------------- */
 
-.item,
-.readOnlyItem {
+.item {
   display: flex;
   align-items: center;
   gap: var(--space-12);
@@ -111,12 +110,6 @@
   font-weight: var(--fw-bold);
   color: var(--text-strong);
   white-space: nowrap;
-}
-
-.owingNote {
-  padding: var(--space-12) 0 var(--space-6);
-  font: var(--text-caption);
-  color: var(--text-label);
 }
 
 /* --- Net ----------------------------------------------------------------- */
@@ -184,8 +177,12 @@
   color: var(--text-muted);
 }
 
-.barTotal {
-  font: var(--text-h3);
+.barTotals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
   color: var(--text-strong);
   white-space: nowrap;
 }
@@ -208,6 +205,14 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--border-subtle);
+}
+
+.confirmHeading {
+  padding: var(--space-8) 0 var(--space-4);
+  font: var(--text-caption);
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
 }
 
 .confirmRow,

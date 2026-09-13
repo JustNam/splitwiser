@@ -1,19 +1,24 @@
 'use client'
 
 /**
- * B5 · Settle up — the list of debts, and recording payment.
+ * B5 · Settle up — the list of debts, and recording that one is done.
  *
  * Two rules from the spec shape everything here:
  *
  *   1. One row per debt, naming the session it came from. Never one blurred
  *      total per person — the question this screen exists to answer is "why
  *      exactly this much".
- *   2. Each debt is paid in full. There is no amount field anywhere on the
- *      screen, and the total is displayed, never typed.
+ *   2. Each debt is settled in full. There is no amount field anywhere on the
+ *      screen, and the totals are displayed, never typed.
+ *
+ * Both directions are tickable. The spec only had the person who owes marking
+ * their own payment, but "I paid you" and "you paid me" are one event seen
+ * from two chairs, and the second is the safer claim of the two: saying
+ * somebody paid you gives up a claim on money, so there is nothing to gain by
+ * saying it falsely.
  *
  * ?member= narrows the screen to one person, which is where tapping a balance
- * row on Home lands. Only a filter over the same data — the maths, the
- * ticking and the write are identical either way.
+ * row on Home lands. Only a filter over the same data.
  */
 
 import { useEffect, useState } from 'react'
@@ -37,7 +42,8 @@ export function SettleList() {
   const [state, setState] = useState({ status: 'loading' })
 
   // item id → true. Item ids are `${costLineId}|${memberId}`, built in
-  // payableDebts(), so a debt keeps the same id across reloads.
+  // payableDebts(). A pair can only lean one way at a time, so one map covers
+  // both directions without collisions.
   const [checked, setChecked] = useState({})
 
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -119,7 +125,7 @@ export function SettleList() {
     : null
 
   // An id that matches nobody is ignored rather than obeyed. Filtering on it
-  // would empty the screen and then say "you're not owing anyone", which is a
+  // would empty the screen and then say "nothing outstanding", which is a
   // statement about every debt you have, not about a broken link.
   const personName = person ? displayName(person, snapshot.accounts) : null
   const matches = (row) => !personName || row.memberId === memberFilter
@@ -131,31 +137,33 @@ export function SettleList() {
   // filtered, "Net" has to mean net with this person, or the number under the
   // list contradicts the list.
   const net =
-    owedToMe.reduce((running, item) => running + item.amount, 0) -
-    owedByMe.reduce((running, owedGroup) => running + owedGroup.total, 0)
+    owedToMe.reduce((running, row) => running + row.total, 0) -
+    owedByMe.reduce((running, row) => running + row.total, 0)
 
+  const flatten = (groups, direction) =>
+    groups.flatMap((entry) =>
+      entry.items.map((item) => ({ ...item, direction, who: entry.name }))
+    )
 
-  // The debts flattened out of their per-person groups, each carrying who it
-  // is owed to. The groups are for reading; this list is for counting.
-  const allItems = owedByMe.flatMap((owedGroup) =>
-    owedGroup.items.map((item) => ({
-      ...item,
-      memberId: owedGroup.memberId,
-      who: owedGroup.name,
-    }))
-  )
-
+  const allItems = [...flatten(owedByMe, 'out'), ...flatten(owedToMe, 'in')]
   const picked = allItems.filter((item) => checked[item.id])
-  const total = picked.reduce((running, item) => running + item.amount, 0)
+
+  const sum = (direction) =>
+    picked
+      .filter((item) => item.direction === direction)
+      .reduce((running, item) => running + item.amount, 0)
+
+  const paying = sum('out')
+  const receiving = sum('in')
 
   function toggle(itemId) {
     setChecked((current) => ({ ...current, [itemId]: !current[itemId] }))
   }
 
-  function selectAll(owedGroup) {
+  function selectAll(entry) {
     setChecked((current) => {
       const next = { ...current }
-      for (const item of owedGroup.items) next[item.id] = true
+      for (const item of entry.items) next[item.id] = true
       return next
     })
   }
@@ -164,6 +172,8 @@ export function SettleList() {
     setSubmitting(true)
     setError(null)
 
+    // Only which debt and with whom. settle_up() reads the amount and works
+    // out the direction from the ledger itself.
     const { error: apiError } = await PaymentsApi.settle({
       groupId: group.id,
       items: picked.map((item) => ({
@@ -186,12 +196,12 @@ export function SettleList() {
     return (
       <div className={Style.empty}>
         <p className={Style.emptyTitle}>
-          {personName ? `Nothing to pay ${personName}` : 'You’re not owing anyone'}
+          {personName ? `Nothing to settle with ${personName}` : 'Everything is settled'}
         </p>
         <p className={Style.emptyBody}>
           {personName
             ? 'Nothing outstanding between the two of you.'
-            : 'Everything on your side is settled. Balances update for everyone the moment either side marks an item paid.'}
+            : 'Nobody owes you and you owe nobody. Balances update for everyone the moment either side marks an item settled.'}
         </p>
       </div>
     )
@@ -199,73 +209,37 @@ export function SettleList() {
 
   return (
     <>
-      <h1 className={Style.title}>{personName ?? 'Pay someone'}</h1>
+      <h1 className={Style.title}>{personName ?? 'Settle up'}</h1>
 
       <p className={Style.subtitle}>
         {personName
-          ? `Every item between you and ${personName}. Tick the ones you’ve actually paid — each is paid in full.`
-          : 'Tick the debts you’ve paid. Each one is paid in full — untick to pay less.'}
+          ? `Every item between you and ${personName}. Tick what has actually changed hands — each is settled in full.`
+          : 'Tick what has actually changed hands, in either direction. Each item is settled in full.'}
       </p>
 
-      {owedByMe.map((owedGroup) => (
-        <section key={owedGroup.memberId} className={Style.group}>
-          <header className={Style.groupHeader}>
-            <p className={Style.groupTitle}>
-              You owe {owedGroup.name} {formatVnd(owedGroup.total)}
-              {owedGroup.isGuest && <span className={Style.guest}>Guest</span>}
-            </p>
-            <button
-              type="button"
-              className={Style.selectAll}
-              onClick={() => selectAll(owedGroup)}
-              disabled={submitting}
-            >
-              Select all
-            </button>
-          </header>
-
-          {owedGroup.items.map((item) => (
-            // A real <input type="checkbox"> inside a <label>: the whole row
-            // becomes the tap target, and the checkbox keeps its keyboard and
-            // screen-reader behaviour without any of it being reimplemented.
-            <label key={item.id} className={Style.item}>
-              <input
-                type="checkbox"
-                className={Style.box}
-                checked={Boolean(checked[item.id])}
-                onChange={() => toggle(item.id)}
-                disabled={submitting}
-              />
-              <span className={Style.itemInfo}>
-                <span className={Style.itemLabel}>{item.label}</span>
-                <span className={Style.itemSub}>{item.sub}</span>
-              </span>
-              <span className={Style.itemAmount}>{formatVnd(item.amount)}</span>
-            </label>
-          ))}
-        </section>
+      {owedByMe.map((entry) => (
+        <DebtGroup
+          key={`out-${entry.memberId}`}
+          entry={entry}
+          heading={`You owe ${entry.name} ${formatVnd(entry.total)}`}
+          checked={checked}
+          onToggle={toggle}
+          onSelectAll={selectAll}
+          disabled={submitting}
+        />
       ))}
 
-      {/* Shown, not hidden: the spec is explicit that a debt in the other
-          direction still has to appear, or the numbers look wrong. It just
-          isn't tickable — you can only record your own payments. */}
-      {owedToMe.length > 0 && (
-        <section className={Style.group}>
-          <p className={Style.owingNote}>They owe you — nothing to pay here</p>
-
-          {owedToMe.map((item) => (
-            <div key={item.id} className={Style.readOnlyItem}>
-              <span className={Style.itemInfo}>
-                <span className={Style.itemLabel}>
-                  {item.who} · {item.label}
-                </span>
-                <span className={Style.itemSub}>{item.sub}</span>
-              </span>
-              <span className={Style.itemSub}>{formatVnd(item.amount)}</span>
-            </div>
-          ))}
-        </section>
-      )}
+      {owedToMe.map((entry) => (
+        <DebtGroup
+          key={`in-${entry.memberId}`}
+          entry={entry}
+          heading={`${entry.name} owes you ${formatVnd(entry.total)}`}
+          checked={checked}
+          onToggle={toggle}
+          onSelectAll={selectAll}
+          disabled={submitting}
+        />
+      ))}
 
       <div className={Style.netBox}>
         <p className={Style.netLabel}>
@@ -288,26 +262,31 @@ export function SettleList() {
         </p>
       )}
 
-      {owedByMe.length > 0 && (
-        <footer className={Style.bar}>
-          <div className={Style.barSummary}>
-            <span>
-              {picked.length === 0
-                ? 'nothing selected'
-                : `${picked.length} ${picked.length === 1 ? 'item' : 'items'} selected`}
-            </span>
-            <span className={Style.barTotal}>{formatVnd(total)}</span>
-          </div>
+      <footer className={Style.bar}>
+        <div className={Style.barSummary}>
+          <span>
+            {picked.length === 0
+              ? 'nothing selected'
+              : `${picked.length} ${picked.length === 1 ? 'item' : 'items'} selected`}
+          </span>
 
-          <Button
-            fullWidth
-            onClick={() => setConfirmOpen(true)}
-            disabled={picked.length === 0 || submitting}
-          >
-            Mark as paid
-          </Button>
-        </footer>
-      )}
+          {/* Two numbers rather than one net, because they are opposite
+              movements of real money: 50.000đ out of your pocket and 20.000đ
+              into it is not "30.000đ". */}
+          <span className={Style.barTotals}>
+            {paying > 0 && <span>You pay {formatVnd(paying)}</span>}
+            {receiving > 0 && <span>You receive {formatVnd(receiving)}</span>}
+          </span>
+        </div>
+
+        <Button
+          fullWidth
+          onClick={() => setConfirmOpen(true)}
+          disabled={picked.length === 0 || submitting}
+        >
+          Mark as settled
+        </Button>
+      </footer>
 
       {/* MUI for behaviour, our SCSS for the look — per constants/theme.js. A
           dialog is nearly all behaviour: focus trap, Escape, scroll lock. */}
@@ -317,30 +296,27 @@ export function SettleList() {
         fullWidth
       >
         <div className={Style.confirm}>
-          <p className={Style.confirmTitle}>Confirm payment</p>
+          <p className={Style.confirmTitle}>Confirm</p>
 
-          <div className={Style.confirmList}>
-            {picked.map((item) => (
-              <div key={item.id} className={Style.confirmRow}>
-                <span>
-                  {item.who} · {item.label}
-                </span>
-                <span>{formatVnd(item.amount)}</span>
-              </div>
-            ))}
-
-            <div className={Style.confirmTotalRow}>
-              <span>Total</span>
-              <span className={Style.confirmTotal}>{formatVnd(total)}</span>
-            </div>
-          </div>
+          {/* Split by direction: a list mixing "you paid" and "they paid you"
+              without saying which is how the wrong one gets confirmed. */}
+          <ConfirmSection
+            title="You paid"
+            items={picked.filter((item) => item.direction === 'out')}
+            total={paying}
+          />
+          <ConfirmSection
+            title="They paid you"
+            items={picked.filter((item) => item.direction === 'in')}
+            total={receiving}
+          />
 
           <p className={Style.warning}>
             This can’t be undone. Only confirm once the money has actually moved.
           </p>
 
           <Button fullWidth onClick={handleConfirm} disabled={submitting}>
-            {submitting ? 'Recording…' : 'Yes, it’s paid'}
+            {submitting ? 'Recording…' : 'Yes, it’s settled'}
           </Button>
 
           <button
@@ -354,5 +330,74 @@ export function SettleList() {
         </div>
       </Dialog>
     </>
+  )
+}
+
+/**
+ * One person's debts in one direction. The same block either way round — only
+ * the heading says which.
+ */
+function DebtGroup({ entry, heading, checked, onToggle, onSelectAll, disabled }) {
+  return (
+    <section className={Style.group}>
+      <header className={Style.groupHeader}>
+        <p className={Style.groupTitle}>
+          {heading}
+          {entry.isGuest && <span className={Style.guest}>Guest</span>}
+        </p>
+        <button
+          type="button"
+          className={Style.selectAll}
+          onClick={() => onSelectAll(entry)}
+          disabled={disabled}
+        >
+          Select all
+        </button>
+      </header>
+
+      {entry.items.map((item) => (
+        // A real <input type="checkbox"> inside a <label>: the whole row
+        // becomes the tap target, and the checkbox keeps its keyboard and
+        // screen-reader behaviour without any of it being reimplemented.
+        <label key={item.id} className={Style.item}>
+          <input
+            type="checkbox"
+            className={Style.box}
+            checked={Boolean(checked[item.id])}
+            onChange={() => onToggle(item.id)}
+            disabled={disabled}
+          />
+          <span className={Style.itemInfo}>
+            <span className={Style.itemLabel}>{item.label}</span>
+            <span className={Style.itemSub}>{item.sub}</span>
+          </span>
+          <span className={Style.itemAmount}>{formatVnd(item.amount)}</span>
+        </label>
+      ))}
+    </section>
+  )
+}
+
+function ConfirmSection({ title, items, total }) {
+  if (items.length === 0) return null
+
+  return (
+    <div className={Style.confirmList}>
+      <p className={Style.confirmHeading}>{title}</p>
+
+      {items.map((item) => (
+        <div key={item.id} className={Style.confirmRow}>
+          <span>
+            {item.who} · {item.label}
+          </span>
+          <span>{formatVnd(item.amount)}</span>
+        </div>
+      ))}
+
+      <div className={Style.confirmTotalRow}>
+        <span>Total</span>
+        <span className={Style.confirmTotal}>{formatVnd(total)}</span>
+      </div>
+    </div>
   )
 }

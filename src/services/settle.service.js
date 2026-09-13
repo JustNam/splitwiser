@@ -5,6 +5,10 @@
  * question — "why exactly that much" — so nothing here is aggregated per
  * person until the individual debts have been worked out first: one debt per
  * cost line, naming the session it came from.
+ *
+ * Both directions come back in the same shape. Either side can record that a
+ * debt is done: "I paid you" and "you paid me" are the same event seen from
+ * two chairs, and whoever opens the app first should be able to say so.
  */
 
 import { displayName } from './money.service'
@@ -24,15 +28,12 @@ import { formatSessionDate } from './session.service'
  * @param {object[]} params.costLines
  * @param {string} params.myMemberId
  * @returns {{
- *   owedByMe: Array<{
- *     memberId: string, name: string, isGuest: boolean, total: number,
- *     items: Array<{ id: string, costLineId: string, label: string,
- *                    sub: string, amount: number }>,
- *   }>,
- *   owedToMe: Array<{ id: string, memberId: string, who: string,
- *                     label: string, sub: string, amount: number }>,
+ *   owedByMe: Group[],
+ *   owedToMe: Group[],
  *   net: number,
- * }}
+ * }} where Group is
+ *   { memberId, name, isGuest, total,
+ *     items: [{ id, costLineId, memberId, label, sub, amount }] }
  */
 export function payableDebts({
   ledger,
@@ -72,9 +73,9 @@ export function payableDebts({
   const costLineById = new Map(costLines.map((line) => [line.id, line]))
   const sessionById = new Map(sessions.map((session) => [session.id, session]))
 
-  // memberId → the group row being built for them
-  const owedGroups = new Map()
-  const owedToMe = []
+  // memberId → the group row being built for them, one map per direction
+  const iOwe = new Map()
+  const theyOwe = new Map()
 
   for (const [key, net] of nets) {
     if (net === 0) continue
@@ -93,18 +94,16 @@ export function payableDebts({
     const item = {
       id: key,
       costLineId,
+      memberId: otherId,
       label: costLine.note ?? 'Session cost',
       sub: session ? formatSessionDate(session.date) : '',
       amount: Math.abs(net),
     }
 
-    if (net < 0) {
-      owedToMe.push({ ...item, memberId: otherId, who: displayName(other, accounts) })
-      continue
-    }
+    const into = net > 0 ? iOwe : theyOwe
 
-    if (!owedGroups.has(otherId)) {
-      owedGroups.set(otherId, {
+    if (!into.has(otherId)) {
+      into.set(otherId, {
         memberId: otherId,
         name: displayName(other, accounts),
         isGuest: other.type === 'guest',
@@ -113,23 +112,27 @@ export function payableDebts({
       })
     }
 
-    const owedGroup = owedGroups.get(otherId)
-    owedGroup.items.push(item)
-    owedGroup.total += item.amount
+    const group = into.get(otherId)
+    group.items.push(item)
+    group.total += item.amount
   }
 
-  const owedByMe = [...owedGroups.values()]
+  const owedByMe = sortGroups([...iOwe.values()])
+  const owedToMe = sortGroups([...theyOwe.values()])
 
-  // Largest first, at both levels: the debt most worth clearing is the one to
-  // put at the top.
-  owedByMe.sort((a, b) => b.total - a.total)
-  for (const owedGroup of owedByMe) {
-    owedGroup.items.sort((a, b) => b.amount - a.amount)
-  }
-  owedToMe.sort((a, b) => b.amount - a.amount)
-
-  const totalOwedToMe = owedToMe.reduce((running, item) => running + item.amount, 0)
-  const totalIOwe = owedByMe.reduce((running, owedGroup) => running + owedGroup.total, 0)
+  const totalOwedToMe = owedToMe.reduce((running, group) => running + group.total, 0)
+  const totalIOwe = owedByMe.reduce((running, group) => running + group.total, 0)
 
   return { owedByMe, owedToMe, net: totalOwedToMe - totalIOwe }
+}
+
+/**
+ * Largest first, at both levels: the debt most worth clearing goes on top.
+ */
+function sortGroups(groups) {
+  groups.sort((a, b) => b.total - a.total)
+  for (const group of groups) {
+    group.items.sort((a, b) => b.amount - a.amount)
+  }
+  return groups
 }
