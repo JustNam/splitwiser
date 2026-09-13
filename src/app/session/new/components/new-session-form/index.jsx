@@ -7,15 +7,27 @@
  * payer, split equally. The other four split methods already work in
  * split.service.js; only the UI for them is missing, and adding it later
  * changes nothing about the save.
+ *
+ * A guest added here is NOT written to the database until the session is
+ * saved. Writing on Add meant a mistyped name, or a form abandoned half way,
+ * left a person in the group for good — and nothing in the app can remove
+ * them. Until Save they are held locally under a temporary id.
+ *
+ * The email is optional and is about later, not now: when that person signs
+ * up and confirms the address, this row becomes their membership with its
+ * whole history attached (migration 0008). Optional because the spec makes a
+ * point of a guest needing only a name — this is the action repeated most
+ * often, usually standing at the court with one more person turning up.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
 import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
+import { InvitesApi } from '@/api/invites'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
 import { useAuth } from '@/hooks/useAuth'
@@ -59,11 +71,21 @@ export function NewSessionForm() {
   const [present, setPresent] = useState({})
 
   const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
   const [guestClash, setGuestClash] = useState(null)
-  const [addingGuest, setAddingGuest] = useState(false)
+
+  // Guests typed in but not yet written. Each carries a temporary id of the
+  // form 'new:1'. Everything downstream — the chips, computeSplit(), the
+  // "Paid by" select — only ever treats an id as an opaque string, so a
+  // placeholder works everywhere a real one does, right up to the save.
+  const [pendingGuests, setPendingGuests] = useState([])
 
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // A ref, not state: bumping it must not cause a render, and it has to
+  // survive one without being reset.
+  const nextGuestKey = useRef(1)
 
   useEffect(() => {
     if (authLoading || !user) return
@@ -123,7 +145,11 @@ export function NewSessionForm() {
 
   // ---- everything below is derived from state, recomputed every render ----
 
-  const { members, accounts } = data
+  const { accounts } = data
+
+  // Real members plus the ones waiting to be written. Shaped like a member
+  // row so nothing below has to know the difference.
+  const members = [...data.members, ...pendingGuests]
   const nameOf = (member) => displayName(member, accounts)
 
   const participants = members.filter((member) => present[member.id])
@@ -169,37 +195,34 @@ export function NewSessionForm() {
     setPresent((current) => ({ ...current, [memberId]: !current[memberId] }))
   }
 
-  async function handleAddGuest() {
+  function handleAddGuest() {
     const name = guestName.trim()
     if (name === '') return
 
-    // Checked here as well as in add_guest(), because what the design wants
-    // for a clash isn't an error — it's the offer to reuse the person we
-    // already have, and that needs the existing member, already on screen.
+    // What the design wants for a clash isn't an error — it's the offer to
+    // reuse the person already in the group. add_guest() refuses duplicates
+    // too, but only with a message; the offer needs the existing member.
     const existing = members.find(
       (member) =>
         member.type === 'guest' && nameOf(member).toLowerCase() === name.toLowerCase()
     )
     if (existing) return setGuestClash(existing)
 
-    setAddingGuest(true)
-    setError(null)
-
-    const { data: member, error: apiError } = await GroupsApi.addGuest(
-      data.group.id,
-      name
-    )
-
-    if (apiError) {
-      setError(apiError)
-      setAddingGuest(false)
-      return
+    // Nothing leaves the browser here. `new:` is not a uuid, so it cannot
+    // collide with a real member id.
+    const guest = {
+      id: `new:${nextGuestKey.current}`,
+      name,
+      email: guestEmail.trim() === '' ? null : guestEmail.trim(),
+      type: 'guest',
+      accountId: null,
     }
+    nextGuestKey.current += 1
 
-    setData((current) => ({ ...current, members: [...current.members, member] }))
-    setPresent((current) => ({ ...current, [member.id]: true }))
+    setPendingGuests((current) => [...current, guest])
+    setPresent((current) => ({ ...current, [guest.id]: true }))
     setGuestName('')
-    setAddingGuest(false)
+    setGuestEmail('')
   }
 
   function useExistingGuest() {
@@ -215,6 +238,45 @@ export function NewSessionForm() {
     setSubmitting(true)
     setError(null)
 
+    // The guests become real here, and only here. A guest that is written
+    // moves out of pendingGuests immediately, so pressing Save again after a
+    // failure doesn't try to create the same person twice.
+    const realId = new Map()
+
+    for (const guest of pendingGuests) {
+      const { data: member, error: guestError } = await GroupsApi.addGuest(
+        data.group.id,
+        guest.name,
+        guest.email
+      )
+
+      if (guestError) {
+        setError(guestError)
+        setSubmitting(false)
+        return
+      }
+
+      realId.set(guest.id, member.id)
+
+      // Only a guest gets invited. An email that already had an account comes
+      // back as a roster member — they are in the group and need no email.
+      //
+      // Not awaited: the session is what the user pressed the button for, and
+      // a mail server having a bad day must not stand between them and it.
+      if (guest.email && member.type === 'guest') {
+        InvitesApi.send({ email: guest.email, groupId: data.group.id })
+      }
+
+      setData((current) => ({ ...current, members: [...current.members, member] }))
+      setPendingGuests((current) => current.filter((row) => row.id !== guest.id))
+      setPresent((current) => ({ ...current, [member.id]: true }))
+    }
+
+    // Swap the placeholders for the ids the database gave back. The amounts
+    // are carried over untouched rather than recomputed — they already add up
+    // to the total exactly, and recomputing invites them not to.
+    const swap = (id) => realId.get(id) ?? id
+
     const { error: apiError } = await SessionsApi.create({
       groupId: data.group.id,
       date,
@@ -222,11 +284,13 @@ export function NewSessionForm() {
         {
           note: note.trim() === '' ? null : note.trim(),
           amount: total,
-          payerMemberId: payerId,
-          shares,
+          payerMemberId: swap(payerId),
+          shares: Object.fromEntries(
+            Object.entries(shares).map(([id, amount]) => [swap(id), amount])
+          ),
         },
       ],
-      participantIds,
+      participantIds: participantIds.map(swap),
     })
 
     if (apiError) {
@@ -321,6 +385,19 @@ export function NewSessionForm() {
           ))}
         </div>
 
+        <p className={Style.hint}>
+          Email is optional, but worth adding: we’ll invite them, and when they
+          sign up everything they owe or are owed comes with them.
+        </p>
+
+        {pendingGuests.length > 0 && (
+          <p className={Style.hint}>
+            {pendingGuests.map((guest) => guest.name).join(', ')}{' '}
+            {pendingGuests.length === 1 ? 'joins' : 'join'} the group when you save
+            this session.
+          </p>
+        )}
+
         <div className={Style.guestRow}>
           <input
             className={Style.guestInput}
@@ -329,14 +406,19 @@ export function NewSessionForm() {
               setGuestName(event.target.value)
               setGuestClash(null)
             }}
-            placeholder="Add a guest — name only"
-            disabled={submitting || addingGuest}
+            placeholder="Add a guest — name"
+            disabled={submitting}
           />
-          <Button
-            onClick={handleAddGuest}
-            disabled={guestName.trim() === '' || submitting || addingGuest}
-          >
-            {addingGuest ? 'Adding…' : 'Add'}
+          <input
+            className={Style.guestInput}
+            value={guestEmail}
+            onChange={(event) => setGuestEmail(event.target.value)}
+            placeholder="Email (optional)"
+            inputMode="email"
+            disabled={submitting}
+          />
+          <Button onClick={handleAddGuest} disabled={guestName.trim() === '' || submitting}>
+            Add
           </Button>
         </div>
 

@@ -7,8 +7,9 @@
  * component with the `useAuth()` hook, not by importing AuthContext directly.
  */
 
-import { createContext, useCallback, useEffect, useState } from 'react'
+import { createContext, useCallback, useEffect, useRef, useState } from 'react'
 import { AuthApi } from '@/api/auth'
+import { GroupsApi } from '@/api/groups'
 import { supabase } from '@/lib/supabase/client'
 
 /**
@@ -29,6 +30,10 @@ export function AuthProvider({ children }) {
    */
   const [loading, setLoading] = useState(true)
 
+  // Once per page load, not once per auth event: onAuthStateChange also fires
+  // on every silent token refresh, and there is nothing new to claim then.
+  const claimed = useRef(false)
+
   useEffect(() => {
     /**
      * Subscribed BEFORE the first read, so a token refresh that lands while
@@ -41,6 +46,16 @@ export function AuthProvider({ children }) {
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
       setLoading(false)
+
+      // Guest rows carrying this account's confirmed email become theirs,
+      // in every group at once (migration 0008). Deliberately not awaited and
+      // deliberately silent: it changes nothing on this screen, and almost
+      // every call has nothing to do. Here rather than in the sign-in form
+      // because this also catches the arrival from a confirmation link.
+      if (newSession && !claimed.current) {
+        claimed.current = true
+        GroupsApi.claimGuestRows()
+      }
     })
 
     // useEffect can't be async itself, hence the inner function.

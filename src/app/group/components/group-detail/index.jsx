@@ -94,7 +94,10 @@ export function GroupDetail() {
       isGuest: member.type === 'guest',
       isMe: member.id === group.myMemberId,
       name: displayName(member, accounts),
-      email: accounts.find((account) => account.id === member.accountId)?.email,
+      // A roster member's email is on their account; a guest's sits on the
+      // member row, waiting for them to sign up with it.
+      email:
+        member.email ?? accounts.find((account) => account.id === member.accountId)?.email,
     }))
     .sort((a, b) => Number(a.isGuest) - Number(b.isGuest))
 
@@ -169,11 +172,15 @@ export function GroupDetail() {
                   {row.isMe && ' (you)'}
                 </span>
                 <span className={Style.rowSub}>
-                  {row.isGuest ? 'name only · no account' : row.email}
+                  {row.isGuest && !row.email ? 'name only · no account' : row.email}
                 </span>
               </span>
 
-              {row.isGuest && <span className={Style.guest}>Guest</span>}
+              {/* An invited guest is waiting, not just unregistered: the
+                  moment they sign up with that email this row becomes theirs. */}
+              {row.isGuest && (
+                <span className={Style.guest}>{row.email ? 'Invited' : 'Guest'}</span>
+              )}
             </div>
           ))}
         </div>

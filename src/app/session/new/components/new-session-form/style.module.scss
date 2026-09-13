@@ -99,13 +99,17 @@
 
 .guestRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-8);
 }
 
 .guestInput {
   flex: 1;
-  min-width: 0;
+
+  /* Not 0: below this the two fields shrink into slivers rather than wrapping
+     onto a second line. */
+  min-width: 140px;
   box-sizing: border-box;
   height: 44px;
 

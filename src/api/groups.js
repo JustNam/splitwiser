@@ -29,7 +29,7 @@ const toGroup = (row) => ({
 // The one select string for member rows, so listMembers() and getSnapshot()
 // can never drift apart on which columns they ask for.
 const MEMBER_SELECT =
-  'id, group_id, name, type, account_id, accounts (id, name, email)'
+  'id, group_id, name, type, email, account_id, accounts (id, name, email)'
 
 const toMembers = (rows) =>
   rows.map((row) => ({
@@ -38,6 +38,8 @@ const toMembers = (rows) =>
     type: row.type,
     accountId: row.account_id,
     name: row.name,
+    // Only ever set on a guest, and only so they can claim the row later.
+    email: row.email,
   }))
 
 // Accounts ride along on the member rows; pull them into their own list
@@ -131,24 +133,51 @@ export class GroupsApi {
   }
 
   /**
-   * Add someone who played but has no account.
+   * Add someone who played to the group.
+   *
+   * The email is optional and is what lets them take the row over later: when
+   * they sign up and confirm that address, claim_guest_rows() turns this very
+   * row into their membership, history and all.
+   *
+   * If the email already belongs to an account, no guest is created at all —
+   * they are added to the roster directly, so there is nothing to migrate.
+   * The returned row says which happened, in its `type`.
    *
    * @param {string} groupId
    * @param {string} name
+   * @param {string} [email]
    * @returns {Promise<{ data: object|null, error: string|null }>}
    */
-  static async addGuest(groupId, name) {
+  static async addGuest(groupId, name, email) {
     if (!isSupabaseConfigured) return { data: null, error: MISSING_CONFIG_MESSAGE }
 
     const { data, error } = await supabase.rpc('add_guest', {
       p_group_id: groupId,
       p_name: name,
+      p_email: email?.trim() === '' ? null : (email ?? null),
     })
 
     if (error) return { data: null, error: error.message }
 
     // The function returns one members row, but toMembers() takes a list.
     return { data: toMembers([data])[0], error: null }
+  }
+
+  /**
+   * Take over any guest rows that carry my confirmed email.
+   *
+   * Opportunistic: the app fires this after signing in and does not wait on
+   * it. Almost every call has nothing to do.
+   *
+   * @returns {Promise<{ data: { claimed: number }|null, error: string|null }>}
+   */
+  static async claimGuestRows() {
+    if (!isSupabaseConfigured) return { data: null, error: MISSING_CONFIG_MESSAGE }
+
+    const { data, error } = await supabase.rpc('claim_guest_rows')
+
+    if (error) return { data: null, error: error.message }
+    return { data: { claimed: data }, error: null }
   }
 
   /**
@@ -217,8 +246,14 @@ export class GroupsApi {
           .eq('group_id', groupId),
         supabase
           .from('sessions')
-          .select('id, group_id, date, created_by_member_id, updated_by_member_id, updated_at')
-          .eq('group_id', groupId),
+          .select(
+            'id, group_id, date, created_at, created_by_member_id, updated_by_member_id, updated_at'
+          )
+          .eq('group_id', groupId)
+          // Newest first, decided by the database rather than left to
+          // whatever order the rows happen to come back in.
+          .order('date', { ascending: false })
+          .order('created_at', { ascending: false }),
         supabase
           .from('cost_lines')
           .select('id, session_id, note, amount, payer_member_id, sessions!inner (group_id)')
@@ -251,6 +286,7 @@ export class GroupsApi {
           id: row.id,
           groupId: row.group_id,
           date: row.date,
+          createdAt: row.created_at,
           createdByMemberId: row.created_by_member_id,
           updatedByMemberId: row.updated_by_member_id,
           updatedAt: row.updated_at,
