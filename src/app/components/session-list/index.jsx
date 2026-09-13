@@ -9,7 +9,10 @@ import Style from './style.module.scss'
  * inside it, so the entire card is the tap target — a 60px row with a 20px
  * link in it is the kind of thing that only annoys people on phones.
  */
-export function SessionList({ rows }) {
+export function SessionList({ rows, limit, seeAllHref }) {
+  const shown = limit ? rows.slice(0, limit) : rows
+  const hidden = rows.length - shown.length
+
   if (rows.length === 0) {
     return (
       <section className={Style.section}>
@@ -29,7 +32,7 @@ export function SessionList({ rows }) {
       <h2 className={Style.title}>Sessions</h2>
 
       <ul className={Style.list}>
-        {rows.map((row) => (
+        {shown.map((row) => (
           <li key={row.id}>
             <Link href={`/session/${row.id}`} className={Style.row}>
               <span className={Style.info}>
@@ -48,6 +51,12 @@ export function SessionList({ rows }) {
           </li>
         ))}
       </ul>
+
+      {hidden > 0 && seeAllHref && (
+        <Link href={seeAllHref} className={Style.seeAll}>
+          See all {rows.length}
+        </Link>
+      )}
     </section>
   )
 }

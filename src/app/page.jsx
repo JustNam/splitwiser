@@ -23,6 +23,8 @@ import { BalanceList } from './components/balance-list'
 import { SessionList } from './components/session-list'
 import Style from './page.module.scss'
 
+const HOME_ROW_LIMIT = 5
+
 export default function HomePage() {
   const { user, loading: authLoading } = useAuth()
 
@@ -239,10 +241,17 @@ function HomeBody({ group, snapshot }) {
     groupId: group.id,
   })
 
+  // Five each. Home answers "where do I stand" at a glance; a long list of
+  // old sessions pushes the two buttons off the screen and answers nothing.
   return (
     <>
-      <BalanceList rows={rows} memberCount={members.length} />
-      <SessionList rows={sessionRows} />
+      <BalanceList
+        rows={rows}
+        memberCount={members.length}
+        limit={HOME_ROW_LIMIT}
+        seeAllHref="/balances"
+      />
+      <SessionList rows={sessionRows} limit={HOME_ROW_LIMIT} seeAllHref="/sessions" />
     </>
   )
 }

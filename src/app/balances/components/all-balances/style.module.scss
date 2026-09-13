@@ -1,0 +1,14 @@
+.note {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
+
+.link {
+  color: var(--brand-primary);
+  font-weight: var(--fw-bold);
+}

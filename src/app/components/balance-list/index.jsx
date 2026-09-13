@@ -11,9 +11,15 @@ import Style from './style.module.scss'
  * way round often enough to matter when the number is money someone owes.
  * Colour only reinforces the words; it never carries the meaning alone.
  *
+ * `limit` cuts the list down for Home, where this block competes for space
+ * with the sessions and the buttons. The full list lives on /balances. Both
+ * render the same component, so the row can only look one way.
+ *
  * No 'use client': nothing here has state or handlers.
  */
-export function BalanceList({ rows, memberCount }) {
+export function BalanceList({ rows, memberCount, limit, seeAllHref }) {
+  const shown = limit ? rows.slice(0, limit) : rows
+  const hidden = rows.length - shown.length
   return (
     <section className={Style.section}>
       <header className={Style.header}>
@@ -33,11 +39,21 @@ export function BalanceList({ rows, memberCount }) {
           <p className={Style.settledText}>Nobody owes anybody.</p>
         </div>
       ) : (
-        <ul className={Style.list}>
-          {rows.map((row) => (
-            <BalanceRow key={row.memberId} row={row} />
-          ))}
-        </ul>
+        <>
+          <ul className={Style.list}>
+            {shown.map((row) => (
+              <BalanceRow key={row.memberId} row={row} />
+            ))}
+          </ul>
+
+          {/* The count is in the link because "See all" alone doesn't say
+              whether it is worth the tap. */}
+          {hidden > 0 && seeAllHref && (
+            <Link href={seeAllHref} className={Style.seeAll}>
+              See all {rows.length}
+            </Link>
+          )}
+        </>
       )}
     </section>
   )
