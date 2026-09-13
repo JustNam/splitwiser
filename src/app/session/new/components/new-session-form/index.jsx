@@ -33,6 +33,11 @@ import { Button } from '@/components/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName, formatVnd } from '@/services/money.service'
+import {
+  formatSessionDate,
+  lastPlayedByMember,
+  latestLineUp,
+} from '@/services/session.service'
 import { SPLIT_EQUAL, computeSplit } from '@/services/split.service'
 import Style from './style.module.scss'
 
@@ -72,6 +77,14 @@ export function NewSessionForm() {
 
   const [guestName, setGuestName] = useState('')
   const [guestEmail, setGuestEmail] = useState('')
+
+  // Collapsed until asked for. Adding a guest is the exception — most weeks
+  // it is the same people — and two empty fields sitting open suggest
+  // otherwise.
+  const [addingGuest, setAddingGuest] = useState(false)
+
+  // Only rendered once the roster is long enough to be worth searching.
+  const [search, setSearch] = useState('')
   const [guestClash, setGuestClash] = useState(null)
 
   // Guests typed in but not yet written. Each carries a temporary id of the
@@ -99,16 +112,24 @@ export function NewSessionForm() {
       if (groups.length === 0) return setLoadError('You are not in a group yet.')
 
       const group = pickCurrentGroup(groups)
-      const { data: roster, error: rosterError } = await GroupsApi.listMembers(group.id)
+
+      // The whole snapshot rather than just the roster: who played last week,
+      // and who plays often, both decide what this screen shows first.
+      const { data: snapshot, error: snapshotError } = await GroupsApi.getSnapshot(
+        group.id
+      )
       if (cancelled) return
-      if (rosterError) return setLoadError(rosterError)
+      if (snapshotError) return setLoadError(snapshotError)
 
-      setData({ group, ...roster })
+      setData({ group, ...snapshot })
 
-      // Everyone ticked, and "I paid" pre-selected: the common case should
-      // need no taps at all. Turnout changes every week, and unticking two
-      // people is faster than ticking five.
-      setPresent(Object.fromEntries(roster.members.map((member) => [member.id, true])))
+      // Start from last week's line-up: the same people mostly turn up, so
+      // the common case is no taps at all. A group that has never played
+      // falls back to everyone, which is right when there are two of you.
+      const lineUp = latestLineUp(snapshot.sessions, snapshot.participants)
+      const starting = lineUp.length > 0 ? lineUp : snapshot.members.map((m) => m.id)
+
+      setPresent(Object.fromEntries(starting.map((memberId) => [memberId, true])))
       setPayerId(group.myMemberId)
     }
 
@@ -155,6 +176,31 @@ export function NewSessionForm() {
   const participants = members.filter((member) => present[member.id])
   const participantIds = participants.map((member) => member.id)
 
+  // Regulars first, then whoever played longest ago, then names. A pending
+  // guest has never played and sorts to the end — but they were just typed
+  // in, so they are pulled to the front instead.
+  const lastPlayed = lastPlayedByMember(data.sessions, data.participants)
+  const ordered = [...members].sort((a, b) => {
+    const aNew = a.id.startsWith('new:')
+    const bNew = b.id.startsWith('new:')
+    if (aNew !== bNew) return aNew ? -1 : 1
+
+    const byDate = (lastPlayed.get(b.id) ?? '').localeCompare(lastPlayed.get(a.id) ?? '')
+    if (byDate !== 0) return byDate
+
+    return nameOf(a).localeCompare(nameOf(b))
+  })
+
+  // A search box below this many people is a box nobody needs.
+  const SEARCHABLE_FROM = 8
+  const searchable = members.length >= SEARCHABLE_FROM
+
+  const query = search.trim().toLowerCase()
+  const visible =
+    query === '' ? ordered : ordered.filter((m) => nameOf(m).toLowerCase().includes(query))
+
+  const lastSession = data.sessions[0]
+
   const total = Number(amountText || 0)
 
   // The real amounts, from the same tested function the save uses. Not a
@@ -195,6 +241,10 @@ export function NewSessionForm() {
     setPresent((current) => ({ ...current, [memberId]: !current[memberId] }))
   }
 
+  function setAll(value) {
+    setPresent(Object.fromEntries(members.map((member) => [member.id, value])))
+  }
+
   function handleAddGuest() {
     const name = guestName.trim()
     if (name === '') return
@@ -223,6 +273,7 @@ export function NewSessionForm() {
     setPresent((current) => ({ ...current, [guest.id]: true }))
     setGuestName('')
     setGuestEmail('')
+    setAddingGuest(false)
   }
 
   function useExistingGuest() {
@@ -365,11 +416,51 @@ export function NewSessionForm() {
       <section className={Style.section}>
         <header className={Style.sectionHeader}>
           <h2 className={Style.sectionTitle}>Who played</h2>
-          <p className={Style.sectionMeta}>{participants.length} playing</p>
+          <p className={Style.sectionMeta}>
+            {participants.length} of {members.length}
+          </p>
         </header>
 
+        {/* Both, not a single toggle: with a long roster you sometimes want to
+            start from nobody and sometimes from everybody, and a toggle makes
+            you guess which one it will do. */}
+        <div className={Style.pickRow}>
+          <button
+            type="button"
+            className={Style.pickAction}
+            onClick={() => setAll(true)}
+            disabled={submitting}
+          >
+            Everyone
+          </button>
+          <button
+            type="button"
+            className={Style.pickAction}
+            onClick={() => setAll(false)}
+            disabled={submitting}
+          >
+            Nobody
+          </button>
+
+          {lastSession && (
+            <p className={Style.pickNote}>
+              Starting from {formatSessionDate(lastSession.date)}
+            </p>
+          )}
+        </div>
+
+        {searchable && (
+          <input
+            className={Style.searchInput}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search names"
+            disabled={submitting}
+          />
+        )}
+
         <div className={Style.chips}>
-          {members.map((member) => (
+          {visible.map((member) => (
             <button
               key={member.id}
               type="button"
@@ -383,12 +474,11 @@ export function NewSessionForm() {
               {nameOf(member)}
             </button>
           ))}
-        </div>
 
-        <p className={Style.hint}>
-          Email is optional, but worth adding: we’ll invite them, and when they
-          sign up everything they owe or are owed comes with them.
-        </p>
+          {visible.length === 0 && (
+            <p className={Style.hint}>Nobody here by that name.</p>
+          )}
+        </div>
 
         {pendingGuests.length > 0 && (
           <p className={Style.hint}>
@@ -398,29 +488,68 @@ export function NewSessionForm() {
           </p>
         )}
 
-        <div className={Style.guestRow}>
-          <input
-            className={Style.guestInput}
-            value={guestName}
-            onChange={(event) => {
-              setGuestName(event.target.value)
-              setGuestClash(null)
-            }}
-            placeholder="Add a guest — name"
+        {/* Closed by default. The fields and their explanation only appear for
+            the person who actually came to add someone. */}
+        {addingGuest ? (
+          <div className={Style.guestBlock}>
+            <div className={Style.guestRow}>
+              <input
+                className={Style.guestInput}
+                value={guestName}
+                onChange={(event) => {
+                  setGuestName(event.target.value)
+                  setGuestClash(null)
+                }}
+                placeholder="Name"
+                disabled={submitting}
+                autoFocus
+              />
+              <input
+                className={Style.guestInput}
+                value={guestEmail}
+                onChange={(event) => setGuestEmail(event.target.value)}
+                placeholder="Email (optional)"
+                inputMode="email"
+                disabled={submitting}
+              />
+            </div>
+
+            <p className={Style.hint}>
+              Email is optional, but worth adding: we’ll invite them, and when
+              they sign up everything they owe or are owed comes with them.
+            </p>
+
+            <div className={Style.guestActions}>
+              <Button
+                onClick={handleAddGuest}
+                disabled={guestName.trim() === '' || submitting}
+              >
+                Add
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setAddingGuest(false)
+                  setGuestName('')
+                  setGuestEmail('')
+                  setGuestClash(null)
+                }}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={Style.addGuestLink}
+            onClick={() => setAddingGuest(true)}
             disabled={submitting}
-          />
-          <input
-            className={Style.guestInput}
-            value={guestEmail}
-            onChange={(event) => setGuestEmail(event.target.value)}
-            placeholder="Email (optional)"
-            inputMode="email"
-            disabled={submitting}
-          />
-          <Button onClick={handleAddGuest} disabled={guestName.trim() === '' || submitting}>
-            Add
-          </Button>
-        </div>
+          >
+            + Add a guest
+          </button>
+        )}
 
         {guestClash && (
           <div className={Style.clash}>

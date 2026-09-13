@@ -100,3 +100,59 @@ export function sessionSummaries({
         (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
     )
 }
+
+// ---------------------------------------------------------------------------
+// lastPlayedByMember
+// ---------------------------------------------------------------------------
+/**
+ * memberId → the date of the last session they played, as 'YYYY-MM-DD'.
+ *
+ * Used to order the "Who played" chips. A group of thirty has a core of six
+ * who play every week and a long tail who came once in March; putting the
+ * regulars first is what stops the list being a hunt.
+ *
+ * @param {object[]} sessions
+ * @param {object[]} participants
+ * @returns {Map<string, string>}
+ */
+export function lastPlayedByMember(sessions, participants) {
+  const dateOf = new Map(sessions.map((session) => [session.id, session.date]))
+  const last = new Map()
+
+  for (const row of participants) {
+    const date = dateOf.get(row.sessionId)
+    if (!date) continue
+
+    const seen = last.get(row.memberId)
+    if (!seen || date > seen) last.set(row.memberId, date)
+  }
+
+  return last
+}
+
+// ---------------------------------------------------------------------------
+// latestLineUp
+// ---------------------------------------------------------------------------
+/**
+ * Who played the most recent session — the default tick list for the next one.
+ *
+ * Turnout changes week to week, but not by much: the same people mostly turn
+ * up. Starting from last week's line-up makes the common case no taps at all,
+ * where starting from everyone ticked makes a group of thirty twenty-four
+ * taps of work.
+ *
+ * Empty when the group has never played, and the caller falls back to
+ * everyone — which is right for a brand-new group of two or three.
+ *
+ * @param {object[]} sessions - already newest-first
+ * @param {object[]} participants
+ * @returns {string[]} member ids
+ */
+export function latestLineUp(sessions, participants) {
+  if (sessions.length === 0) return []
+
+  const newest = sessions[0]
+  return participants
+    .filter((row) => row.sessionId === newest.id)
+    .map((row) => row.memberId)
+}
