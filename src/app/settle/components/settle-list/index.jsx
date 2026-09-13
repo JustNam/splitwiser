@@ -293,10 +293,16 @@ export function SettleList() {
       <Dialog
         open={confirmOpen && picked.length > 0}
         onClose={() => setConfirmOpen(false)}
+        // Without this the dialog opens announcing nothing: a screen reader
+        // reads out the name of the thing it has just trapped focus inside,
+        // and there was no name to read.
+        aria-labelledby="settle-confirm-title"
         fullWidth
       >
         <div className={Style.confirm}>
-          <p className={Style.confirmTitle}>Confirm</p>
+          <h2 className={Style.confirmTitle} id="settle-confirm-title">
+            Confirm
+          </h2>
 
           {/* Split by direction: a list mixing "you paid" and "they paid you"
               without saying which is how the wrong one gets confirmed. */}
@@ -340,34 +346,43 @@ function DebtGroup({ entry, heading, checked, onToggle, onSelectAll, disabled })
   return (
     <section className={Style.group}>
       <header className={Style.groupHeader}>
-        <p className={Style.groupTitle}>
+        {/* A heading, not a paragraph: it names the <section> it opens, and
+            a section with no heading is a landmark a screen reader cannot
+            tell you anything about. */}
+        <h2 className={Style.groupTitle}>
           {heading}
           {entry.isGuest && <span className={Style.guest}>Guest</span>}
-        </p>
+        </h2>
         <TextButton onClick={() => onSelectAll(entry)} disabled={disabled}>
           Select all
         </TextButton>
       </header>
 
-      {entry.items.map((item) => (
-        // A real <input type="checkbox"> inside a <label>: the whole row
-        // becomes the tap target, and the checkbox keeps its keyboard and
-        // screen-reader behaviour without any of it being reimplemented.
-        <label key={item.id} className={Style.item}>
-          <input
-            type="checkbox"
-            className={Style.box}
-            checked={Boolean(checked[item.id])}
-            onChange={() => onToggle(item.id)}
-            disabled={disabled}
-          />
-          <span className={Style.itemInfo}>
-            <span className={Style.itemLabel}>{item.label}</span>
-            <span className={Style.itemSub}>{item.sub}</span>
-          </span>
-          <span className={Style.itemAmount}>{formatVnd(item.amount)}</span>
-        </label>
-      ))}
+      {/* A list, because it is one: without <ul> a screen reader cannot say
+          how many debts there are or where one ends. */}
+      <ul className={Style.items}>
+        {entry.items.map((item) => (
+          <li key={item.id}>
+            {/* A real <input type="checkbox"> inside a <label>: the whole row
+                becomes the tap target, and the checkbox keeps its keyboard and
+                screen-reader behaviour without any of it reimplemented. */}
+            <label className={Style.item}>
+              <input
+                type="checkbox"
+                className={Style.box}
+                checked={Boolean(checked[item.id])}
+                onChange={() => onToggle(item.id)}
+                disabled={disabled}
+              />
+              <span className={Style.itemInfo}>
+                <span className={Style.itemLabel}>{item.label}</span>
+                <span className={Style.itemSub}>{item.sub}</span>
+              </span>
+              <span className={Style.itemAmount}>{formatVnd(item.amount)}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

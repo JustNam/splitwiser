@@ -39,7 +39,10 @@ export function SessionList({ rows, limit, seeAllHref }) {
             <Link href={`/session/${row.id}`} className={Style.row}>
               <span className={Style.info}>
                 <span className={Style.date}>
-                  {row.dateLabel}
+                  {/* A date is data, not a word that happens to look like one.
+                      dateTime gives the machine-readable form, so "10 Sep"
+                      stays short for a human without the year being lost. */}
+                  <time dateTime={row.date}>{row.dateLabel}</time>
                   {row.isEdited && <span className={Style.edited}>Edited</span>}
                 </span>
                 <span className={Style.subtitle}>{row.subtitle}</span>

@@ -71,13 +71,17 @@ export function sessionDetail({
   const people = buildPeople({ sessionCostLines, sessionLedger, playedIds }).map(
     (person) => ({
       ...person,
-      name: person.memberId === myMemberId ? `${nameOf(person.memberId)} (you)` : nameOf(person.memberId),
+      name:
+        person.memberId === myMemberId
+          ? `${nameOf(person.memberId)} (you)`
+          : nameOf(person.memberId),
       isGuest: memberOf(person.memberId)?.type === 'guest',
     })
   )
 
   return {
     id: session.id,
+    date: session.date,
     dateLabel: formatSessionDate(session.date),
     total,
     // "1 cost · 2 played" — a one-line sanity check on the session.
@@ -146,7 +150,8 @@ function buildPeople({ sessionCostLines, sessionLedger, playedIds }) {
     // The payer's share is the one number never written to the ledger — a
     // debt to yourself isn't a debt — so it comes out as the remainder of the
     // cost once everyone else's share is taken off.
-    if (share.has(payerId)) share.set(payerId, share.get(payerId) + line.amount - assigned)
+    if (share.has(payerId))
+      share.set(payerId, share.get(payerId) + line.amount - assigned)
   }
 
   return playedIds.map((memberId) => ({

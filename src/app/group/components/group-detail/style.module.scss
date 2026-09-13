@@ -23,9 +23,14 @@
 
 /* --- Members ------------------------------------------------------------ */
 
+/* A real list. `list-style: none` removes the bullets without removing what
+   the element means: a screen reader still says how many items there are. */
 .rows {
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   border-top: 1px solid var(--border-subtle);
 }
 

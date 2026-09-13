@@ -107,7 +107,7 @@ export function SessionDetail() {
   return (
     <>
       <PageHeader
-        title={detail.dateLabel}
+        title={<time dateTime={detail.date}>{detail.dateLabel}</time>}
         action={<TextLink href={`/session/${detail.id}/edit`}>Edit</TextLink>}
       />
 
@@ -118,17 +118,17 @@ export function SessionDetail() {
       <section className={Style.section}>
         <SectionHeader>Costs</SectionHeader>
 
-        <div className={Style.rows}>
+        <ul className={Style.rows}>
           {detail.lines.map((line) => (
-            <div key={line.id} className={Style.row}>
+            <li key={line.id} className={Style.row}>
               <span className={Style.rowInfo}>
                 <span className={Style.rowLabel}>{line.note}</span>
                 <span className={Style.rowSub}>{line.payerText}</span>
               </span>
               <span className={Style.rowAmount}>{formatVnd(line.amount)}</span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <section className={Style.section}>
@@ -142,9 +142,9 @@ export function SessionDetail() {
           Who played
         </SectionHeader>
 
-        <div className={Style.rows}>
+        <ul className={Style.rows}>
           {detail.people.map((person) => (
-            <div key={person.memberId} className={Style.row}>
+            <li key={person.memberId} className={Style.row}>
               <span className={Style.rowInfo}>
                 <span className={Style.rowLabel}>{person.name}</span>
                 {person.isGuest && <span className={Style.rowSub}>Guest</span>}
@@ -157,9 +157,9 @@ export function SessionDetail() {
               </span>
 
               <span className={Style.rowAmount}>{formatVnd(person.amount)}</span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       {/* Nothing writes adjustment rows until B4 exists, so this section is
@@ -170,14 +170,14 @@ export function SessionDetail() {
         <section className={Style.section}>
           <SectionHeader>Edits</SectionHeader>
 
-          <div className={Style.rows}>
+          <ul className={Style.rows}>
             {detail.edits.map((edit) => (
-              <div key={edit.id} className={Style.editRow}>
+              <li key={edit.id} className={Style.editRow}>
                 <span className={Style.rowLabel}>{edit.text}</span>
                 <span className={Style.rowSub}>{edit.by}</span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
           <p className={Style.note}>
             The original numbers above are what was first recorded. Edits are listed

@@ -343,9 +343,9 @@ export function EditSessionForm() {
       <section className={Style.section}>
         <SectionHeader>What changes</SectionHeader>
 
-        <div className={Style.rows}>
+        <ul className={Style.rows}>
           {preview.map((row) => (
-            <div key={row.memberId} className={Style.row}>
+            <li key={row.memberId} className={Style.row}>
               <span className={Style.rowName}>
                 {row.name}
                 {row.isOut && <span className={Style.outTag}>Out</span>}
@@ -354,9 +354,9 @@ export function EditSessionForm() {
               <span className={clsx(Style.change, row.changed && Style.changed)}>
                 {formatVnd(row.was)} → {formatVnd(row.next)}
               </span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <p className={Style.hint}>
           The original numbers stay recorded. This is saved as a separate edit, shown on

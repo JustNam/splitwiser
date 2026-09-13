@@ -118,7 +118,7 @@ export default function HomePage() {
     return (
       <main className={Style.page}>
         <header className={Style.topBar}>
-          <p className={Style.groupName}>SplitWiser</p>
+          <h1 className={Style.groupName}>SplitWiser</h1>
         </header>
 
         <div className={Style.noGroup}>
@@ -159,24 +159,31 @@ export default function HomePage() {
           mistake this line exists to prevent. */}
       <header className={Style.topBar}>
         {groups.length > 1 ? (
-          // A native <select>, not a custom dropdown: on a phone it opens the
-          // OS picker, which is familiar and accessible with no code of ours.
-          // Hidden entirely at one group — a dropdown with a single option
-          // asks a question that has no answer.
-          <select
-            className={Style.groupSelect}
-            value={group.id}
-            onChange={handleSwitch}
-            aria-label="Group"
-          >
-            {groups.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.name}
-              </option>
-            ))}
-          </select>
+          <>
+            {/* The switcher is the visible title, but a <select> is not a
+                heading, and this page's two blocks are <h2>. The hidden <h1>
+                gives the document the level they sit under. */}
+            <h1 className={Style.srOnly}>{group.name}</h1>
+
+            {/* Native, not a custom dropdown: on a phone it opens the OS
+                picker, familiar and accessible with no code of ours. Hidden
+                entirely at one group — a dropdown with a single option asks a
+                question that has no answer. */}
+            <select
+              className={Style.groupSelect}
+              value={group.id}
+              onChange={handleSwitch}
+              aria-label="Group"
+            >
+              {groups.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.name}
+                </option>
+              ))}
+            </select>
+          </>
         ) : (
-          <p className={Style.groupName}>{group.name}</p>
+          <h1 className={Style.groupName}>{group.name}</h1>
         )}
 
         {/* The wireframe puts this behind a "..." menu together with Sign out.

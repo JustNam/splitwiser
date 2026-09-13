@@ -748,7 +748,7 @@ export function NewSessionForm() {
           </>
         ) : (
           <>
-            <div className={Style.splitRows}>
+            <ul className={Style.splitRows}>
               {participants.map((member) => (
                 <SplitRow
                   key={member.id}
@@ -760,7 +760,7 @@ export function NewSessionForm() {
                   disabled={submitting}
                 />
               ))}
-            </div>
+            </ul>
 
             <div className={Style.splitFoot}>
               <p className={clsx(Style.readout, splitProblem && Style.readoutBad)}>
@@ -823,7 +823,7 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
   }
 
   return (
-    <div className={Style.splitRow}>
+    <li className={Style.splitRow}>
       <span className={Style.splitName}>{name}</span>
 
       {method === SPLIT_SHARES ? (
@@ -869,6 +869,6 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
       )}
 
       <span className={Style.splitOutput}>{output}</span>
-    </div>
+    </li>
   )
 }

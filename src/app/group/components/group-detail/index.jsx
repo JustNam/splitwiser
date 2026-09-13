@@ -171,9 +171,9 @@ export function GroupDetail() {
           Members
         </SectionHeader>
 
-        <div className={Style.rows}>
+        <ul className={Style.rows}>
           {rows.map((row) => (
-            <div key={row.id} className={Style.row}>
+            <li key={row.id} className={Style.row}>
               <span className={Style.rowInfo}>
                 <span className={Style.rowName}>
                   {row.name}
@@ -189,9 +189,9 @@ export function GroupDetail() {
               {row.isGuest && (
                 <span className={Style.guest}>{row.email ? 'Invited' : 'Guest'}</span>
               )}
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <section className={Style.section}>
