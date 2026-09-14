@@ -12,12 +12,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import TextField from '@mui/material/TextField'
 import { AuthApi } from '@/api/auth'
 import { Button } from '@/components/Button'
+import { useToast } from '@/components/Toast'
 import { readNextPath } from '@/lib/next-path'
 import Style from './style.module.scss'
 
 export function SigninForm() {
   // From 'next/navigation' — NOT 'next/router', which is the Pages Router one.
   const router = useRouter()
+  const toast = useToast()
 
   // Where to land afterwards. Usually Home; the invite link sends people
   // back to /join with their code still in the URL.
@@ -41,10 +43,15 @@ export function SigninForm() {
     const { error } = await AuthApi.signIn({ email: email.trim(), password })
 
     if (error) {
+      // Both: the toast is what you notice, the paragraph is what stays put
+      // while you retype the password.
       setError(error)
+      toast.error(error)
       setSubmitting(false)
       return
     }
+
+    toast.success('Signed in')
 
     // No setSubmitting(false) on success on purpose: let the navigation take
     // the screen away instead of flickering the button back to life.

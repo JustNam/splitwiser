@@ -1,0 +1,103 @@
+/* Pinned to the viewport but kept inside the phone-shaped column: the app
+   shell is a centred max-width block, and a `fixed` bar left to itself would
+   span a 27" monitor. Hence left: 50% + translateX, matching .app's own
+   `margin: 0 auto`. */
+.viewport {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--space-16) + var(--safe-bottom));
+  z-index: 100;
+
+  width: calc(100% - var(--space-32));
+  max-width: calc(var(--app-max-width) - var(--space-32));
+  transform: translateX(-50%);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+
+  /* The gap between toasts must not swallow taps meant for the screen
+     underneath. Only the toasts themselves take pointer events. */
+  pointer-events: none;
+}
+
+.region {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.toast {
+  pointer-events: auto;
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+
+  border-radius: var(--radius);
+  /* 16.3:1 against white text — the reason both tones share one surface. */
+  background: var(--neutral-900);
+  color: var(--text-inverse);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 25%);
+
+  font: var(--text-body-md);
+
+  animation: rise 160ms ease-out;
+}
+
+.marker {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+}
+
+.success {
+  background: var(--semantic-green-300);
+}
+
+/* Not --semantic-red: at this size, on this surface, the brighter tint is
+   what stays visible. */
+.error {
+  background: var(--flamingo-300);
+}
+
+.message {
+  flex: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.close {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: var(--space-4);
+  margin: calc(var(--space-4) * -1);
+
+  font: var(--text-body-md);
+  color: var(--text-inverse);
+  opacity: 0.7;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

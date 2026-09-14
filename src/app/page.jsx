@@ -27,6 +27,7 @@ import { SessionList } from './components/session-list'
 import { TextLink } from '@/components/TextLink'
 import { LinkButton } from '@/components/LinkButton'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
 import Style from './page.module.scss'
 
 const HOME_ROW_LIMIT = 5
@@ -37,6 +38,22 @@ export default function HomePage() {
   const [state, setState] = useState({ status: 'loading' })
   const [groupId, setGroupId] = useState(null)
   const [snapshot, setSnapshot] = useState({ status: 'loading' })
+
+  // One counter per fetch, because they fail for their own reasons: the list
+  // of groups and the contents of one group are two requests, and retrying
+  // the wrong one leaves the screen exactly as broken as it was.
+  const [groupsAttempt, setGroupsAttempt] = useState(0)
+  const [snapshotAttempt, setSnapshotAttempt] = useState(0)
+
+  function reloadGroups() {
+    setState({ status: 'loading' })
+    setGroupsAttempt((n) => n + 1)
+  }
+
+  function reloadSnapshot() {
+    setSnapshot({ status: 'loading' })
+    setSnapshotAttempt((n) => n + 1)
+  }
 
   useEffect(() => {
     if (authLoading) return
@@ -65,7 +82,7 @@ export default function HomePage() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user])
+  }, [authLoading, user, groupsAttempt])
 
   useEffect(() => {
     if (!groupId) return
@@ -85,7 +102,7 @@ export default function HomePage() {
     return () => {
       cancelled = true
     }
-  }, [groupId])
+  }, [groupId, snapshotAttempt])
 
   if (authLoading) return <Loading />
 
@@ -115,9 +132,7 @@ export default function HomePage() {
   if (state.status === 'error') {
     return (
       <main className={Style.page}>
-        <p className={Style.error} role="alert">
-          {state.error}
-        </p>
+        <RetryMessage message={state.error} onRetry={reloadGroups} />
       </main>
     )
   }
@@ -202,7 +217,12 @@ export default function HomePage() {
         <TextLink href="/group">Group</TextLink>
       </header>
 
-      <HomeBody group={group} snapshot={snapshot} accountId={user.id} />
+      <HomeBody
+        group={group}
+        snapshot={snapshot}
+        accountId={user.id}
+        onRetry={reloadSnapshot}
+      />
 
       <footer className={Style.actions}>
         <LinkButton href="/session/new">New session</LinkButton>
@@ -219,15 +239,11 @@ export default function HomePage() {
  * another group's numbers are being fetched — switching group shouldn't
  * blank the whole screen.
  */
-function HomeBody({ group, snapshot }) {
+function HomeBody({ group, snapshot, onRetry }) {
   if (snapshot.status === 'loading') return <Loading />
 
   if (snapshot.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {snapshot.error}
-      </p>
-    )
+    return <RetryMessage message={snapshot.error} onRetry={onRetry} />
   }
 
   const { members, accounts, sessions, costLines, participants, ledger } = snapshot.data

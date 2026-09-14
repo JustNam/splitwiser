@@ -45,3 +45,48 @@ export function readNextPath(searchParams) {
 export function withNextPath(base, returnTo) {
   return `${base}?next=${encodeURIComponent(returnTo)}`
 }
+
+/**
+ * Read `?from=` — where the back arrow should go.
+ *
+ * The same safety check as readNextPath, for the same reason: this value ends
+ * up in an href, and an href built from a query parameter is an open redirect
+ * unless something refuses anything that isn't a path of ours.
+ *
+ * Kept separate from `next` because they answer different questions. `next`
+ * is "where was I going before you asked me to sign in"; `from` is "which
+ * list did I open this out of". A screen can carry both at once.
+ *
+ * @param {URLSearchParams} searchParams
+ * @param {string} fallback - where back goes when nobody said
+ * @returns {string}
+ */
+export function readFromPath(searchParams, fallback = '/') {
+  const from = searchParams.get('from')
+
+  if (!from) return fallback
+  if (!from.startsWith('/')) return fallback
+  if (from.startsWith('//')) return fallback
+
+  return from
+}
+
+/**
+ * Tag a link with the screen it is being opened from.
+ *
+ *     withFrom(`/session/${id}`, '/sessions')  → '/session/123?from=%2Fsessions'
+ *     withFrom('/settle?member=7', '/balances') → '/settle?member=7&from=...'
+ *
+ * `/` is left untagged: it is the default, and a parameter that says what
+ * would have happened anyway is noise in the address bar.
+ *
+ * @param {string} path
+ * @param {string} [from]
+ * @returns {string}
+ */
+export function withFrom(path, from) {
+  if (!from || from === '/') return path
+
+  const separator = path.includes('?') ? '&' : '?'
+  return `${path}${separator}from=${encodeURIComponent(from)}`
+}

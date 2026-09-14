@@ -29,11 +29,14 @@ import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
+import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
+import { readFromPath } from '@/lib/next-path'
 import { displayName, formatVnd } from '@/services/money.service'
 import { payableDebts } from '@/services/settle.service'
 import Style from './style.module.scss'
@@ -41,9 +44,22 @@ import Style from './style.module.scss'
 export function SettleList() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const memberFilter = useSearchParams().get('member')
+  const toast = useToast()
+
+  const searchParams = useSearchParams()
+  const memberFilter = searchParams.get('member')
+
+  // Tapping a balance on /balances lands here. Back used to go to Home and
+  // drop you out of the list you were working through.
+  const backHref = readFromPath(searchParams)
 
   const [state, setState] = useState({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+
+  function reload() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
 
   // item id → true. Item ids are `${costLineId}|${memberId}`, built in
   // payableDebts(). A pair can only lean one way at a time, so one map covers
@@ -80,14 +96,14 @@ export function SettleList() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user])
+  }, [authLoading, user, attempt])
 
   // Header in every state. This screen was the worst of them: its states are
   // reached by tapping a button on Home, and none of them drew a back arrow.
   if (authLoading || !user || state.status !== 'ready') {
     return (
       <>
-        <PageHeader title="Settle up" />
+        <PageHeader backHref={backHref} title="Settle up" />
 
         {(authLoading || state.status === 'loading') && <Loading />}
 
@@ -98,9 +114,7 @@ export function SettleList() {
         )}
 
         {user && state.status === 'error' && (
-          <p className={Style.error} role="alert">
-            {state.error}
-          </p>
+          <RetryMessage message={state.error} onRetry={reload} />
         )}
 
         {user && state.status === 'no-group' && (
@@ -188,10 +202,17 @@ export function SettleList() {
 
     if (apiError) {
       setError(apiError)
+      toast.error(apiError)
       setSubmitting(false)
       setConfirmOpen(false)
       return
     }
+
+    // The screen is about to be replaced by Home, so the confirmation cannot
+    // live on it. The toast outlives the navigation because its provider sits
+    // above the router — which is the whole reason it is up there.
+    const count = picked.length
+    toast.success(`${count} ${count === 1 ? 'item' : 'items'} settled`)
 
     router.push('/')
   }
@@ -202,7 +223,7 @@ export function SettleList() {
     // it used to be a screen with nothing on it you could tap.
     return (
       <>
-        <PageHeader title={personName ?? 'Settle up'} />
+        <PageHeader backHref={backHref} title={personName ?? 'Settle up'} />
 
         <div className={Style.empty}>
           <p className={Style.emptyTitle}>
@@ -230,7 +251,7 @@ export function SettleList() {
 
   return (
     <>
-      <PageHeader title={personName ?? 'Settle up'} />
+      <PageHeader backHref={backHref} title={personName ?? 'Settle up'} />
 
       <p className={Style.subtitle}>
         {personName

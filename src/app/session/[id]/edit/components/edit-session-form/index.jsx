@@ -40,6 +40,8 @@ import { Chip, ChipGroup } from '@/components/Chip'
 import { SplitPicker } from '@/components/SplitPicker'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
+import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
@@ -55,8 +57,15 @@ export function EditSessionForm() {
   const { user, loading: authLoading } = useAuth()
   const { id } = useParams()
   const router = useRouter()
+  const toast = useToast()
 
   const [state, setState] = useState({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+
+  function reload() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
 
   const [date, setDate] = useState('')
 
@@ -129,7 +138,7 @@ export function EditSessionForm() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user, id])
+  }, [authLoading, user, id, attempt])
 
   // Header in every state. A failed load used to leave a bare sentence with
   // no back arrow anywhere on it.
@@ -150,9 +159,7 @@ export function EditSessionForm() {
         )}
 
         {user && state.status === 'error' && (
-          <p className={Style.error} role="alert">
-            {state.error}
-          </p>
+          <RetryMessage message={state.error} onRetry={reload} />
         )}
 
         {user && state.status === 'not-found' && (
@@ -349,16 +356,25 @@ export function EditSessionForm() {
 
     if (apiError) {
       setError(apiError)
+      toast.error(apiError)
       setSubmitting(false)
       return
     }
 
+    toast.success('Changes saved')
     router.push(`/session/${session.id}`)
   }
 
   return (
     <form className={Style.form} onSubmit={handleSubmit} noValidate>
-      <PageHeader backHref={`/session/${session.id}`} title="Edit session" />
+      <PageHeader
+        backHref={`/session/${session.id}`}
+        title="Edit session"
+        guard={{
+          when: changedAnything && !submitting,
+          message: 'These changes haven’t been saved. The session stays as it was.',
+        }}
+      />
 
       <p className={Style.lede}>
         {current.dateLabel} · change anything below. Everyone’s share is worked out for

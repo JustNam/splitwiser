@@ -10,6 +10,7 @@ import { sessionSummaries } from '@/services/session.service'
 import { SessionList } from '@/app/components/session-list'
 import { TextLink } from '@/components/TextLink'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
 import Style from './style.module.scss'
 
 export function AllSessions() {
@@ -26,11 +27,7 @@ export function AllSessions() {
   }
 
   if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
+    return <RetryMessage message={state.error} onRetry={state.reload} />
   }
 
   if (state.status === 'no-group') {
@@ -48,5 +45,5 @@ export function AllSessions() {
     groupId: group.id,
   })
 
-  return <SessionList rows={rows} />
+  return <SessionList rows={rows} from="/sessions" />
 }

@@ -20,6 +20,12 @@
   color: var(--text-strong);
   font: var(--text-h3);
   text-decoration: none;
+
+  /* The arrow is a <button> when the screen has unsaved work on it, and a
+     <a> otherwise. Both have to look like the same arrow. */
+  border: 0;
+  background: none;
+  padding: 0;
 }
 
 .title {
@@ -34,4 +40,31 @@
 
 .action {
   margin-left: auto;
+}
+
+/* --- "Leave without saving?" --------------------------------------------- */
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-20);
+}
+
+.confirmTitle {
+  -webkit-user-select: none;
+  user-select: none;
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.confirmText {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+/* TextButton is fit-content, so without this the quiet way out sits hard
+   against the left edge under a full-width button. */
+.confirm > button:last-child {
+  align-self: center;
 }

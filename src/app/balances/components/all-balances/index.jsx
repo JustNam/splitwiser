@@ -10,6 +10,7 @@ import { groupBalances } from '@/services/balance.service'
 import { BalanceList } from '@/app/components/balance-list'
 import { TextLink } from '@/components/TextLink'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
 import Style from './style.module.scss'
 
 export function AllBalances() {
@@ -26,11 +27,7 @@ export function AllBalances() {
   }
 
   if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
+    return <RetryMessage message={state.error} onRetry={state.reload} />
   }
 
   if (state.status === 'no-group') {
@@ -46,5 +43,7 @@ export function AllBalances() {
     myMemberId: group.myMemberId,
   })
 
-  return <BalanceList rows={rows} memberCount={snapshot.members.length} />
+  return (
+    <BalanceList rows={rows} memberCount={snapshot.members.length} from="/balances" />
+  )
 }

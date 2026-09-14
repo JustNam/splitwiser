@@ -42,6 +42,9 @@ import { SplitPicker } from '@/components/SplitPicker'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
 import { Loading } from '@/components/Loading'
+import { PageHeader } from '@/components/PageHeader'
+import { RetryMessage } from '@/components/RetryMessage'
+import { useToast } from '@/components/Toast'
 import { LinkButton } from '@/components/LinkButton'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
@@ -71,11 +74,18 @@ function todayIso() {
 export function NewSessionForm() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const toast = useToast()
 
   // The group and its people. One object because they arrive together and are
   // useless apart.
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(null)
+  const [attempt, setAttempt] = useState(0)
+
+  function reload() {
+    setLoadError(null)
+    setAttempt((n) => n + 1)
+  }
 
   const [date, setDate] = useState(todayIso)
 
@@ -109,6 +119,14 @@ export function NewSessionForm() {
   // placeholder works everywhere a real one does, right up to the save.
   const [pendingGuests, setPendingGuests] = useState([])
 
+  // The line-up this screen STARTED from, as a sorted string. Ticking people
+  // is work too, and the leave guard has to tell "I chose these twelve" from
+  // "the screen guessed these twelve for me".
+  //
+  // State, not a ref: it is read while rendering, and a ref read during
+  // render is a value React has not promised to have kept up to date.
+  const [seed, setSeed] = useState('')
+
   const [method, setMethod] = useState(SPLIT_EQUAL)
 
   // memberId -> a number whose MEANING is set by `method`: đồng, percent,
@@ -122,6 +140,8 @@ export function NewSessionForm() {
   // A ref, not state: bumping it must not cause a render, and it has to
   // survive one without being reset.
   const nextGuestKey = useRef(1)
+
+
   const nextLineKey = useRef(2)
 
   useEffect(() => {
@@ -153,6 +173,7 @@ export function NewSessionForm() {
       const lineUp = latestLineUp(snapshot.sessions, snapshot.participants)
       const starting = lineUp.length > 0 ? lineUp : snapshot.members.map((m) => m.id)
 
+      setSeed([...starting].sort().join(','))
       setPresent(Object.fromEntries(starting.map((memberId) => [memberId, true])))
 
       // "I paid" pre-selected: it is the common case, and the select is right
@@ -165,16 +186,28 @@ export function NewSessionForm() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user])
+  }, [authLoading, user, attempt])
 
-  if (authLoading) return <Loading />
+  const header = <PageHeader title="New session" />
+
+  if (authLoading) {
+    return (
+      <>
+        {header}
+        <Loading />
+      </>
+    )
+  }
 
   if (!user) {
     return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> before you can log a
-        session.
-      </p>
+      <>
+        {header}
+        <p className={Style.error} role="alert">
+          You need to <TextLink href="/signin">sign in</TextLink> before you can log a
+          session.
+        </p>
+      </>
     )
   }
 
@@ -186,9 +219,13 @@ export function NewSessionForm() {
 
     return (
       <>
-        <p className={noGroup ? Style.hint : Style.error} role={noGroup ? undefined : 'alert'}>
-          {loadError}
-        </p>
+        {header}
+
+        {noGroup ? (
+          <p className={Style.hint}>{loadError}</p>
+        ) : (
+          <RetryMessage message={loadError} onRetry={reload} />
+        )}
 
         {noGroup && (
           <div className={Style.noGroupActions}>
@@ -202,7 +239,14 @@ export function NewSessionForm() {
     )
   }
 
-  if (!data) return <Loading />
+  if (!data) {
+    return (
+      <>
+        {header}
+        <Loading />
+      </>
+    )
+  }
 
   // ---- everything below is derived from state, recomputed every render ----
 
@@ -428,9 +472,12 @@ export function NewSessionForm() {
 
     if (apiError) {
       setError(apiError)
+      toast.error(apiError)
       setSubmitting(false)
       return
     }
+
+    toast.success('Session saved')
 
     // Straight to B3, which the spec calls the confirmation you see right
     // after logging a session. This used to go to Home because B3 did not
@@ -439,8 +486,25 @@ export function NewSessionForm() {
     router.push(`/session/${created.id}`)
   }
 
+  // What leaving would throw away. Money typed and names typed, plus a
+  // line-up that is no longer the one the screen guessed — ticking twelve of
+  // thirty people is work, and it is lost as completely as the amount is.
+  const dirty =
+    lines.some((line) => line.amountText !== '' || line.note.trim() !== '') ||
+    pendingGuests.length > 0 ||
+    guestName.trim() !== '' ||
+    [...participantIds].sort().join(',') !== seed
+
   return (
     <form className={Style.form} onSubmit={handleSubmit} noValidate>
+      <PageHeader
+        title="New session"
+        guard={{
+          when: dirty && !submitting,
+          message: 'This session hasn’t been saved. Nothing is recorded yet.',
+        }}
+      />
+
       <TextField
         label="Date"
         type="date"

@@ -15,7 +15,10 @@ import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
+import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
+import TextField from '@mui/material/TextField'
 import { TextButton } from '@/components/TextButton'
 import { LinkButton } from '@/components/LinkButton'
 import { TextLink } from '@/components/TextLink'
@@ -27,8 +30,23 @@ import Style from './style.module.scss'
 export function GroupDetail() {
   const { user, loading: authLoading, signOut } = useAuth()
   const router = useRouter()
+  const toast = useToast()
 
   const [state, setState] = useState({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+
+  function reload() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
+
+  // Adding a guest used to be possible only from inside New session, on a
+  // screen about one evening's badminton. This is the screen about who is in
+  // the group, which is where you look when that is the thing you want.
+  const [addingGuest, setAddingGuest] = useState(false)
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [savingGuest, setSavingGuest] = useState(false)
 
   const [copied, setCopied] = useState(false)
   const [confirming, setConfirming] = useState(false)
@@ -60,7 +78,7 @@ export function GroupDetail() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user])
+  }, [authLoading, user, attempt])
 
   // Header in every state, so a failed load still has a way back.
   if (authLoading || !user || state.status !== 'ready') {
@@ -77,9 +95,7 @@ export function GroupDetail() {
         )}
 
         {user && state.status === 'error' && (
-          <p className={Style.error} role="alert">
-            {state.error}
-          </p>
+          <RetryMessage message={state.error} onRetry={reload} />
         )}
 
         {/* The two ways out, on the one screen that is about groups. */}
@@ -128,6 +144,7 @@ export function GroupDetail() {
     try {
       await navigator.clipboard.writeText(inviteLink)
       setCopied(true)
+      toast.success('Invite link copied')
       // Back to "Copy link" after a beat. Left latched, the button spends the
       // rest of the visit claiming a copy that happened a page-view ago, and
       // a second tap gives you no sign it worked.
@@ -136,6 +153,7 @@ export function GroupDetail() {
       // Needs a secure context and can be refused outright. The code is on
       // screen either way, so this is a downgrade, not a failure.
       setError('Couldn’t copy — read the code above instead.')
+      toast.error('Couldn’t copy — read the code above')
     }
   }
 
@@ -147,6 +165,7 @@ export function GroupDetail() {
 
     if (apiError) {
       setError(apiError)
+      toast.error(apiError)
       setWorking(false)
       return
     }
@@ -157,6 +176,7 @@ export function GroupDetail() {
       ...current,
       group: { ...current.group, ...data },
     }))
+    toast.success('New invite code created')
     setConfirming(false)
     setChanged(true)
     setCopied(false)
@@ -165,7 +185,41 @@ export function GroupDetail() {
 
   async function handleSignOut() {
     await signOut()
+    toast.success('Signed out')
     router.push('/signin')
+  }
+
+  async function handleAddGuest() {
+    setSavingGuest(true)
+    setError(null)
+
+    const { data, error: apiError } = await GroupsApi.addGuest(
+      group.id,
+      guestName.trim(),
+      guestEmail.trim()
+    )
+
+    if (apiError) {
+      setError(apiError)
+      toast.error(apiError)
+      setSavingGuest(false)
+      return
+    }
+
+    // Only the roster changed, so only the roster is added to — refetching
+    // the screen would throw away the invite code for nothing.
+    setState((current) => ({ ...current, members: [...current.members, data] }))
+
+    toast.success(
+      guestEmail.trim() === ''
+        ? `${data.name ?? guestName.trim()} added`
+        : `${data.name ?? guestName.trim()} added — we’ll invite them`
+    )
+
+    setGuestName('')
+    setGuestEmail('')
+    setAddingGuest(false)
+    setSavingGuest(false)
   }
 
   return (
@@ -209,6 +263,58 @@ export function GroupDetail() {
             </li>
           ))}
         </ul>
+
+        {/* Closed by default — the same shape B2 uses. The fields and their
+            explanation appear only for the person who came to add someone. */}
+        {addingGuest ? (
+          <div className={Style.guestBlock}>
+            <div className={Style.guestRow}>
+              <TextField
+                label="Name"
+                value={guestName}
+                onChange={(event) => setGuestName(event.target.value)}
+                size="small"
+                autoFocus
+                disabled={savingGuest}
+              />
+              <TextField
+                label="Email (optional)"
+                value={guestEmail}
+                onChange={(event) => setGuestEmail(event.target.value)}
+                slotProps={{ htmlInput: { inputMode: 'email' } }}
+                size="small"
+                disabled={savingGuest}
+              />
+            </div>
+
+            <p className={Style.note}>
+              Email is optional, but worth adding: we’ll invite them, and when they
+              sign up everything they owe or are owed comes with them.
+            </p>
+
+            <div className={Style.inviteActions}>
+              <Button
+                onClick={handleAddGuest}
+                disabled={guestName.trim() === '' || savingGuest}
+              >
+                {savingGuest ? 'Adding…' : 'Add'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setAddingGuest(false)
+                  setGuestName('')
+                  setGuestEmail('')
+                }}
+                disabled={savingGuest}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <TextButton onClick={() => setAddingGuest(true)}>+ Add a guest</TextButton>
+        )}
       </section>
 
       <section className={Style.section}>

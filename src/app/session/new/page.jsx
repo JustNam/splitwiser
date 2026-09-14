@@ -1,5 +1,4 @@
 import { NewSessionForm } from './components/new-session-form'
-import { PageHeader } from '@/components/PageHeader'
 import Style from './page.module.scss'
 
 export const metadata = {
@@ -9,16 +8,14 @@ export const metadata = {
 /**
  * B2 · New session
  *
- * The header is static, so it stays a Server Component; everything that moves
- * lives in the form. The wireframe puts the date picker up here beside the
- * title — it sits inside the form instead, because the date is form state and
- * splitting state across a server/client boundary buys nothing.
+ * The header used to live here, static. It moved into the form: the back
+ * arrow has to ask before discarding a half-filled session, and whether there
+ * is anything to discard is form state. Same reason the date picker is in
+ * there rather than up beside the title as the wireframe draws it.
  */
 export default function NewSessionPage() {
   return (
     <main className={Style.page}>
-      <PageHeader title="New session" />
-
       <NewSessionForm />
     </main>
   )

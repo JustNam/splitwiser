@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { formatVnd } from '@/services/money.service'
 import { LinkButton } from '@/components/LinkButton'
 import { SectionHeader } from '@/components/SectionHeader'
+import { withFrom } from '@/lib/next-path'
 import Style from './style.module.scss'
 
 /**
@@ -19,7 +20,7 @@ import Style from './style.module.scss'
  *
  * No 'use client': nothing here has state or handlers.
  */
-export function BalanceList({ rows, memberCount, limit, seeAllHref }) {
+export function BalanceList({ rows, memberCount, limit, seeAllHref, from }) {
   const shown = limit ? rows.slice(0, limit) : rows
   const hidden = rows.length - shown.length
   return (
@@ -45,7 +46,7 @@ export function BalanceList({ rows, memberCount, limit, seeAllHref }) {
         <>
           <ul className={Style.list}>
             {shown.map((row) => (
-              <BalanceRow key={row.memberId} row={row} />
+              <BalanceRow key={row.memberId} row={row} from={from} />
             ))}
           </ul>
 
@@ -62,7 +63,7 @@ export function BalanceList({ rows, memberCount, limit, seeAllHref }) {
   )
 }
 
-function BalanceRow({ row }) {
+function BalanceRow({ row, from }) {
   const owedToMe = row.direction === 'they-owe-me'
 
   // One line, one number — and a link to where the number comes from. B5
@@ -73,7 +74,7 @@ function BalanceRow({ row }) {
   // entire card is the tap target.
   return (
     <li>
-      <Link href={`/settle?member=${row.memberId}`} className={Style.row}>
+      <Link href={withFrom(`/settle?member=${row.memberId}`, from)} className={Style.row}>
         <span className={Style.phrase}>
           {owedToMe ? 'You lent ' : 'You owe '}
           <span className={Style.name}>{row.name}</span>

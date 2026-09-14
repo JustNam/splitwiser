@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SectionHeader } from '@/components/SectionHeader'
 import { formatVnd } from '@/services/money.service'
 import { LinkButton } from '@/components/LinkButton'
+import { withFrom } from '@/lib/next-path'
 import Style from './style.module.scss'
 
 /**
@@ -10,8 +11,12 @@ import Style from './style.module.scss'
  * Each row links to B3. The <Link> wraps the whole row rather than sitting
  * inside it, so the entire card is the tap target — a 60px row with a 20px
  * link in it is the kind of thing that only annoys people on phones.
+ *
+ * `from` is where B3's back arrow should return to. Home leaves it unset and
+ * gets the default; /sessions passes itself, so coming back lands in the list
+ * you were reading rather than at the top of the app.
  */
-export function SessionList({ rows, limit, seeAllHref }) {
+export function SessionList({ rows, limit, seeAllHref, from }) {
   const shown = limit ? rows.slice(0, limit) : rows
   const hidden = rows.length - shown.length
 
@@ -36,7 +41,7 @@ export function SessionList({ rows, limit, seeAllHref }) {
       <ul className={Style.list}>
         {shown.map((row) => (
           <li key={row.id}>
-            <Link href={`/session/${row.id}`} className={Style.row}>
+            <Link href={withFrom(`/session/${row.id}`, from)} className={Style.row}>
               <span className={Style.info}>
                 <span className={Style.date}>
                   {/* A date is data, not a word that happens to look like one.

@@ -1,0 +1,12 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-24) 0;
+}
+
+.text {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}

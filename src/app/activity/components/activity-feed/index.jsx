@@ -13,10 +13,12 @@
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
 import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
 import { writeLastSeen } from '@/lib/last-seen'
+import { withFrom } from '@/lib/next-path'
 import { useAuth } from '@/hooks/useAuth'
 import { formatVnd } from '@/services/money.service'
 import { activityFeed, formatMoment } from '@/services/activity.service'
@@ -60,9 +62,7 @@ export function ActivityFeed() {
         )}
 
         {state.status === 'error' && (
-          <p className={Style.error} role="alert">
-            {state.error}
-          </p>
+          <RetryMessage message={state.error} onRetry={state.reload} />
         )}
 
         {state.status === 'no-group' && (
@@ -111,7 +111,9 @@ export function ActivityFeed() {
                 </span>
               </span>
 
-              <TextLink href={`/session/${event.sessionId}`}>Open</TextLink>
+              <TextLink href={withFrom(`/session/${event.sessionId}`, '/activity')}>
+                Open
+              </TextLink>
             </li>
           ))}
         </ul>

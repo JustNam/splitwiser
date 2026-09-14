@@ -157,6 +157,9 @@ function buildPeople({ sessionCostLines, sessionLedger, playedIds }) {
   return playedIds.map((memberId) => ({
     memberId,
     amount: share.get(memberId),
+    // What this person still has to hand over. B3 reads it to decide whether
+    // "Pay my share" is a button that means anything to the person looking.
+    outstanding: outstanding.get(memberId),
     // Positive when this person has handed money over. B4 warns before an
     // edit changes the share of someone who has already paid.
     paid: handedOver.get(memberId),

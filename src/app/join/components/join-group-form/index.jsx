@@ -18,12 +18,14 @@ import { LinkButton } from '@/components/LinkButton'
 import { Loading } from '@/components/Loading'
 import { useAuth } from '@/hooks/useAuth'
 import { writeCurrentGroupId } from '@/lib/current-group'
+import { useToast } from '@/components/Toast'
 import { withNextPath } from '@/lib/next-path'
 import Style from './style.module.scss'
 
 export function JoinGroupForm() {
   const { isAuthenticated, loading } = useAuth()
   const searchParams = useSearchParams()
+  const toast = useToast()
 
   // Read once, as the starting value. A useState initialiser runs on the first
   // render only, which is what we want — the user can edit the field
@@ -57,6 +59,7 @@ export function JoinGroupForm() {
     if (apiError) {
       if (field === 'code') setCodeError(apiError)
       else setError(apiError)
+      toast.error(apiError)
       setSubmitting(false)
       return
     }
@@ -65,6 +68,7 @@ export function JoinGroupForm() {
     // this, so without it “Go to group” quietly shows the previous one.
     writeCurrentGroupId(data.id)
 
+    toast.success(`Joined ${data.name}`)
     setJoined(data)
     setSubmitting(false)
   }

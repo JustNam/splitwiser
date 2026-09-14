@@ -9,15 +9,17 @@
  */
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
 import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
+import { readFromPath } from '@/lib/next-path'
 import { formatVnd } from '@/services/money.service'
 import { sessionDetail } from '@/services/session-detail.service'
 import { Loading } from '@/components/Loading'
+import { RetryMessage } from '@/components/RetryMessage'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextLink } from '@/components/TextLink'
@@ -33,6 +35,17 @@ export function SessionDetail() {
   const { id } = useParams()
 
   const [state, setState] = useState({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+
+  function reload() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
+
+  // Which list this session was opened out of. Back used to be hardcoded to
+  // Home, so tapping a session from /sessions or /activity and coming back
+  // lost your place in the list you were reading.
+  const backHref = readFromPath(useSearchParams())
 
   useEffect(() => {
     if (authLoading || !user) return
@@ -67,14 +80,14 @@ export function SessionDetail() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user, id])
+  }, [authLoading, user, id, attempt])
 
   // Header in every state. A failed load used to leave a bare sentence with
   // no back arrow anywhere on it.
   if (authLoading || !user || state.status !== 'ready') {
     return (
       <>
-        <PageHeader title="Session" />
+        <PageHeader backHref={backHref} title="Session" />
 
         {(authLoading || state.status === 'loading') && <Loading />}
 
@@ -85,9 +98,7 @@ export function SessionDetail() {
         )}
 
         {user && state.status === 'error' && (
-          <p className={Style.error} role="alert">
-            {state.error}
-          </p>
+          <RetryMessage message={state.error} onRetry={reload} />
         )}
 
         {user && state.status === 'not-found' && (
@@ -109,9 +120,19 @@ export function SessionDetail() {
     myMemberId: group.myMemberId,
   })
 
+  // Who still owes what, on THIS session. The footer button used to be
+  // unconditional, so the person who paid for everybody — the one the others
+  // owe — was invited to "Pay my share".
+  const me = detail.people.find((person) => person.memberId === group.myMemberId)
+  const iOwe = (me?.outstanding ?? 0) > 0
+  const othersOwe = detail.people.some(
+    (person) => person.memberId !== group.myMemberId && person.outstanding > 0
+  )
+
   return (
     <>
       <PageHeader
+        backHref={backHref}
         title={<time dateTime={detail.date}>{detail.dateLabel}</time>}
         action={<TextLink href={`/session/${detail.id}/edit`}>Edit</TextLink>}
       />
@@ -195,9 +216,20 @@ export function SessionDetail() {
 
       <p className={Style.trail}>{detail.trail}</p>
 
-      <footer className={Style.actions}>
-        <LinkButton href="/settle">Pay my share</LinkButton>
-      </footer>
+      {/* Both routes land on B5, which is where money is recorded either
+          way — only the words change, because "pay" and "collect" are not the
+          same errand. Neither is offered to somebody with nothing to do. */}
+      {iOwe ? (
+        <footer className={Style.actions}>
+          <LinkButton href="/settle">Pay my share</LinkButton>
+        </footer>
+      ) : othersOwe ? (
+        <footer className={Style.actions}>
+          <LinkButton variant="secondary" href="/settle">
+            See what you’re owed
+          </LinkButton>
+        </footer>
+      ) : null}
     </>
   )
 }

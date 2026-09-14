@@ -17,6 +17,7 @@ import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
 import { Loading } from '@/components/Loading'
+import { useToast } from '@/components/Toast'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { writeCurrentGroupId } from '@/lib/current-group'
@@ -24,6 +25,7 @@ import Style from './style.module.scss'
 
 export function CreateGroupForm() {
   const { isAuthenticated, loading } = useAuth()
+  const toast = useToast()
 
   // useState gives back a pair: the current value, and the only function
   // allowed to change it. Assigning to `name` directly would not re-render.
@@ -56,6 +58,7 @@ export function CreateGroupForm() {
 
     if (apiError) {
       setError(apiError)
+      toast.error(apiError)
       setSubmitting(false)
       return
     }
@@ -64,6 +67,7 @@ export function CreateGroupForm() {
     // this, so without it “Go to group” quietly shows the previous one.
     writeCurrentGroupId(data.id)
 
+    toast.success(`${data.name} created`)
     setGroup(data)
     setSubmitting(false)
   }
@@ -79,12 +83,17 @@ export function CreateGroupForm() {
     try {
       await navigator.clipboard.writeText(inviteLink)
       setCopied(true)
+      toast.success('Invite link copied')
+      // "Copied" is a moment, not a state: left latched, the button spends
+      // the rest of the visit claiming a copy that already happened.
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // Clipboard access needs a secure context and can be refused outright.
       // The code is on screen either way, so this is a downgrade, not a
       // failure.
       setCopied(false)
       setError('Couldn’t copy — use the code above instead.')
+      toast.error('Couldn’t copy — use the code above')
     }
   }
 
