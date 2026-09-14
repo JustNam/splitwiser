@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Badge from '@mui/material/Badge'
 import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup, writeCurrentGroupId } from '@/lib/current-group'
@@ -282,10 +283,12 @@ function ActivityLink({ group, snapshot, accountId }) {
 
   const unread = unreadCount(events, readLastSeen(accountId), myName)
 
+  // MUI's Badge rather than our own span: it positions the count against the
+  // word, hides itself at zero, and caps at "9+" without any of that being
+  // three more lines here.
   return (
-    <TextLink href="/activity">
-      Activity
-      {unread > 0 && <span className={Style.badge}>{unread}</span>}
-    </TextLink>
+    <Badge badgeContent={unread} color="primary" max={9}>
+      <TextLink href="/activity">Activity</TextLink>
+    </Badge>
   )
 }

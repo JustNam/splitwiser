@@ -25,6 +25,8 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Checkbox from '@mui/material/Checkbox'
 import Dialog from '@mui/material/Dialog'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 import { GroupsApi } from '@/api/groups'
 import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
@@ -46,6 +48,12 @@ export function SettleList() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const toast = useToast()
+
+  // A dialog that lists every item being settled can be longer than a phone.
+  // MUI's default paper keeps 32px of margin on each side, so on a 360px
+  // screen the list gets 296px and then scrolls inside a box inside a page.
+  // Full screen below `sm` is the pattern MUI itself recommends for this.
+  const fullScreen = useMediaQuery(useTheme().breakpoints.down('sm'))
 
   const searchParams = useSearchParams()
   const memberFilter = searchParams.get('member')
@@ -341,6 +349,7 @@ export function SettleList() {
         // and there was no name to read.
         aria-labelledby="settle-confirm-title"
         fullWidth
+        fullScreen={fullScreen}
       >
         <div className={Style.confirm}>
           <h2 className={Style.confirmTitle} id="settle-confirm-title">

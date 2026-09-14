@@ -163,14 +163,21 @@
   border-radius: var(--radius);
 }
 
+/* Wraps rather than overflows. The amount column is fixed so the numbers
+   line up down the list; on a narrow phone that fixed column plus a note
+   field is more than the row has, and the note drops to its own line
+   instead of the page scrolling sideways. */
 .costRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-8);
 }
 
 .costNote {
-  flex: 1;
+  /* 160px basis, not `flex: 1` alone: the basis is what tells the row when
+     there is no longer space for the note and the amount side by side. */
+  flex: 1 1 160px;
   min-width: 0;
 }
 

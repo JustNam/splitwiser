@@ -18,7 +18,7 @@ import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
 import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import { Loading } from '@/components/Loading'
+import { LoadingForm } from '@/components/Loading'
 import { useToast } from '@/components/Toast'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
@@ -108,7 +108,7 @@ export function CreateGroupForm() {
 
   // Nothing rendered while the session is still being read, or a signed-in
   // user sees "you need to sign in" for one frame.
-  if (loading) return <Loading />
+  if (loading) return <LoadingForm fields={2} />
 
   if (!isAuthenticated) {
     return (

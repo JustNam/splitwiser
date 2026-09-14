@@ -30,9 +30,14 @@
   color: var(--text-muted);
 }
 
-.tick {
-  display: inline-block;
-  width: 18px;
-  flex: none;
+/* The tick is the one icon in the menu that means "you are here" rather than
+   "this does something", so it is the one that takes the brand colour. */
+.current {
   color: var(--brand-primary);
+}
+
+/* The caret needs a little air of its own; the icons inside the menu get
+   theirs from ListItemIcon. */
+.trigger .caret {
+  margin-left: var(--space-2);
 }

@@ -7,6 +7,8 @@ import CheckIcon from '@mui/icons-material/Check'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import LoginIcon from '@mui/icons-material/Login'
 import Divider from '@mui/material/Divider'
+import ListItemIcon from '@mui/material/ListItemIcon'
+import ListItemText from '@mui/material/ListItemText'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import Style from './style.module.scss'
@@ -70,30 +72,34 @@ export function GroupSwitcher({ groups, current, onSwitch }) {
             selected={row.id === current.id}
             onClick={() => choose(row.id)}
           >
-            {/* A column the tick sits in whether or not it is there, so the
-                names stay in one line down the menu instead of shuffling
-                sideways by an icon's width. */}
-            <span className={Style.tick}>
-              {row.id === current.id && <CheckIcon fontSize="small" />}
-            </span>
-            {row.name}
+            {/* ListItemIcon rather than a span of our own: it is the piece
+                MUI sizes the icon column with, so the gap is the one every
+                other menu in the world uses instead of a number I picked.
+                Empty for the groups you are not in — the column has to stay
+                the same width or the names shuffle sideways. */}
+            <ListItemIcon>
+              {row.id === current.id && (
+                <CheckIcon fontSize="small" className={Style.current} />
+              )}
+            </ListItemIcon>
+            <ListItemText>{row.name}</ListItemText>
           </MenuItem>
         ))}
 
         <Divider />
 
         <MenuItem component={Link} href="/group/new" onClick={() => setAnchor(null)}>
-          <span className={Style.tick}>
+          <ListItemIcon>
             <AddIcon fontSize="small" />
-          </span>
-          New group
+          </ListItemIcon>
+          <ListItemText>New group</ListItemText>
         </MenuItem>
 
         <MenuItem component={Link} href="/join" onClick={() => setAnchor(null)}>
-          <span className={Style.tick}>
+          <ListItemIcon>
             <LoginIcon fontSize="small" />
-          </span>
-          Join with a code
+          </ListItemIcon>
+          <ListItemText>Join with a code</ListItemText>
         </MenuItem>
       </Menu>
     </>

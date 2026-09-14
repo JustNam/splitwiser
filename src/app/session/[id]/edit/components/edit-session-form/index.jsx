@@ -39,7 +39,7 @@ import { Button } from '@/components/Button'
 import { Chip, ChipGroup } from '@/components/Chip'
 import { SplitPicker } from '@/components/SplitPicker'
 import { SectionHeader } from '@/components/SectionHeader'
-import { Loading } from '@/components/Loading'
+import { LoadingForm } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
@@ -150,7 +150,7 @@ export function EditSessionForm() {
       <>
         <PageHeader title="Edit session" />
 
-        {(authLoading || state.status === 'loading') && <Loading />}
+        {(authLoading || state.status === 'loading') && <LoadingForm fields={3} />}
 
         {!authLoading && !user && (
           <p className={Style.error} role="alert">

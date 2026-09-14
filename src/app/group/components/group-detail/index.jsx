@@ -25,6 +25,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import LogoutIcon from '@mui/icons-material/Logout'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import Alert from '@mui/material/Alert'
+import Collapse from '@mui/material/Collapse'
 import TextField from '@mui/material/TextField'
 import { TextButton } from '@/components/TextButton'
 import { LinkButton } from '@/components/LinkButton'
@@ -278,7 +279,10 @@ export function GroupDetail() {
 
         {/* Closed by default — the same shape B2 uses. The fields and their
             explanation appear only for the person who came to add someone. */}
-        {addingGuest ? (
+        {/* Collapse rather than a bare conditional: a block that appears
+            between two taps with no transition reads as the page having
+            jumped, and you look for what moved instead of at what arrived. */}
+        <Collapse in={addingGuest} unmountOnExit>
           <div className={Style.guestBlock}>
             <div className={Style.guestRow}>
               <TextField
@@ -324,7 +328,9 @@ export function GroupDetail() {
               </Button>
             </div>
           </div>
-        ) : (
+        </Collapse>
+
+        {!addingGuest && (
           <TextButton onClick={() => setAddingGuest(true)}>
             <AddIcon fontSize="small" />
             Add a guest
@@ -360,7 +366,7 @@ export function GroupDetail() {
 
           {/* The warning has to be read before the damage, not after — so the
               confirmation appears in place rather than as a toast afterwards. */}
-          {confirming && (
+          <Collapse in={confirming} unmountOnExit>
             <div className={Style.confirm}>
               <p className={Style.confirmText}>
                 Anyone holding the current link won’t be able to join. Carry on?
@@ -378,7 +384,7 @@ export function GroupDetail() {
                 </Button>
               </div>
             </div>
-          )}
+          </Collapse>
         </div>
       </section>
 

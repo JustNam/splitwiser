@@ -82,3 +82,29 @@ export function LoadingRows({ rows = 3, label = 'Loading…' }) {
     </div>
   )
 }
+
+/**
+ * Fields, for a screen that is a form.
+ *
+ * A form has a shape too — it is just not rows. Boxes the height of a field,
+ * which is honest about what is coming without pretending to know how many
+ * of them there are: `fields` is the count above the fold, not the whole
+ * form, because a skeleton of twelve inputs is a worse lie than three.
+ */
+export function LoadingForm({ fields = 3, label = 'Loading…' }) {
+  const settled = useSettled()
+  if (!settled) return null
+
+  return (
+    <div className={Style.fields} role="status" aria-label={label}>
+      {Array.from({ length: fields }, (_, index) => (
+        <Skeleton
+          key={index}
+          variant="rounded"
+          height={52}
+          aria-hidden="true"
+        />
+      ))}
+    </div>
+  )
+}

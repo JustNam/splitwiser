@@ -61,3 +61,10 @@
   flex: 1;
   min-width: 0;
 }
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-8) 0;
+}

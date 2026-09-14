@@ -15,7 +15,7 @@ import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
-import { Loading } from '@/components/Loading'
+import { LoadingForm } from '@/components/Loading'
 import { useAuth } from '@/hooks/useAuth'
 import { writeCurrentGroupId } from '@/lib/current-group'
 import { useToast } from '@/components/Toast'
@@ -73,7 +73,7 @@ export function JoinGroupForm() {
     setSubmitting(false)
   }
 
-  if (loading) return <Loading />
+  if (loading) return <LoadingForm fields={2} />
 
   if (!isAuthenticated) {
     // Both doors, because someone opening an invite link for the first time

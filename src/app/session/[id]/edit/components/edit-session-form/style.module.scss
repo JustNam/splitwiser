@@ -152,14 +152,16 @@
   border-radius: var(--radius);
 }
 
+/* Wraps rather than overflows — see the note on B2's .costRow. */
 .costRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-8);
 }
 
 .costNote {
-  flex: 1;
+  flex: 1 1 160px;
   min-width: 0;
 }
 

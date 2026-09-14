@@ -174,17 +174,23 @@ export function SessionDetail() {
             <li key={person.memberId} className={Style.row}>
               <Avatar name={person.name} size="sm" />
 
+              {/* Name and status in one column, amount in the other. Four
+                  columns — avatar, name, status, amount — left about 50px for
+                  the name on a 360px phone, and a status is a fact ABOUT the
+                  person, so under their name is where it belongs anyway. */}
               <span className={Style.rowInfo}>
-                <span className={Style.rowLabel}>{person.name}</span>
-                {person.isGuest && (
-                  <span className={clsx(Style.rowSub, Style.guestTag)}>Guest</span>
-                )}
-              </span>
+                <span className={Style.rowLabel}>
+                  {person.name}
+                  {person.isGuest && (
+                    <span className={clsx(Style.rowSub, Style.guestTag)}> · Guest</span>
+                  )}
+                </span>
 
-              {/* Words carry the meaning; the class only tints them. */}
-              <span className={clsx(Style.status, Style[person.tone])}>
-                {person.status}
-                {person.statusAmount ? ` ${formatVnd(person.statusAmount)}` : ''}
+                {/* Words carry the meaning; the class only tints them. */}
+                <span className={clsx(Style.status, Style[person.tone])}>
+                  {person.status}
+                  {person.statusAmount ? ` ${formatVnd(person.statusAmount)}` : ''}
+                </span>
               </span>
 
               <span className={Style.rowAmount}>{formatVnd(person.amount)}</span>

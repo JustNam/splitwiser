@@ -42,7 +42,8 @@ import { SplitPicker } from '@/components/SplitPicker'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
 import AddIcon from '@mui/icons-material/Add'
-import { Loading } from '@/components/Loading'
+import Collapse from '@mui/material/Collapse'
+import { LoadingForm } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
@@ -56,7 +57,11 @@ import {
   latestLineUp,
 } from '@/services/session.service'
 import { seedInputs, splitPlan, spreadTheRest } from '@/services/split-plan.service'
-import { SPLIT_EQUAL } from '@/services/split.service'
+import {
+  SPLIT_ADJUSTED,
+  SPLIT_EQUAL,
+  SPLIT_EXACT,
+} from '@/services/split.service'
 import Style from './style.module.scss'
 
 /**
@@ -195,7 +200,7 @@ export function NewSessionForm() {
     return (
       <>
         {header}
-        <Loading />
+        <LoadingForm fields={3} />
       </>
     )
   }
@@ -244,7 +249,7 @@ export function NewSessionForm() {
     return (
       <>
         {header}
-        <Loading />
+        <LoadingForm fields={3} />
       </>
     )
   }
@@ -727,7 +732,9 @@ export function NewSessionForm() {
 
         {/* Closed by default. The fields and their explanation only appear for
             the person who actually came to add someone. */}
-        {addingGuest ? (
+        {/* Collapse rather than a bare conditional — a block that appears
+            with no transition reads as the page jumping. */}
+        <Collapse in={addingGuest} unmountOnExit>
           <div className={Style.guestBlock}>
             <div className={Style.guestRow}>
               <TextField
@@ -777,7 +784,9 @@ export function NewSessionForm() {
               </Button>
             </div>
           </div>
-        ) : (
+        </Collapse>
+
+        {!addingGuest && (
           <TextButton onClick={() => setAddingGuest(true)} disabled={submitting}>
             <AddIcon fontSize="small" />
             Add a guest
