@@ -40,6 +40,17 @@
   --flamingo-100: #fcdde8;
   --flamingo-50: #fff9fb;
 
+  /* ---- Azure (primary brand) ----
+     #1354d4 sits at 6.47:1 against white, which it has to clear TWICE over:
+     as brand-coloured text on the page, and as white text on a filled chip
+     or button. Contrast is symmetric, so one number covers both. */
+  --azure-700: #0b3fa8;
+  --azure-600: #1354d4;
+  --azure-400: #6aa3f5;
+  --azure-300: #9cc3ff;
+  --azure-100: #dbe9ff;
+  --azure-50: #f5f9ff;
+
   /* ---- Rossie (soft accent) ---- */
   --rossie-800: #894d51;
   --rossie-700: #f47e7e;
@@ -49,17 +60,11 @@
   --rossie-100: #fbf7f8;
 
   /* ---- Semantic raw ---- */
-  /* Deliberately far from --flamingo-600 (#da2a52). The brand is a red, so
-     an error cannot also be THAT red — #dc0034 sat at a contrast ratio of
-     1.08 against the brand, which is to say the same colour.
-
-     No field in the app sets MUI's `error` prop, so the two never meet as
-     two borders; the confusion is learned instead. Every error message on
-     every screen is this colour, so red means "wrong" by the time you reach
-     a form — and then MUI paints a merely FOCUSED field in the primary red,
-     and it reads as a rejection. Darker and browner breaks the association,
-     and reads at 8.15:1 on white instead of 5.13:1. */
-  --semantic-red: #9b1c1c;
+  /* Bright again, and it can be: the brand is no longer a red, so this is
+     the only red on the screen. The darker #9b1c1c was a workaround for a
+     collision that no longer exists. */
+  --semantic-red: #dc0034;
+  --semantic-red-100: #fef2f4;
   --semantic-green-500: #538e3b;
   --semantic-green-300: #49c14a;
   --semantic-green-100: #bbe3bb;
@@ -68,11 +73,14 @@
      Semantic aliases — reference THESE in components
      ============================================================ */
 
-  /* Brand */
-  --brand-primary: var(--flamingo-600);
-  --brand-primary-strong: var(--flamingo-700);
-  --brand-secondary: var(--flamingo-400);
-  --brand-tint: var(--flamingo-100);
+  /* Brand.
+     Flamingo stays in the palette above as an accent that is no longer
+     spoken for. Only these four lines decide what the app looks like — the
+     raw palette says which colours exist, the aliases say what they mean. */
+  --brand-primary: var(--azure-600);
+  --brand-primary-strong: var(--azure-700);
+  --brand-secondary: var(--azure-400);
+  --brand-tint: var(--azure-100);
 
   /* Text */
   --text-strong: var(--neutral-900);
@@ -89,7 +97,7 @@
   --surface-muted: var(--neutral-200);
   --surface-card: var(--neutral-white);
   --surface-warm: var(--charcoal-100);
-  --surface-tint: var(--flamingo-50);
+  --surface-tint: var(--azure-50);
 
   /* Borders */
   --border-default: var(--neutral-300);
@@ -101,6 +109,12 @@
   --feedback-error: var(--semantic-red);
   --feedback-success: var(--semantic-green-500);
   --feedback-success-tint: var(--semantic-green-100);
+  /* Three boxes on three screens meant "careful" and got their background
+     from --surface-tint, which worked only for as long as the brand happened
+     to be a red. It isn't any more, and a red border on a blue fill is
+     nobody's warning. The colour a warning is made of now has its own name
+     and cannot drift again. */
+  --feedback-error-tint: var(--semantic-red-100);
 
   /* Scrims / overlays */
   --scrim-strong: var(--transparent-800);
@@ -191,7 +205,7 @@
   --shadow-lg: 0 8px 28px rgba(9, 0, 0, 0.14);
 
   /* Focus ring */
-  --focus-ring: 0 0 0 3px var(--flamingo-100);
+  --focus-ring: 0 0 0 3px var(--azure-100);
 
   /* ============================================================
      App-specific (not from the design system)

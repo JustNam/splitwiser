@@ -18,13 +18,12 @@ import { createTheme } from '@mui/material/styles'
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#da2a52', // --flamingo-600
-      dark: '#b32656', // --flamingo-700
-      light: '#f384a7', // --flamingo-400
+      main: '#1354d4', // --azure-600
+      dark: '#0b3fa8', // --azure-700
+      light: '#6aa3f5', // --azure-400
       contrastText: '#ffffff',
     },
-    // Must stay far from primary.main: see --semantic-red in _tokens.scss.
-    error: { main: '#9b1c1c' }, // --semantic-red
+    error: { main: '#dc0034' }, // --semantic-red
     success: { main: '#538e3b' }, // --semantic-green-500
     text: {
       primary: '#231f20', // --neutral-900
