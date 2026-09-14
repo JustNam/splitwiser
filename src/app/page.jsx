@@ -17,6 +17,9 @@ import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup, writeCurrentGroupId } from '@/lib/current-group'
+import { readLastSeen } from '@/lib/last-seen'
+import { activityFeed, unreadCount } from '@/services/activity.service'
+import { displayName } from '@/services/money.service'
 import { groupBalances } from '@/services/balance.service'
 import { sessionSummaries } from '@/services/session.service'
 import { BalanceList } from './components/balance-list'
@@ -186,12 +189,13 @@ export default function HomePage() {
           <h1 className={Style.groupName}>{group.name}</h1>
         )}
 
-        {/* The wireframe puts this behind a "..." menu together with Sign out.
-            A plain link until there is a third thing to put in a menu. */}
+        {/* The wireframe puts these behind a "..." menu together with Sign
+            out. Plain links until there is a fourth thing to put in a menu. */}
+        <ActivityLink group={group} snapshot={snapshot} accountId={user.id} />
         <TextLink href="/group">Group</TextLink>
       </header>
 
-      <HomeBody group={group} snapshot={snapshot} />
+      <HomeBody group={group} snapshot={snapshot} accountId={user.id} />
 
       <footer className={Style.actions}>
         <LinkButton href="/session/new">New session</LinkButton>
@@ -249,5 +253,43 @@ function HomeBody({ group, snapshot }) {
       />
       <SessionList rows={sessionRows} limit={HOME_ROW_LIMIT} seeAllHref="/sessions" />
     </>
+  )
+}
+
+/**
+ * Activity, with a count of what has happened to your money since you last
+ * looked.
+ *
+ * Anyone in the group can change anyone's session. That rule is Splitwise's
+ * and it is the right one — whoever spots a mistake should be able to fix it
+ * — but it only works if the people affected find out. Without this, someone
+ * could change what you owe and you would never know unless you happened to
+ * reopen that exact session.
+ *
+ * Your own actions never count. A badge that lights up because of your own
+ * tap teaches you to ignore the badge.
+ */
+function ActivityLink({ group, snapshot, accountId }) {
+  if (snapshot.status !== 'ready') return <TextLink href="/activity">Activity</TextLink>
+
+  const me = snapshot.data.members.find((member) => member.id === group.myMemberId)
+  const myName = me ? displayName(me, snapshot.data.accounts) : ''
+
+  const events = activityFeed({
+    sessions: snapshot.data.sessions,
+    costLines: snapshot.data.costLines,
+    ledger: snapshot.data.ledger,
+    members: snapshot.data.members,
+    accounts: snapshot.data.accounts,
+    myMemberId: group.myMemberId,
+  })
+
+  const unread = unreadCount(events, readLastSeen(accountId), myName)
+
+  return (
+    <TextLink href="/activity">
+      Activity
+      {unread > 0 && <span className={Style.badge}>{unread}</span>}
+    </TextLink>
   )
 }

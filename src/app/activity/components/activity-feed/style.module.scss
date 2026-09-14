@@ -1,0 +1,89 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Fixed width so the three kinds line up as a column you can scan down
+   without reading. */
+.tag {
+  flex: none;
+  width: 60px;
+  padding: var(--space-2) 0;
+  border-radius: var(--radius);
+  font: var(--text-micro);
+  font-weight: var(--fw-bold);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.logged {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+
+.edited {
+  background: var(--surface-tint);
+  color: var(--brand-primary);
+}
+
+.settled {
+  background: var(--feedback-success-tint);
+  color: var(--feedback-success);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.text {
+  font: var(--text-body-md);
+  color: var(--text-body);
+}
+
+.actor {
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.mine {
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--surface-tint);
+  font-weight: var(--fw-bold);
+  color: var(--brand-primary);
+}
+
+.note {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
+}
