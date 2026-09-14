@@ -15,20 +15,29 @@
  *      that turns their payment into money owed back to them.
  *
  * Costs are a list, as they are on B2 — a session can have several, each
- * with its own payer. The split stays equal here: changing HOW a session is
- * divided is a different job from correcting what it cost, and mixing the two
- * into one screen makes the preview impossible to read.
+ * with its own payer, and both the payer and the way it is divided can be
+ * corrected here.
+ *
+ * Changing the payer is the one correction with a trap in it, and the trap is
+ * in the SQL rather than here: migration 0010 cancels what people were
+ * CHARGED rather than what they still owe, so somebody who already paid the
+ * old payer ends up owed that money back instead of quietly losing it.
  */
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
 import { Chip, ChipGroup } from '@/components/Chip'
+import { SplitPicker } from '@/components/SplitPicker'
 import { SectionHeader } from '@/components/SectionHeader'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
@@ -37,7 +46,8 @@ import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName, formatVnd } from '@/services/money.service'
 import { formatSessionDate } from '@/services/session.service'
 import { sessionDetail } from '@/services/session-detail.service'
-import { SPLIT_EQUAL, computeSplit } from '@/services/split.service'
+import { seedInputs, splitPlan, spreadTheRest } from '@/services/split-plan.service'
+import { SPLIT_EQUAL } from '@/services/split.service'
 import Style from './style.module.scss'
 
 export function EditSessionForm() {
@@ -56,6 +66,9 @@ export function EditSessionForm() {
 
   const [present, setPresent] = useState({})
   const [why, setWhy] = useState('')
+
+  const [method, setMethod] = useState(SPLIT_EQUAL)
+  const [inputs, setInputs] = useState({})
 
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -95,8 +108,10 @@ export function EditSessionForm() {
           costLineId: line.id,
           note: line.note ?? '',
           amountText: String(line.amount),
+          payerId: line.payerMemberId,
           amountWas: line.amount,
           noteWas: line.note ?? '',
+          payerWas: line.payerMemberId,
         }))
       )
       setPresent(
@@ -164,27 +179,12 @@ export function EditSessionForm() {
   const participants = members.filter((member) => present[member.id])
   const participantIds = participants.map((member) => member.id)
 
+  const multiLine = lines.length > 1
   const lineTotals = lines.map((line) => Number(line.amountText || 0))
-  const total = lineTotals.reduce((running, amount) => running + amount, 0)
 
-  // Per cost line, because each has its own payer and a share is owed to the
-  // person who paid THAT cost.
-  const lineShares = lines.map((line, index) =>
-    lineTotals[index] > 0 && participantIds.length > 0
-      ? computeSplit({
-          total: lineTotals[index],
-          participantIds,
-          method: SPLIT_EQUAL,
-        })
-      : {}
-  )
-
-  const nextShares = {}
-  for (const perLine of lineShares) {
-    for (const [memberId, amount] of Object.entries(perLine)) {
-      nextShares[memberId] = (nextShares[memberId] ?? 0) + amount
-    }
-  }
+  const plan = splitPlan({ lineTotals, participantIds, method, inputs })
+  const { lineShares, total } = plan
+  const nextShares = plan.shares
 
   // Everyone the edit touches: who plays now, plus anyone who used to and
   // doesn't any more. The second half is what makes a removal visible.
@@ -210,11 +210,19 @@ export function EditSessionForm() {
   // person editing has to see BEFORE saving.
   const warnings = preview.filter((row) => row.paid > 0 && row.paid > row.next)
 
+  // Changing who paid does not move money that has already changed hands.
+  // Whoever was paid keeps it and ends up owing it back, which is right but
+  // is not what anyone expects from editing a dropdown.
+  const movedPayer = lines.filter((line) => line.payerId !== line.payerWas)
+  const alreadyPaid = preview.filter((row) => row.paid > 0)
+
   const changedAnything =
     date !== session.date ||
     lines.some(
       (line, index) =>
-        lineTotals[index] !== line.amountWas || line.note.trim() !== line.noteWas
+        lineTotals[index] !== line.amountWas ||
+        line.note.trim() !== line.noteWas ||
+        line.payerId !== line.payerWas
     ) ||
     preview.some((row) => row.changed)
 
@@ -224,9 +232,13 @@ export function EditSessionForm() {
       : 'Every cost needs an amount above zero.'
     : participantIds.length === 0
       ? 'Tick at least one person who played.'
-      : !changedAnything
-        ? 'Nothing has changed yet.'
-        : null
+      : lines.some((line) => line.payerId === '')
+        ? 'Choose who paid.'
+        : plan.problem
+          ? plan.problem
+          : !changedAnything
+            ? 'Nothing has changed yet.'
+            : null
 
   /**
    * The sentence stored on every adjustment row, and the only thing B3 shows
@@ -241,6 +253,16 @@ export function EditSessionForm() {
         `Date: ${formatSessionDate(session.date)} → ${formatSessionDate(date)}`
       )
     }
+
+    lines.forEach((line) => {
+      if (line.payerId !== line.payerWas) {
+        parts.push(
+          `${line.note.trim() || 'Cost'}: paid by ${nameOfId(
+            line.payerWas
+          )} → ${nameOfId(line.payerId)}`
+        )
+      }
+    })
 
     lines.forEach((line, index) => {
       if (lineTotals[index] !== line.amountWas) {
@@ -264,9 +286,17 @@ export function EditSessionForm() {
     return why.trim() === '' ? sentence : `${sentence} — ${why.trim()}`
   }
 
-  function payerTextFor(costLineId) {
-    const costLine = costLines.find((row) => row.id === costLineId)
-    return costLine ? `Paid by ${nameOfId(costLine.payerMemberId)}` : ''
+  function changeMethod(nextMethod) {
+    setMethod(nextMethod)
+    setInputs(seedInputs(nextMethod, participantIds, total))
+  }
+
+  function setInput(memberId, value) {
+    setInputs((current) => ({ ...current, [memberId]: value }))
+  }
+
+  function splitTheRest() {
+    setInputs(spreadTheRest({ participantIds, method, inputs, ...plan }))
   }
 
   function updateLine(costLineId, patch) {
@@ -302,6 +332,7 @@ export function EditSessionForm() {
         costLineId: line.costLineId,
         note: line.note.trim() === '' ? null : line.note.trim(),
         amount: lineTotals[index],
+        payerMemberId: line.payerId,
         shares: lineShares[index],
       })),
       participantIds,
@@ -357,6 +388,25 @@ export function EditSessionForm() {
             disabled={submitting}
           />
 
+          <FormControl fullWidth disabled={submitting}>
+            <InputLabel id="payer-label">Paid by</InputLabel>
+            <Select
+              labelId="payer-label"
+              label="Paid by"
+              value={lines[0].payerId}
+              onChange={(event) =>
+                updateLine(lines[0].costLineId, { payerId: event.target.value })
+              }
+            >
+              {members.map((member) => (
+                <MenuItem key={member.id} value={member.id}>
+                  {nameOf(member)}
+                  {member.type === 'guest' ? ' (guest)' : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             label="What for"
             value={lines[0].note}
@@ -405,11 +455,24 @@ export function EditSessionForm() {
                   />
                 </div>
 
-                {/* No payer select and no remove button. Both change which
-                    ledger rows a cost line's debts belong to, which is a
-                    different correction from "it cost less than I typed" —
-                    and the one this screen's preview can explain. */}
-                <p className={Style.hint}>{payerTextFor(line.costLineId)}</p>
+                <FormControl size="small" fullWidth disabled={submitting}>
+                  <InputLabel id={`payer-${line.costLineId}`}>Paid by</InputLabel>
+                  <Select
+                    labelId={`payer-${line.costLineId}`}
+                    label="Paid by"
+                    value={line.payerId}
+                    onChange={(event) =>
+                      updateLine(line.costLineId, { payerId: event.target.value })
+                    }
+                  >
+                    {members.map((member) => (
+                      <MenuItem key={member.id} value={member.id}>
+                        {nameOf(member)}
+                        {member.type === 'guest' ? ' (guest)' : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </li>
             ))}
           </ul>
@@ -435,6 +498,19 @@ export function EditSessionForm() {
         </ChipGroup>
       </section>
 
+      <SplitPicker
+        plan={plan}
+        method={method}
+        inputs={inputs}
+        participants={participants}
+        nameOf={nameOf}
+        multiLine={multiLine}
+        disabled={submitting}
+        onMethodChange={changeMethod}
+        onInputChange={setInput}
+        onSplitTheRest={splitTheRest}
+      />
+
       <section className={Style.section}>
         <SectionHeader>What changes</SectionHeader>
 
@@ -459,8 +535,17 @@ export function EditSessionForm() {
         </p>
       </section>
 
-      {warnings.length > 0 && (
+      {(warnings.length > 0 || (movedPayer.length > 0 && alreadyPaid.length > 0)) && (
         <section className={Style.warnBox}>
+          {movedPayer.length > 0 && alreadyPaid.length > 0 && (
+            <p className={Style.warnText}>
+              {alreadyPaid.map((row) => row.name).join(', ')} already paid{' '}
+              {movedPayer.map((line) => nameOfId(line.payerWas)).join(', ')}. That money
+              stays where it went, so it becomes a debt back to them rather than
+              disappearing.
+            </p>
+          )}
+
           {warnings.map((row) => (
             <p key={row.memberId} className={Style.warnText}>
               {row.name} already paid {formatVnd(row.paid)}. Their share becomes{' '}

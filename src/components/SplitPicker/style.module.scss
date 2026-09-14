@@ -1,0 +1,110 @@
+/* --- Section (Who played / Split) --------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+/* --- Split -------------------------------------------------------------- */
+
+.sentence {
+  font: var(--text-body-md);
+  color: var(--text-body);
+}
+.hint {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+/* --- Split rows ----------------------------------------------------------- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 52px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.name {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-body-md);
+  color: var(--text-strong);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+/* Inside MUI's field: fixes the column width so the amounts line up down
+   the list, which is how you spot the one that is wrong. */
+.input {
+  width: 76px;
+  text-align: right;
+}
+.suffix {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+/* A stepper, not a field: share counts are 1, 2, maybe 3, and typing is the
+   wrong tool for a number you nudge. */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.stepperButton {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: none;
+  font: var(--text-body-lg);
+  color: var(--text-strong);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+.stepperValue {
+  width: 24px;
+  text-align: center;
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+/* A fixed column so the amounts line up down the list — reading them as a
+   column is how you spot the one that's wrong. */
+.output {
+  width: 88px;
+  text-align: right;
+  font: var(--text-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding-top: var(--space-8);
+}
+.readout {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+.readoutBad {
+  color: var(--feedback-error);
+}
