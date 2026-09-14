@@ -56,7 +56,7 @@
   padding: 0 var(--space-6);
   border-radius: var(--radius-pill);
   background: var(--surface-muted);
-  color: var(--text-label);
+  color: var(--text-muted);
   font: var(--text-micro);
   font-weight: var(--fw-regular);
   text-transform: uppercase;
@@ -78,8 +78,10 @@
   white-space: nowrap;
 }
 
+/* A decorative arrow, so 3:1 is the bar it has to clear rather than 4.5 —
+   but 1.61:1 cleared neither. */
 .chevron {
-  color: var(--text-placeholder);
+  color: var(--text-label);
   font: var(--text-body-lg);
   line-height: 1;
 }

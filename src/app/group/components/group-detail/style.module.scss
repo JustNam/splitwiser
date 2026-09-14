@@ -1,24 +1,9 @@
-.banner {
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius);
-  background: var(--feedback-success-tint);
-  font: var(--text-caption);
-  color: var(--text-strong);
-}
-
 /* --- Sections ----------------------------------------------------------- */
 
 .section {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-12);
 }
 
 /* --- Members ------------------------------------------------------------ */

@@ -16,12 +16,12 @@
 .title {
   font: var(--text-caption);
   font-weight: var(--fw-bold);
-  color: var(--text-label);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
 }
 
 .meta {
   font: var(--text-caption);
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }

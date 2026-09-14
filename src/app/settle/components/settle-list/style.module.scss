@@ -51,9 +51,8 @@
   min-height: 60px;
   padding: 0 var(--space-12);
   border-bottom: 1px solid var(--border-subtle);
-}
 
-.item {
+  /* The whole row is the checkbox's label, so the whole row is tappable. */
   cursor: pointer;
 }
 
@@ -196,7 +195,7 @@
   user-select: none;
   padding: var(--space-8) 0 var(--space-4);
   font: var(--text-caption);
-  color: var(--text-label);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
 }

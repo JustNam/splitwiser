@@ -26,13 +26,6 @@
   gap: var(--space-8);
 }
 
-.sectionHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-12);
-}
-
 /* --- Preview ------------------------------------------------------------ */
 
 /* A real list. `list-style: none` removes the bullets without removing what
@@ -77,10 +70,14 @@
   letter-spacing: var(--ls-wide);
 }
 
-/* Unchanged rows stay quiet so the ones that move are the ones you read. */
+/* Unchanged rows stay quiet so the ones that move are the ones you read.
+   Quiet, not invisible: --text-placeholder is 1.61:1 on white, which is not
+   a quieter colour, it is an absent one. The bold --text-strong on .changed
+   below is 10.84:1, so the contrast between the two carries the meaning
+   without this one being unreadable. */
 .change {
   font: var(--text-caption);
-  color: var(--text-placeholder);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 

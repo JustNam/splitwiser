@@ -67,19 +67,6 @@
   color: var(--text-muted);
 }
 
-/* Links styled as buttons. A <Link> rather than a <Button> because these
-   navigate — a screen reader should announce them as links, and they should
-   open in a new tab on a middle click. */
-.primaryLink,
-.secondaryLink {
-  background: var(--surface-muted);
-  color: var(--text-strong);
-
-  &:hover {
-    background: var(--surface-warm);
-  }
-}
-
 /* --- Signed out / failed states ---------------------------------------- */
 
 .empty {
@@ -94,9 +81,4 @@
 
 .emptySub {
   font: var(--text-body-md);
-}
-
-.error {
-  font: var(--text-body-md);
-  color: var(--feedback-error);
 }

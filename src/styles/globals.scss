@@ -43,6 +43,29 @@ body {
   cursor: default;
 }
 
+/* `cursor` is an inherited property, so `default` on <body> SHOULD be the
+   whole story. It wasn't: the initial value is `auto` — the I-beam over
+   anything text-shaped — and any stylesheet that sets `auto` on one element
+   hands it back to every child of that element. MUI injects its styles at
+   runtime through Emotion, so "read every stylesheet and check" is not a
+   thing anyone can finish.
+
+   This ends the class of bug rather than the instances of it: nothing takes
+   a cursor of its own unless a rule below says so. Specificity 0-0-0, so
+   every rule in this file and every MUI class still beats it. */
+*,
+*::before,
+*::after {
+  cursor: inherit;
+}
+
+/* Which means the browser's own `a { cursor: pointer }` has just been
+   overridden — a UA rule loses to any author rule, however weak. Asked for
+   again here, or every link in the app gets an arrow. */
+a[href] {
+  cursor: pointer;
+}
+
 /* Buttons and inputs don't inherit the page font by default. */
 button,
 input,

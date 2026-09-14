@@ -11,13 +11,6 @@
   gap: var(--space-6);
 }
 
-.sectionHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-12);
-}
-
 /* A real list. `list-style: none` removes the bullets without removing what
    the element means: a screen reader still says how many items there are. */
 .rows {
@@ -128,4 +121,3 @@
   font: var(--text-body-md);
   color: var(--feedback-error);
 }
-

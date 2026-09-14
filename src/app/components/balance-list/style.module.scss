@@ -4,23 +4,6 @@
   gap: var(--space-12);
 }
 
-.header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-12);
-}
-
-.title {
-  font: var(--text-h3);
-  color: var(--text-strong);
-}
-
-.meta {
-  font: var(--text-caption);
-  color: var(--text-muted);
-}
-
 .list {
   display: flex;
   flex-direction: column;
@@ -69,7 +52,7 @@
   padding: 0 var(--space-6);
   border-radius: var(--radius-pill);
   background: var(--surface-muted);
-  color: var(--text-label);
+  color: var(--text-muted);
   font: var(--text-micro);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
@@ -116,4 +99,3 @@
   font: var(--text-body-md);
   color: var(--text-strong);
 }
-

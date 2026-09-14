@@ -29,13 +29,6 @@
   gap: var(--space-8);
 }
 
-.sectionHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-12);
-}
-
 /* --- Picking who played --------------------------------------------------- */
 
 .pickRow {
@@ -47,7 +40,7 @@
 .pickNote {
   margin-left: auto;
   font: var(--text-caption);
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
 /* --- Adding a guest ------------------------------------------------------- */
