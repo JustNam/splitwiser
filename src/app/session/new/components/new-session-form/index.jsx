@@ -41,6 +41,8 @@ import { SectionHeader } from '@/components/SectionHeader'
 import { SplitPicker } from '@/components/SplitPicker'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
+import { Loading } from '@/components/Loading'
+import { LinkButton } from '@/components/LinkButton'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { displayName, formatVnd } from '@/services/money.service'
@@ -165,7 +167,7 @@ export function NewSessionForm() {
     }
   }, [authLoading, user])
 
-  if (authLoading) return null
+  if (authLoading) return <Loading />
 
   if (!user) {
     return (
@@ -177,14 +179,30 @@ export function NewSessionForm() {
   }
 
   if (loadError) {
+    // "Not in a group" is not an error, it is a missing prerequisite — and
+    // the two ways to fix it are one tap away, so they go here rather than
+    // leaving the screen as a sentence with no way out of it.
+    const noGroup = loadError.startsWith('You are not in a group')
+
     return (
-      <p className={Style.error} role="alert">
-        {loadError}
-      </p>
+      <>
+        <p className={noGroup ? Style.hint : Style.error} role={noGroup ? undefined : 'alert'}>
+          {loadError}
+        </p>
+
+        {noGroup && (
+          <div className={Style.noGroupActions}>
+            <LinkButton href="/group/new">New group</LinkButton>
+            <LinkButton variant="secondary" href="/join">
+              Join with a code
+            </LinkButton>
+          </div>
+        )}
+      </>
     )
   }
 
-  if (!data) return null
+  if (!data) return <Loading />
 
   // ---- everything below is derived from state, recomputed every render ----
 
@@ -394,7 +412,7 @@ export function NewSessionForm() {
     // to the total exactly, and recomputing invites them not to.
     const swap = (id) => realId.get(id) ?? id
 
-    const { error: apiError } = await SessionsApi.create({
+    const { data: created, error: apiError } = await SessionsApi.create({
       groupId: data.group.id,
       date,
       lines: lines.map((line, index) => ({
@@ -414,9 +432,11 @@ export function NewSessionForm() {
       return
     }
 
-    // The spec sends this to B3 (session detail) to confirm. That screen
-    // doesn't exist yet, so Home — where the new numbers appear — stands in.
-    router.push('/')
+    // Straight to B3, which the spec calls the confirmation you see right
+    // after logging a session. This used to go to Home because B3 did not
+    // exist; it does now, and Home makes you hunt for the thing you just
+    // saved in order to check it came out right.
+    router.push(`/session/${created.id}`)
   }
 
   return (

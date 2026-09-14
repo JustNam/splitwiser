@@ -9,12 +9,13 @@ import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
 import { sessionSummaries } from '@/services/session.service'
 import { SessionList } from '@/app/components/session-list'
 import { TextLink } from '@/components/TextLink'
+import { Loading } from '@/components/Loading'
 import Style from './style.module.scss'
 
 export function AllSessions() {
   const state = useGroupSnapshot()
 
-  if (state.status === 'loading') return null
+  if (state.status === 'loading') return <Loading />
 
   if (state.status === 'signed-out') {
     return (

@@ -26,6 +26,7 @@ import { BalanceList } from './components/balance-list'
 import { SessionList } from './components/session-list'
 import { TextLink } from '@/components/TextLink'
 import { LinkButton } from '@/components/LinkButton'
+import { Loading } from '@/components/Loading'
 import Style from './page.module.scss'
 
 const HOME_ROW_LIMIT = 5
@@ -86,7 +87,7 @@ export default function HomePage() {
     }
   }, [groupId])
 
-  if (authLoading) return null
+  if (authLoading) return <Loading />
 
   if (!user) {
     return (
@@ -103,7 +104,13 @@ export default function HomePage() {
     )
   }
 
-  if (state.status === 'loading') return null
+  if (state.status === 'loading') {
+    return (
+      <main className={Style.page}>
+        <Loading />
+      </main>
+    )
+  }
 
   if (state.status === 'error') {
     return (
@@ -213,7 +220,7 @@ export default function HomePage() {
  * blank the whole screen.
  */
 function HomeBody({ group, snapshot }) {
-  if (snapshot.status === 'loading') return null
+  if (snapshot.status === 'loading') return <Loading />
 
   if (snapshot.status === 'error') {
     return (

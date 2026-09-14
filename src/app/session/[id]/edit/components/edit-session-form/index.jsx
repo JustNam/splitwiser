@@ -39,6 +39,7 @@ import { Button } from '@/components/Button'
 import { Chip, ChipGroup } from '@/components/Chip'
 import { SplitPicker } from '@/components/SplitPicker'
 import { SectionHeader } from '@/components/SectionHeader'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
@@ -130,28 +131,35 @@ export function EditSessionForm() {
     }
   }, [authLoading, user, id])
 
-  if (authLoading) return null
-
-  if (!user) {
+  // Header in every state. A failed load used to leave a bare sentence with
+  // no back arrow anywhere on it.
+  if (authLoading || !user || state.status !== 'ready') {
+    // backHref is the default '/' here on purpose: the session id in the URL
+    // is the one thing that just failed to resolve, so sending someone back
+    // to /session/<that id> is sending them to the same wall.
     return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> first.
-      </p>
+      <>
+        <PageHeader title="Edit session" />
+
+        {(authLoading || state.status === 'loading') && <Loading />}
+
+        {!authLoading && !user && (
+          <p className={Style.error} role="alert">
+            You need to <TextLink href="/signin">sign in</TextLink> first.
+          </p>
+        )}
+
+        {user && state.status === 'error' && (
+          <p className={Style.error} role="alert">
+            {state.error}
+          </p>
+        )}
+
+        {user && state.status === 'not-found' && (
+          <p className={Style.hint}>That session isn’t in your group.</p>
+        )}
+      </>
     )
-  }
-
-  if (state.status === 'loading') return null
-
-  if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
-  }
-
-  if (state.status === 'not-found') {
-    return <p className={Style.hint}>That session isn’t in your group.</p>
   }
 
   const { group, snapshot, session, costLines } = state

@@ -9,12 +9,13 @@ import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
 import { groupBalances } from '@/services/balance.service'
 import { BalanceList } from '@/app/components/balance-list'
 import { TextLink } from '@/components/TextLink'
+import { Loading } from '@/components/Loading'
 import Style from './style.module.scss'
 
 export function AllBalances() {
   const state = useGroupSnapshot()
 
-  if (state.status === 'loading') return null
+  if (state.status === 'loading') return <Loading />
 
   if (state.status === 'signed-out') {
     return (

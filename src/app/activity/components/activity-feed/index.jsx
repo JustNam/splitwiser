@@ -12,6 +12,7 @@
 
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
 import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
@@ -42,26 +43,33 @@ export function ActivityFeed() {
     writeLastSeen(user.id, new Date().toISOString())
   }, [state.status, user])
 
-  if (state.status === 'loading') return null
-
-  if (state.status === 'signed-out') {
+  // The header is drawn in EVERY state, not only the ready one. Without it a
+  // screen that fails to load carries no back arrow and no link at all, and
+  // the browser's own Back button becomes the only way out of the app.
+  if (state.status !== 'ready') {
     return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> first.
-      </p>
-    )
-  }
+      <>
+        <PageHeader title="Activity" />
 
-  if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
-  }
+        {state.status === 'loading' && <Loading />}
 
-  if (state.status === 'no-group') {
-    return <p className={Style.note}>You’re not in a group yet.</p>
+        {state.status === 'signed-out' && (
+          <p className={Style.error} role="alert">
+            You need to <TextLink href="/signin">sign in</TextLink> first.
+          </p>
+        )}
+
+        {state.status === 'error' && (
+          <p className={Style.error} role="alert">
+            {state.error}
+          </p>
+        )}
+
+        {state.status === 'no-group' && (
+          <p className={Style.note}>You’re not in a group yet.</p>
+        )}
+      </>
+    )
   }
 
   const { group, snapshot } = state

@@ -5,6 +5,14 @@
   gap: var(--space-20);
 }
 
+/* Two ways out of the one state this screen cannot do anything in. */
+.noGroupActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+}
+
 .amountInput {
   /* Applied to the <input> inside MUI's field, so it only sets type — the box,
      the label and the focus ring all come from the field. */

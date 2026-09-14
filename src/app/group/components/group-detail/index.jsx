@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { SectionHeader } from '@/components/SectionHeader'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { TextButton } from '@/components/TextButton'
 import { LinkButton } from '@/components/LinkButton'
@@ -61,28 +62,40 @@ export function GroupDetail() {
     }
   }, [authLoading, user])
 
-  if (authLoading) return null
-
-  if (!user) {
+  // Header in every state, so a failed load still has a way back.
+  if (authLoading || !user || state.status !== 'ready') {
     return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> first.
-      </p>
+      <>
+        <PageHeader title="Group" />
+
+        {(authLoading || state.status === 'loading') && <Loading />}
+
+        {!authLoading && !user && (
+          <p className={Style.error} role="alert">
+            You need to <TextLink href="/signin">sign in</TextLink> first.
+          </p>
+        )}
+
+        {user && state.status === 'error' && (
+          <p className={Style.error} role="alert">
+            {state.error}
+          </p>
+        )}
+
+        {/* The two ways out, on the one screen that is about groups. */}
+        {user && state.status === 'no-group' && (
+          <>
+            <p className={Style.note}>You’re not in a group yet.</p>
+            <div className={Style.otherActions}>
+              <LinkButton href="/group/new">New group</LinkButton>
+              <LinkButton variant="secondary" href="/join">
+                Join with a code
+              </LinkButton>
+            </div>
+          </>
+        )}
+      </>
     )
-  }
-
-  if (state.status === 'loading') return null
-
-  if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
-  }
-
-  if (state.status === 'no-group') {
-    return <p className={Style.note}>You’re not in a group yet.</p>
   }
 
   const { group, members, accounts } = state
@@ -115,6 +128,10 @@ export function GroupDetail() {
     try {
       await navigator.clipboard.writeText(inviteLink)
       setCopied(true)
+      // Back to "Copy link" after a beat. Left latched, the button spends the
+      // rest of the visit claiming a copy that happened a page-view ago, and
+      // a second tap gives you no sign it worked.
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // Needs a secure context and can be refused outright. The code is on
       // screen either way, so this is a downgrade, not a failure.

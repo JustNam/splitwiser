@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup } from '@/lib/current-group'
 import { formatVnd } from '@/services/money.service'
 import { sessionDetail } from '@/services/session-detail.service'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextLink } from '@/components/TextLink'
@@ -68,28 +69,32 @@ export function SessionDetail() {
     }
   }, [authLoading, user, id])
 
-  if (authLoading) return null
-
-  if (!user) {
+  // Header in every state. A failed load used to leave a bare sentence with
+  // no back arrow anywhere on it.
+  if (authLoading || !user || state.status !== 'ready') {
     return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> first.
-      </p>
+      <>
+        <PageHeader title="Session" />
+
+        {(authLoading || state.status === 'loading') && <Loading />}
+
+        {!authLoading && !user && (
+          <p className={Style.error} role="alert">
+            You need to <TextLink href="/signin">sign in</TextLink> first.
+          </p>
+        )}
+
+        {user && state.status === 'error' && (
+          <p className={Style.error} role="alert">
+            {state.error}
+          </p>
+        )}
+
+        {user && state.status === 'not-found' && (
+          <p className={Style.note}>That session isn’t in your group.</p>
+        )}
+      </>
     )
-  }
-
-  if (state.status === 'loading') return null
-
-  if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
-  }
-
-  if (state.status === 'not-found') {
-    return <p className={Style.note}>That session isn’t in your group.</p>
   }
 
   const { group, snapshot, session } = state

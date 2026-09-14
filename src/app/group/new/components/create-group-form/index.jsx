@@ -16,6 +16,7 @@ import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
+import { Loading } from '@/components/Loading'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
 import { writeCurrentGroupId } from '@/lib/current-group'
@@ -96,7 +97,7 @@ export function CreateGroupForm() {
 
   // Nothing rendered while the session is still being read, or a signed-in
   // user sees "you need to sign in" for one frame.
-  if (loading) return null
+  if (loading) return <Loading />
 
   if (!isAuthenticated) {
     return (

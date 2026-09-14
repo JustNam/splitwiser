@@ -27,6 +27,8 @@ import Dialog from '@mui/material/Dialog'
 import { GroupsApi } from '@/api/groups'
 import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
+import { LinkButton } from '@/components/LinkButton'
+import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
@@ -80,28 +82,32 @@ export function SettleList() {
     }
   }, [authLoading, user])
 
-  if (authLoading) return null
-
-  if (!user) {
+  // Header in every state. This screen was the worst of them: its states are
+  // reached by tapping a button on Home, and none of them drew a back arrow.
+  if (authLoading || !user || state.status !== 'ready') {
     return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> first.
-      </p>
+      <>
+        <PageHeader title="Settle up" />
+
+        {(authLoading || state.status === 'loading') && <Loading />}
+
+        {!authLoading && !user && (
+          <p className={Style.error} role="alert">
+            You need to <TextLink href="/signin">sign in</TextLink> first.
+          </p>
+        )}
+
+        {user && state.status === 'error' && (
+          <p className={Style.error} role="alert">
+            {state.error}
+          </p>
+        )}
+
+        {user && state.status === 'no-group' && (
+          <p className={Style.emptyBody}>You’re not in a group yet.</p>
+        )}
+      </>
     )
-  }
-
-  if (state.status === 'loading') return null
-
-  if (state.status === 'error') {
-    return (
-      <p className={Style.error} role="alert">
-        {state.error}
-      </p>
-    )
-  }
-
-  if (state.status === 'no-group') {
-    return <p className={Style.emptyBody}>You’re not in a group yet.</p>
   }
 
   const { group, snapshot } = state
@@ -191,19 +197,34 @@ export function SettleList() {
   }
 
   if (owedByMe.length === 0 && owedToMe.length === 0) {
+    // The header belongs here most of all. "Everything is settled" is not a
+    // failure, it is the state a healthy group is in most of the time — and
+    // it used to be a screen with nothing on it you could tap.
     return (
-      <div className={Style.empty}>
-        <p className={Style.emptyTitle}>
-          {personName
-            ? `Nothing to settle with ${personName}`
-            : 'Everything is settled'}
-        </p>
-        <p className={Style.emptyBody}>
-          {personName
-            ? 'Nothing outstanding between the two of you.'
-            : 'Nobody owes you and you owe nobody. Balances update for everyone the moment either side marks an item settled.'}
-        </p>
-      </div>
+      <>
+        <PageHeader title={personName ?? 'Settle up'} />
+
+        <div className={Style.empty}>
+          <p className={Style.emptyTitle}>
+            {personName
+              ? `Nothing to settle with ${personName}`
+              : 'Everything is settled'}
+          </p>
+          <p className={Style.emptyBody}>
+            {personName
+              ? 'Nothing outstanding between the two of you.'
+              : 'Nobody owes you and you owe nobody. Balances update for everyone the moment either side marks an item settled.'}
+          </p>
+
+          {/* Filtered to one person and square with them, the useful next step
+              is the rest of the list rather than the way you came in. */}
+          {personName && (
+            <LinkButton variant="secondary" href="/settle">
+              See everyone
+            </LinkButton>
+          )}
+        </div>
+      </>
     )
   }
 
