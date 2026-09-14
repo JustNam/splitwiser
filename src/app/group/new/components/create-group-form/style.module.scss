@@ -55,9 +55,13 @@
   font-weight: var(--fw-black);
   color: var(--brand-primary);
 
-  /* The code gets read off a screen and typed by hand, so the characters need
-     to stay far apart. */
   letter-spacing: var(--ls-wide);
+
+  /* The exception to the arrow above: this is the one string people copy by
+     hand. `all` means one click takes the whole code rather than a word of
+     it, which is what you want from something with a dash in the middle. */
+  cursor: text;
+  user-select: all;
 }
 
 .linkText {

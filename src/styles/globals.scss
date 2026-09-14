@@ -27,6 +27,15 @@ body {
      inside is wider than the screen — this makes that a visible bug, not a
      silent one you only notice on a real phone. */
   overflow-x: hidden;
+
+  /* An arrow over ordinary text, not the I-beam.
+     HTML defaults to the I-beam because a web page was originally a document,
+     and a document is something you select and copy from. This is an app: a
+     name, an amount or a section heading is furniture, and an I-beam over it
+     invites a click that does nothing. Text stays selectable — only the
+     pointer changes — and the few things people really do copy ask for the
+     I-beam back themselves. */
+  cursor: default;
 }
 
 /* Buttons and inputs don't inherit the page font by default. */
@@ -39,5 +48,16 @@ textarea {
 }
 
 button {
+  cursor: pointer;
+}
+
+/* `cursor` is inherited, so the rule on <body> would reach into the fields
+   too. Typing IS the I-beam's job, so it is asked for again here. */
+input,
+textarea {
+  cursor: text;
+}
+
+select {
   cursor: pointer;
 }
