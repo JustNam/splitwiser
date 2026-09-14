@@ -3,10 +3,14 @@
 /**
  * B2 · New session — form.
  *
- * Cut down for v1 to the case the spec calls the default: ONE cost line, one
- * payer, split equally. The other four split methods already work in
- * split.service.js; only the UI for them is missing, and adding it later
- * changes nothing about the save.
+ * A session can have several costs, each with its own payer — the court paid
+ * by one person, the shuttles by another. One is the default and looks like a
+ * single form; the rest appear only if asked for, so the common case never
+ * shows the words "cost line".
+ *
+ * The split is worked out PER COST LINE, which is the unit the design splits:
+ * "five ways to split a cost line's total". The method is chosen once for the
+ * session and its weights apply to every line.
  *
  * A guest added here is NOT written to the database until the session is
  * saved. Writing on Add meant a mistyped name, or a form abandoned half way,
@@ -125,11 +129,13 @@ export function NewSessionForm() {
 
   const [date, setDate] = useState(todayIso)
 
-  // Digits only, as a string. Kept as text because '' and 0 are different
-  // things to a form: one is "hasn't typed yet", the other is a real amount.
-  const [amountText, setAmountText] = useState('')
-  const [payerId, setPayerId] = useState('')
-  const [note, setNote] = useState('')
+  // One entry per cost. `amountText` is digits as a string, because '' and 0
+  // are different things to a form: one is "hasn't typed yet", the other is a
+  // real amount. `key` is for React, since rows are added and removed and an
+  // index would reassign the wrong field to the wrong row.
+  const [lines, setLines] = useState([
+    { key: 1, note: '', amountText: '', payerId: '' },
+  ])
 
   // memberId -> true. An object rather than an array because the question
   // asked of it is always "is this one ticked?".
@@ -166,6 +172,7 @@ export function NewSessionForm() {
   // A ref, not state: bumping it must not cause a render, and it has to
   // survive one without being reset.
   const nextGuestKey = useRef(1)
+  const nextLineKey = useRef(2)
 
   useEffect(() => {
     if (authLoading || !user) return
@@ -197,7 +204,10 @@ export function NewSessionForm() {
       const starting = lineUp.length > 0 ? lineUp : snapshot.members.map((m) => m.id)
 
       setPresent(Object.fromEntries(starting.map((memberId) => [memberId, true])))
-      setPayerId(group.myMemberId)
+
+      // "I paid" pre-selected: it is the common case, and the select is right
+      // there for the weeks it isn't.
+      setLines([{ key: 1, note: '', amountText: '', payerId: group.myMemberId }])
     }
 
     load()
@@ -269,14 +279,28 @@ export function NewSessionForm() {
 
   const lastSession = data.sessions[0]
 
-  const total = Number(amountText || 0)
+  const multiLine = lines.length > 1
+  const lineTotals = lines.map((line) => Number(line.amountText || 0))
+  const total = lineTotals.reduce((running, amount) => running + amount, 0)
 
-  // The real amounts, from the same tested function the save uses. Not a
-  // preview of what will be stored — it IS what gets stored.
-  const shares =
-    total > 0 && participantIds.length > 0
-      ? computeSplit({ total, participantIds, method, inputs })
+  // Split per cost line, not once over the session total. Each line has its
+  // own payer, and a share row names the payer it is owed to — so the money
+  // has to be divided where it was spent. The weights are the same on every
+  // line; only the amount they divide changes.
+  const lineShares = lines.map((line, index) =>
+    lineTotals[index] > 0 && participantIds.length > 0
+      ? computeSplit({ total: lineTotals[index], participantIds, method, inputs })
       : {}
+  )
+
+  // What each person owes for the whole session: their share of every line.
+  // Display only — the save sends the per-line amounts.
+  const shares = {}
+  for (const perLine of lineShares) {
+    for (const [memberId, amount] of Object.entries(perLine)) {
+      shares[memberId] = (shares[memberId] ?? 0) + amount
+    }
+  }
 
   const shareAmounts = Object.values(shares)
   const baseShare = shareAmounts.length > 0 ? Math.min(...shareAmounts) : 0
@@ -287,6 +311,16 @@ export function NewSessionForm() {
   const extraNames = participants
     .filter((member) => shares[member.id] > baseShare)
     .map(nameOf)
+
+  // Exact and Adjusted are typed in đồng, and đồng only mean something
+  // against ONE total. With several costs there is no single total for them
+  // to name — the design splits "a cost line's total", so they would need a
+  // full set of inputs per line. Weights have no such problem.
+  const methodOptions = multiLine
+    ? SPLIT_METHODS.filter(
+        (option) => option.value !== SPLIT_EXACT && option.value !== SPLIT_ADJUSTED
+      )
+    : SPLIT_METHODS
 
   const inputTotal = participantIds.reduce(
     (running, id) => running + (inputs[id] ?? 0),
@@ -337,19 +371,48 @@ export function NewSessionForm() {
 
   // Ordered by which fix comes first, so the message points at the next thing
   // to do rather than the last thing missing.
-  const blockedText =
-    total <= 0
-      ? 'Enter how much the session cost.'
-      : participantIds.length === 0
-        ? 'Tick at least one person who played.'
-        : payerId === ''
-          ? 'Choose who paid.'
-          : splitProblem
+  const blockedText = lineTotals.some((amount) => amount <= 0)
+    ? multiLine
+      ? 'Every cost needs an amount above zero.'
+      : 'Enter how much the session cost.'
+    : participantIds.length === 0
+      ? 'Tick at least one person who played.'
+      : lines.some((line) => line.payerId === '')
+        ? 'Choose who paid.'
+        : splitProblem
 
-  function handleAmountChange(event) {
+  function updateLine(key, patch) {
+    setLines((current) =>
+      current.map((line) => (line.key === key ? { ...line, ...patch } : line))
+    )
+  }
+
+  function setLineAmount(key, raw) {
     // Strip everything that isn't a digit, so a pasted "300.000đ" becomes
     // 300000 rather than NaN.
-    setAmountText(event.target.value.replace(/[^0-9]/g, '').slice(0, 12))
+    updateLine(key, { amountText: raw.replace(/[^0-9]/g, '').slice(0, 12) })
+  }
+
+  function addLine() {
+    const key = nextLineKey.current
+    nextLineKey.current += 1
+
+    setLines((current) => [
+      ...current,
+      { key, note: '', amountText: '', payerId: data.group.myMemberId },
+    ])
+
+    // Exact and Adjusted stop being offered once there are two costs, so a
+    // split already typed in đồng has to go back to something that survives
+    // the change rather than silently meaning something else.
+    if (method === SPLIT_EXACT || method === SPLIT_ADJUSTED) {
+      setMethod(SPLIT_EQUAL)
+      setInputs({})
+    }
+  }
+
+  function removeLine(key) {
+    setLines((current) => current.filter((line) => line.key !== key))
   }
 
   function toggle(memberId) {
@@ -481,16 +544,14 @@ export function NewSessionForm() {
     const { error: apiError } = await SessionsApi.create({
       groupId: data.group.id,
       date,
-      lines: [
-        {
-          note: note.trim() === '' ? null : note.trim(),
-          amount: total,
-          payerMemberId: swap(payerId),
-          shares: Object.fromEntries(
-            Object.entries(shares).map(([id, amount]) => [swap(id), amount])
-          ),
-        },
-      ],
+      lines: lines.map((line, index) => ({
+        note: line.note.trim() === '' ? null : line.note.trim(),
+        amount: lineTotals[index],
+        payerMemberId: swap(line.payerId),
+        shares: Object.fromEntries(
+          Object.entries(lineShares[index]).map(([id, amount]) => [swap(id), amount])
+        ),
+      })),
       participantIds: participantIds.map(swap),
     })
 
@@ -519,51 +580,125 @@ export function NewSessionForm() {
         disabled={submitting}
       />
 
-      {/* A TextField like every other entry on the screen. It was a bare
-          <input> with its own label above it, sitting directly under a MUI
-          Date field with a floating one — two ways of labelling a box, six
-          pixels apart. The size is what makes it the headline, not the
-          markup. */}
-      <TextField
-        label="Amount"
-        value={amountText === '' ? '' : formatVnd(total)}
-        onChange={handleAmountChange}
-        placeholder="0đ"
-        // A numeric keypad on a phone. type="number" gives one too, but it
-        // also allows "e", "-" and spinner arrows.
-        inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
-        fullWidth
-        disabled={submitting}
-      />
+      {/* One cost looks like a plain form: an amount, who paid, what for. The
+          word "cost line" appears nowhere, because the common case is one
+          person paying for one thing and it should not have to know about the
+          concept at all. */}
+      {lines.length === 1 ? (
+        <>
+          <TextField
+            label="Amount"
+            value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
+            onChange={(event) => setLineAmount(lines[0].key, event.target.value)}
+            placeholder="0đ"
+            // A numeric keypad on a phone. type="number" gives one too, but it
+            // also allows "e", "-" and spinner arrows.
+            inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
+            fullWidth
+            disabled={submitting}
+          />
 
-      {/* A Select, not a TextField with `select` set. MUI offers that shortcut
-          and it renders identically, but the code should say which of the two
-          a control is: one is typed into, the other is chosen from. */}
-      <FormControl fullWidth disabled={submitting}>
-        <InputLabel id="payer-label">Paid by</InputLabel>
-        <Select
-          labelId="payer-label"
-          label="Paid by"
-          value={payerId}
-          onChange={(event) => setPayerId(event.target.value)}
-        >
-          {members.map((member) => (
-            <MenuItem key={member.id} value={member.id}>
-              {nameOf(member)}
-              {member.type === 'guest' ? ' (guest)' : ''}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+          {/* A Select, not a TextField with `select` set. MUI offers that
+              shortcut and it renders identically, but the code should say
+              which of the two a control is: one is typed into, the other is
+              chosen from. */}
+          <FormControl fullWidth disabled={submitting}>
+            <InputLabel id="payer-label">Paid by</InputLabel>
+            <Select
+              labelId="payer-label"
+              label="Paid by"
+              value={lines[0].payerId}
+              onChange={(event) =>
+                updateLine(lines[0].key, { payerId: event.target.value })
+              }
+            >
+              {members.map((member) => (
+                <MenuItem key={member.id} value={member.id}>
+                  {nameOf(member)}
+                  {member.type === 'guest' ? ' (guest)' : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-      <TextField
-        label="What for"
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
-        placeholder="Courts"
-        fullWidth
-        disabled={submitting}
-      />
+          <TextField
+            label="What for"
+            value={lines[0].note}
+            onChange={(event) => updateLine(lines[0].key, { note: event.target.value })}
+            placeholder="Courts"
+            fullWidth
+            disabled={submitting}
+          />
+        </>
+      ) : (
+        <section className={Style.section}>
+          <SectionHeader meta={formatVnd(total)}>Costs</SectionHeader>
+
+          <ul className={Style.costList}>
+            {lines.map((line, index) => (
+              <li key={line.key} className={Style.costLine}>
+                <div className={Style.costRow}>
+                  <TextField
+                    label="What for"
+                    value={line.note}
+                    onChange={(event) =>
+                      updateLine(line.key, { note: event.target.value })
+                    }
+                    placeholder="Courts"
+                    size="small"
+                    className={Style.costNote}
+                    disabled={submitting}
+                  />
+                  <TextField
+                    label="Amount"
+                    value={line.amountText === '' ? '' : formatVnd(lineTotals[index])}
+                    onChange={(event) => setLineAmount(line.key, event.target.value)}
+                    inputProps={{ inputMode: 'numeric' }}
+                    size="small"
+                    className={Style.costAmount}
+                    disabled={submitting}
+                  />
+                </div>
+
+                <div className={Style.costRow}>
+                  <FormControl size="small" fullWidth disabled={submitting}>
+                    <InputLabel id={`payer-${line.key}`}>Paid by</InputLabel>
+                    <Select
+                      labelId={`payer-${line.key}`}
+                      label="Paid by"
+                      value={line.payerId}
+                      onChange={(event) =>
+                        updateLine(line.key, { payerId: event.target.value })
+                      }
+                    >
+                      {members.map((member) => (
+                        <MenuItem key={member.id} value={member.id}>
+                          {nameOf(member)}
+                          {member.type === 'guest' ? ' (guest)' : ''}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextButton
+                    onClick={() => removeLine(line.key)}
+                    disabled={submitting}
+                  >
+                    Remove
+                  </TextButton>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* The wireframe's own words. It says what the second cost is FOR,
+          which "+ Add cost" would not: the point is that somebody else paid
+          for something. */}
+      <TextButton onClick={addLine} disabled={submitting}>
+        + Someone paid for something else
+      </TextButton>
 
       <section className={Style.section}>
         <SectionHeader
@@ -722,13 +857,20 @@ export function NewSessionForm() {
             value={method}
             onChange={(event) => changeMethod(event.target.value)}
           >
-            {SPLIT_METHODS.map((option) => (
+            {methodOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
+
+        {multiLine && (
+          <p className={Style.hint}>
+            With more than one cost, the split is set in shares or percentages — typing
+            exact đồng would mean typing them for each cost separately.
+          </p>
+        )}
 
         {total <= 0 || participants.length === 0 ? (
           <p className={Style.hint}>

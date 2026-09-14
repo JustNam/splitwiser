@@ -14,7 +14,10 @@
  *   3. A warning when the edit hits somebody who has already paid, because
  *      that turns their payment into money owed back to them.
  *
- * Matching B2, v1 edits a single cost line split equally.
+ * Costs are a list, as they are on B2 — a session can have several, each
+ * with its own payer. The split stays equal here: changing HOW a session is
+ * divided is a different job from correcting what it cost, and mixing the two
+ * into one screen makes the preview impossible to read.
  */
 
 import { useEffect, useState } from 'react'
@@ -45,8 +48,12 @@ export function EditSessionForm() {
   const [state, setState] = useState({ status: 'loading' })
 
   const [date, setDate] = useState('')
-  const [amountText, setAmountText] = useState('')
-  const [note, setNote] = useState('')
+
+  // One entry per cost, seeded from what is recorded. `costLineId` is what
+  // ties a row back to the ledger it has to correct — edit_session() works
+  // out each person's delta against the rows already on that line.
+  const [lines, setLines] = useState([])
+
   const [present, setPresent] = useState({})
   const [why, setWhy] = useState('')
 
@@ -74,21 +81,24 @@ export function EditSessionForm() {
       const session = snapshot.sessions.find((row) => row.id === id)
       if (!session) return setState({ status: 'not-found' })
 
-      const lines = snapshot.costLines.filter((line) => line.sessionId === session.id)
+      const costLines = snapshot.costLines.filter(
+        (line) => line.sessionId === session.id
+      )
 
-      // Refuse rather than mangle. v1 has no UI for a second cost line, and
-      // saving would silently drop it.
-      if (lines.length !== 1) return setState({ status: 'too-complex' })
+      setState({ status: 'ready', group, snapshot, session, costLines })
 
-      const line = lines[0]
-
-      setState({ status: 'ready', group, snapshot, session, line })
-
-      // Prefill with what is recorded now — the point of the screen is to
-      // change one thing, not retype the session.
+      // Prefilled with what is recorded now — the point of the screen is to
+      // change one thing, not to retype the session.
       setDate(session.date)
-      setAmountText(String(line.amount))
-      setNote(line.note ?? '')
+      setLines(
+        costLines.map((line) => ({
+          costLineId: line.id,
+          note: line.note ?? '',
+          amountText: String(line.amount),
+          amountWas: line.amount,
+          noteWas: line.note ?? '',
+        }))
+      )
       setPresent(
         Object.fromEntries(
           snapshot.participants
@@ -129,15 +139,7 @@ export function EditSessionForm() {
     return <p className={Style.hint}>That session isn’t in your group.</p>
   }
 
-  if (state.status === 'too-complex') {
-    return (
-      <p className={Style.hint}>
-        This session has more than one cost. Editing those isn’t built yet.
-      </p>
-    )
-  }
-
-  const { group, snapshot, session, line } = state
+  const { group, snapshot, session, costLines } = state
 
   // What is recorded right now, from the same function B3 renders.
   const current = sessionDetail({
@@ -162,12 +164,27 @@ export function EditSessionForm() {
   const participants = members.filter((member) => present[member.id])
   const participantIds = participants.map((member) => member.id)
 
-  const total = Number(amountText || 0)
+  const lineTotals = lines.map((line) => Number(line.amountText || 0))
+  const total = lineTotals.reduce((running, amount) => running + amount, 0)
 
-  const nextShares =
-    total > 0 && participantIds.length > 0
-      ? computeSplit({ total, participantIds, method: SPLIT_EQUAL })
+  // Per cost line, because each has its own payer and a share is owed to the
+  // person who paid THAT cost.
+  const lineShares = lines.map((line, index) =>
+    lineTotals[index] > 0 && participantIds.length > 0
+      ? computeSplit({
+          total: lineTotals[index],
+          participantIds,
+          method: SPLIT_EQUAL,
+        })
       : {}
+  )
+
+  const nextShares = {}
+  for (const perLine of lineShares) {
+    for (const [memberId, amount] of Object.entries(perLine)) {
+      nextShares[memberId] = (nextShares[memberId] ?? 0) + amount
+    }
+  }
 
   // Everyone the edit touches: who plays now, plus anyone who used to and
   // doesn't any more. The second half is what makes a removal visible.
@@ -195,18 +212,21 @@ export function EditSessionForm() {
 
   const changedAnything =
     date !== session.date ||
-    total !== line.amount ||
-    note.trim() !== (line.note ?? '') ||
+    lines.some(
+      (line, index) =>
+        lineTotals[index] !== line.amountWas || line.note.trim() !== line.noteWas
+    ) ||
     preview.some((row) => row.changed)
 
-  const blockedText =
-    total <= 0
+  const blockedText = lineTotals.some((amount) => amount <= 0)
+    ? lines.length === 1
       ? 'Enter how much the session cost.'
-      : participantIds.length === 0
-        ? 'Tick at least one person who played.'
-        : !changedAnything
-          ? 'Nothing has changed yet.'
-          : null
+      : 'Every cost needs an amount above zero.'
+    : participantIds.length === 0
+      ? 'Tick at least one person who played.'
+      : !changedAnything
+        ? 'Nothing has changed yet.'
+        : null
 
   /**
    * The sentence stored on every adjustment row, and the only thing B3 shows
@@ -222,11 +242,15 @@ export function EditSessionForm() {
       )
     }
 
-    if (total !== line.amount) {
-      parts.push(
-        `${note.trim() || 'Cost'}: ${formatVnd(line.amount)} → ${formatVnd(total)}`
-      )
-    }
+    lines.forEach((line, index) => {
+      if (lineTotals[index] !== line.amountWas) {
+        parts.push(
+          `${line.note.trim() || 'Cost'}: ${formatVnd(line.amountWas)} → ${formatVnd(
+            lineTotals[index]
+          )}`
+        )
+      }
+    })
 
     const out = preview.filter((row) => row.isOut).map((row) => row.name)
     const added = preview
@@ -240,8 +264,21 @@ export function EditSessionForm() {
     return why.trim() === '' ? sentence : `${sentence} — ${why.trim()}`
   }
 
-  function handleAmountChange(event) {
-    setAmountText(event.target.value.replace(/[^0-9]/g, '').slice(0, 12))
+  function payerTextFor(costLineId) {
+    const costLine = costLines.find((row) => row.id === costLineId)
+    return costLine ? `Paid by ${nameOfId(costLine.payerMemberId)}` : ''
+  }
+
+  function updateLine(costLineId, patch) {
+    setLines((current) =>
+      current.map((line) =>
+        line.costLineId === costLineId ? { ...line, ...patch } : line
+      )
+    )
+  }
+
+  function setLineAmount(costLineId, raw) {
+    updateLine(costLineId, { amountText: raw.replace(/[^0-9]/g, '').slice(0, 12) })
   }
 
   function toggle(memberId) {
@@ -261,14 +298,12 @@ export function EditSessionForm() {
     const { error: apiError } = await SessionsApi.edit({
       sessionId: session.id,
       date,
-      lines: [
-        {
-          costLineId: line.id,
-          note: note.trim() === '' ? null : note.trim(),
-          amount: total,
-          shares: nextShares,
-        },
-      ],
+      lines: lines.map((line, index) => ({
+        costLineId: line.costLineId,
+        note: line.note.trim() === '' ? null : line.note.trim(),
+        amount: lineTotals[index],
+        shares: lineShares[index],
+      })),
       participantIds,
       summary: summary(),
     })
@@ -301,25 +336,85 @@ export function EditSessionForm() {
         disabled={submitting}
       />
 
-      <TextField
-        label="Amount"
-        value={amountText === '' ? '' : formatVnd(total)}
-        onChange={handleAmountChange}
-        placeholder="0đ"
-        inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
-        helperText={total !== line.amount ? `Was ${formatVnd(line.amount)}` : undefined}
-        fullWidth
-        disabled={submitting}
-      />
+      {/* One cost keeps the plain layout it had; several become a list, the
+          same shape as New session. `Was …` under a field is the point of
+          this screen: you are correcting a number, so the old one has to stay
+          in view while you type the new one. */}
+      {lines.length === 1 ? (
+        <>
+          <TextField
+            label="Amount"
+            value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
+            onChange={(event) => setLineAmount(lines[0].costLineId, event.target.value)}
+            placeholder="0đ"
+            inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
+            helperText={
+              lineTotals[0] !== lines[0].amountWas
+                ? `Was ${formatVnd(lines[0].amountWas)}`
+                : undefined
+            }
+            fullWidth
+            disabled={submitting}
+          />
 
-      <TextField
-        label="What for"
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
-        placeholder="Courts"
-        fullWidth
-        disabled={submitting}
-      />
+          <TextField
+            label="What for"
+            value={lines[0].note}
+            onChange={(event) =>
+              updateLine(lines[0].costLineId, { note: event.target.value })
+            }
+            placeholder="Courts"
+            fullWidth
+            disabled={submitting}
+          />
+        </>
+      ) : (
+        <section className={Style.section}>
+          <SectionHeader meta={formatVnd(total)}>Costs</SectionHeader>
+
+          <ul className={Style.costList}>
+            {lines.map((line, index) => (
+              <li key={line.costLineId} className={Style.costLine}>
+                <div className={Style.costRow}>
+                  <TextField
+                    label="What for"
+                    value={line.note}
+                    onChange={(event) =>
+                      updateLine(line.costLineId, { note: event.target.value })
+                    }
+                    placeholder="Courts"
+                    size="small"
+                    className={Style.costNote}
+                    disabled={submitting}
+                  />
+                  <TextField
+                    label="Amount"
+                    value={line.amountText === '' ? '' : formatVnd(lineTotals[index])}
+                    onChange={(event) =>
+                      setLineAmount(line.costLineId, event.target.value)
+                    }
+                    inputProps={{ inputMode: 'numeric' }}
+                    helperText={
+                      lineTotals[index] !== line.amountWas
+                        ? `Was ${formatVnd(line.amountWas)}`
+                        : undefined
+                    }
+                    size="small"
+                    className={Style.costAmount}
+                    disabled={submitting}
+                  />
+                </div>
+
+                {/* No payer select and no remove button. Both change which
+                    ledger rows a cost line's debts belong to, which is a
+                    different correction from "it cost less than I typed" —
+                    and the one this screen's preview can explain. */}
+                <p className={Style.hint}>{payerTextFor(line.costLineId)}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className={Style.section}>
         <SectionHeader meta={<>{participants.length} playing</>}>
