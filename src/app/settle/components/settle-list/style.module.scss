@@ -58,13 +58,11 @@
 }
 
 .box {
-  /* accent-color paints a native checkbox in the brand colour — no custom
-     box, so it keeps its focus ring and keyboard behaviour. */
+  /* MUI sizes and colours it from the theme. Only the things it cannot know
+     are set here: that it must not shrink, and that its own padding is the
+     tap target so the row does not need to add more. */
   flex: none;
-  width: 22px;
-  height: 22px;
-  accent-color: var(--brand-primary);
-  cursor: pointer;
+  margin: calc(var(--space-4) * -1);
 }
 
 .itemInfo {

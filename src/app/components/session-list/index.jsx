@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import { SectionHeader } from '@/components/SectionHeader'
 import { formatVnd } from '@/services/money.service'
 import { LinkButton } from '@/components/LinkButton'
@@ -54,9 +55,7 @@ export function SessionList({ rows, limit, seeAllHref, from }) {
               </span>
 
               <span className={Style.total}>{formatVnd(row.total)}</span>
-              <span className={Style.chevron} aria-hidden="true">
-                ›
-              </span>
+              <ChevronRightIcon className={Style.chevron} fontSize="small" />
             </Link>
           </li>
         ))}

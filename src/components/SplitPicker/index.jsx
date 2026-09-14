@@ -1,6 +1,8 @@
 'use client'
 
 import clsx from 'clsx'
+import AddIcon from '@mui/icons-material/Add'
+import RemoveIcon from '@mui/icons-material/Remove'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
@@ -174,7 +176,7 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
             disabled={disabled}
             aria-label={`One less share for ${name}`}
           >
-            −
+            <RemoveIcon fontSize="small" />
           </button>
           <span className={Style.stepperValue}>{value}</span>
           <button
@@ -184,7 +186,7 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
             disabled={disabled}
             aria-label={`One more share for ${name}`}
           >
-            +
+            <AddIcon fontSize="small" />
           </button>
         </span>
       ) : (

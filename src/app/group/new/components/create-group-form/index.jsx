@@ -16,6 +16,8 @@ import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
+import CheckIcon from '@mui/icons-material/Check'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { Loading } from '@/components/Loading'
 import { useToast } from '@/components/Toast'
 import { TextLink } from '@/components/TextLink'
@@ -136,7 +138,8 @@ export function CreateGroupForm() {
         {/* One button, two labels. The ternary swaps the copy in place rather
             than adding a second button to keep in sync. */}
         <Button fullWidth onClick={handleCopy}>
-          {copied ? 'Copied ✓' : 'Copy invite link'}
+          {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+          {copied ? 'Copied' : 'Copy invite link'}
         </Button>
 
         <LinkButton variant="quiet" href="/">

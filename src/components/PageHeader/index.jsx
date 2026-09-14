@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import Dialog from '@mui/material/Dialog'
 import { Button } from '@/components/Button'
 import { TextButton } from '@/components/TextButton'
@@ -44,11 +45,11 @@ export function PageHeader({ backHref = '/', title, action, guard }) {
           onClick={() => setAsking(true)}
           aria-label="Back"
         >
-          ←
+          <ArrowBackIcon fontSize="small" />
         </button>
       ) : (
         <Link href={backHref} className={Style.back} aria-label="Back">
-          ←
+          <ArrowBackIcon fontSize="small" />
         </Link>
       )}
 

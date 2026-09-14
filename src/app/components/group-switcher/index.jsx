@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import AddIcon from '@mui/icons-material/Add'
+import CheckIcon from '@mui/icons-material/Check'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import LoginIcon from '@mui/icons-material/Login'
 import Divider from '@mui/material/Divider'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
@@ -48,9 +52,7 @@ export function GroupSwitcher({ groups, current, onSwitch }) {
           aria-expanded={open}
         >
           {current.name}
-          <span className={Style.caret} aria-hidden="true">
-            ⌄
-          </span>
+          <ExpandMoreIcon className={Style.caret} fontSize="small" />
         </button>
       </h1>
 
@@ -70,9 +72,9 @@ export function GroupSwitcher({ groups, current, onSwitch }) {
           >
             {/* A column the tick sits in whether or not it is there, so the
                 names stay in one line down the menu instead of shuffling
-                sideways by a character. */}
-            <span className={Style.tick} aria-hidden="true">
-              {row.id === current.id ? '✓' : ''}
+                sideways by an icon's width. */}
+            <span className={Style.tick}>
+              {row.id === current.id && <CheckIcon fontSize="small" />}
             </span>
             {row.name}
           </MenuItem>
@@ -81,15 +83,15 @@ export function GroupSwitcher({ groups, current, onSwitch }) {
         <Divider />
 
         <MenuItem component={Link} href="/group/new" onClick={() => setAnchor(null)}>
-          <span className={Style.tick} aria-hidden="true">
-            +
+          <span className={Style.tick}>
+            <AddIcon fontSize="small" />
           </span>
           New group
         </MenuItem>
 
         <MenuItem component={Link} href="/join" onClick={() => setAnchor(null)}>
-          <span className={Style.tick} aria-hidden="true">
-            →
+          <span className={Style.tick}>
+            <LoginIcon fontSize="small" />
           </span>
           Join with a code
         </MenuItem>

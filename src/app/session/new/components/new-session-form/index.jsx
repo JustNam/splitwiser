@@ -41,6 +41,7 @@ import { SectionHeader } from '@/components/SectionHeader'
 import { SplitPicker } from '@/components/SplitPicker'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
+import AddIcon from '@mui/icons-material/Add'
 import { Loading } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { RetryMessage } from '@/components/RetryMessage'
@@ -636,7 +637,8 @@ export function NewSessionForm() {
           which "+ Add cost" would not: the point is that somebody else paid
           for something. */}
       <TextButton onClick={addLine} disabled={submitting}>
-        + Someone paid for something else
+        <AddIcon fontSize="small" />
+        Someone paid for something else
       </TextButton>
 
       <section className={Style.section}>
@@ -777,7 +779,8 @@ export function NewSessionForm() {
           </div>
         ) : (
           <TextButton onClick={() => setAddingGuest(true)} disabled={submitting}>
-            + Add a guest
+            <AddIcon fontSize="small" />
+            Add a guest
           </TextButton>
         )}
 

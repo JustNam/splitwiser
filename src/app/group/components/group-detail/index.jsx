@@ -19,6 +19,11 @@ import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
+import AddIcon from '@mui/icons-material/Add'
+import CheckIcon from '@mui/icons-material/Check'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import LogoutIcon from '@mui/icons-material/Logout'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import Alert from '@mui/material/Alert'
 import TextField from '@mui/material/TextField'
 import { TextButton } from '@/components/TextButton'
@@ -320,7 +325,10 @@ export function GroupDetail() {
             </div>
           </div>
         ) : (
-          <TextButton onClick={() => setAddingGuest(true)}>+ Add a guest</TextButton>
+          <TextButton onClick={() => setAddingGuest(true)}>
+            <AddIcon fontSize="small" />
+            Add a guest
+          </TextButton>
         )}
       </section>
 
@@ -333,13 +341,15 @@ export function GroupDetail() {
 
           <div className={Style.inviteActions}>
             <Button onClick={handleCopy} disabled={working}>
-              {copied ? 'Copied ✓' : 'Copy link'}
+              {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+              {copied ? 'Copied' : 'Copy link'}
             </Button>
             <Button
               variant="secondary"
               onClick={() => setConfirming(true)}
               disabled={working || confirming}
             >
+              <RefreshIcon fontSize="small" />
               New code
             </Button>
           </div>
@@ -380,27 +390,18 @@ export function GroupDetail() {
 
       <p className={Style.note}>Anyone in the group can log and edit sessions.</p>
 
-      {/* Both of these used to live only on Home's no-group state, which made
-          them unreachable the moment you were in a group — including joining a
-          SECOND group by invite code. They belong on the screen about groups. */}
-      <section className={Style.section}>
-        <SectionHeader>Other groups</SectionHeader>
-
-        <div className={Style.otherActions}>
-          <LinkButton variant="secondary" href="/group/new">
-            New group
-          </LinkButton>
-          <LinkButton variant="secondary" href="/join">
-            Join with a code
-          </LinkButton>
-        </div>
-      </section>
+      {/* "New group" and "Join with a code" used to be repeated here. They
+          now live in the group switcher on Home, next to the list of groups
+          they add to — which is where the question "which group?" is already
+          being asked. Two places offering the same two actions is two places
+          to keep in step, and one of them was always going to drift. */}
 
       {/* Not in the C1 wireframe — the prototype keeps Sign out in Home's
           overflow menu, which doesn't exist yet. It goes here because without
           it there is no way out of an account at all. */}
       <footer className={Style.actions}>
         <TextButton tone="danger" onClick={handleSignOut}>
+          <LogoutIcon fontSize="small" />
           Sign out
         </TextButton>
       </footer>

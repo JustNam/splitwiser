@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import CloseIcon from '@mui/icons-material/Close'
 import Style from './style.module.scss'
 
 /**
@@ -102,7 +103,7 @@ function ToastRow({ toast, onDismiss }) {
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss"
       >
-        ✕
+        <CloseIcon fontSize="small" />
       </button>
     </div>
   )

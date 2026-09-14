@@ -23,6 +23,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Checkbox from '@mui/material/Checkbox'
 import Dialog from '@mui/material/Dialog'
 import { GroupsApi } from '@/api/groups'
 import { PaymentsApi } from '@/api/payments'
@@ -405,12 +406,14 @@ function DebtGroup({ entry, heading, checked, onToggle, onSelectAll, disabled })
       <ul className={Style.items}>
         {entry.items.map((item) => (
           <li key={item.id}>
-            {/* A real <input type="checkbox"> inside a <label>: the whole row
-                becomes the tap target, and the checkbox keeps its keyboard and
-                screen-reader behaviour without any of it reimplemented. */}
+            {/* MUI's Checkbox still renders a real <input type="checkbox">,
+                so keeping it inside the <label> keeps what that buys: the
+                whole row is the tap target, and the keyboard and screen
+                reader behaviour is the browser's, not ours. What changes is
+                that the box is drawn by the app rather than by the operating
+                system — the same reason the group <select> had to go. */}
             <label className={Style.item}>
-              <input
-                type="checkbox"
+              <Checkbox
                 className={Style.box}
                 checked={Boolean(checked[item.id])}
                 onChange={() => onToggle(item.id)}
