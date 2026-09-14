@@ -566,21 +566,40 @@ export function NewSessionForm() {
 
         {/* Both, not a single toggle: with a long roster you sometimes want to
             start from nobody and sometimes from everybody, and a toggle makes
-            you guess which one it will do. */}
-        <div className={Style.pickRow}>
-          <TextButton onClick={() => setAll(true)} disabled={submitting}>
-            Everyone
-          </TextButton>
-          <TextButton onClick={() => setAll(false)} disabled={submitting}>
-            Nobody
-          </TextButton>
+            you guess which one it will do.
 
-          {lastSession && (
-            <p className={Style.pickNote}>
-              Starting from {formatSessionDate(lastSession.date)}
-            </p>
-          )}
-        </div>
+            Quiet, and only once the roster is long enough to need the search
+            box. At four people they save nobody a tap, and in brand red they
+            were a third different red in a block that already had the picked
+            chips and the focused field. */}
+        {(searchable || lastSession) && (
+          <div className={Style.pickRow}>
+            {searchable && (
+              <>
+                <TextButton
+                  tone="quiet"
+                  onClick={() => setAll(true)}
+                  disabled={submitting}
+                >
+                  Everyone
+                </TextButton>
+                <TextButton
+                  tone="quiet"
+                  onClick={() => setAll(false)}
+                  disabled={submitting}
+                >
+                  Nobody
+                </TextButton>
+              </>
+            )}
+
+            {lastSession && (
+              <p className={Style.pickNote}>
+                Starting from {formatSessionDate(lastSession.date)}
+              </p>
+            )}
+          </div>
+        )}
 
         {searchable && (
           <TextField

@@ -55,6 +55,17 @@ export function SplitPicker({
     .filter((member) => shares[member.id] > baseShare)
     .map(nameOf)
 
+  // Naming both halves when only one is missing reads as an instruction you
+  // have already followed, so the sentence says the one thing that is left.
+  const missing =
+    total <= 0 && participants.length === 0
+      ? 'Enter an amount and tick who played to see the split.'
+      : total <= 0
+        ? 'Enter an amount to see the split.'
+        : participants.length === 0
+          ? 'Tick who played to see the split.'
+          : null
+
   return (
     <section className={Style.section}>
       <SectionHeader>Split</SectionHeader>
@@ -82,10 +93,8 @@ export function SplitPicker({
         </p>
       )}
 
-      {total <= 0 || participants.length === 0 ? (
-        <p className={Style.hint}>
-          Enter an amount and tick who played to see the split.
-        </p>
+      {missing ? (
+        <p className={Style.hint}>{missing}</p>
       ) : method === SPLIT_EQUAL ? (
         <>
           <p className={Style.sentence}>

@@ -23,7 +23,8 @@ export const theme = createTheme({
       light: '#f384a7', // --flamingo-400
       contrastText: '#ffffff',
     },
-    error: { main: '#dc0034' }, // --semantic-red
+    // Must stay far from primary.main: see --semantic-red in _tokens.scss.
+    error: { main: '#9b1c1c' }, // --semantic-red
     success: { main: '#538e3b' }, // --semantic-green-500
     text: {
       primary: '#231f20', // --neutral-900

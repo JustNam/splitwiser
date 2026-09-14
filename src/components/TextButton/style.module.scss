@@ -3,6 +3,12 @@
   background: none;
   padding: 0;
 
+  /* Every one of these sits in a column flex, whose default is to stretch a
+     child to the full width — and a <button> centres its own label. That is
+     how "+ Add a guest" ended up in the middle of the screen without anyone
+     asking for it. A link is as wide as its words. */
+  width: fit-content;
+
   /* 44px even though it looks like text: it is still a tap target on a phone,
      and the caption type would otherwise give it a ~16px hit area. */
   min-height: 44px;

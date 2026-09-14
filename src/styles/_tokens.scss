@@ -49,7 +49,17 @@
   --rossie-100: #fbf7f8;
 
   /* ---- Semantic raw ---- */
-  --semantic-red: #dc0034;
+  /* Deliberately far from --flamingo-600 (#da2a52). The brand is a red, so
+     an error cannot also be THAT red — #dc0034 sat at a contrast ratio of
+     1.08 against the brand, which is to say the same colour.
+
+     No field in the app sets MUI's `error` prop, so the two never meet as
+     two borders; the confusion is learned instead. Every error message on
+     every screen is this colour, so red means "wrong" by the time you reach
+     a form — and then MUI paints a merely FOCUSED field in the primary red,
+     and it reads as a rejection. Darker and browner breaks the association,
+     and reads at 8.15:1 on white instead of 5.13:1. */
+  --semantic-red: #9b1c1c;
   --semantic-green-500: #538e3b;
   --semantic-green-300: #49c14a;
   --semantic-green-100: #bbe3bb;

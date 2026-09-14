@@ -22,9 +22,12 @@
   }
 }
 
+/* Filled, not tinted. At two people an outline is enough; at thirty you are
+   scanning a wall of pills for the ones that are on, and a solid shape is
+   something you see without reading it. */
 .selected {
   border-color: var(--brand-primary);
-  background: var(--surface-tint);
-  color: var(--brand-primary);
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
   font-weight: var(--fw-bold);
 }
