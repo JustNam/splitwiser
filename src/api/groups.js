@@ -84,15 +84,31 @@ export class GroupsApi {
    * with no approval step (spec A3).
    *
    * @param {string} code
-   * @returns {Promise<{ data: object|null, error: string|null }>}
+   * `field` is 'code' when the refusal is about what was typed, so the form
+   * can mark the input rather than leaving a sentence floating under it.
+   *
+   * @returns {Promise<{ data: object|null, error: string|null, field: string|null }>}
    */
   static async join(code) {
-    if (!isSupabaseConfigured) return { data: null, error: MISSING_CONFIG_MESSAGE }
+    if (!isSupabaseConfigured) {
+      return { data: null, error: MISSING_CONFIG_MESSAGE, field: null }
+    }
 
     const { data, error } = await supabase.rpc('join_group', { code })
 
-    if (error) return { data: null, error: error.message }
-    return { data: toGroup(data), error: null }
+    if (error) {
+      // P0001 is `raise exception` — join_group itself refusing, which from a
+      // signed-in caller can only be "no group has this code". Anything else
+      // (a network failure, a 500) is not the user's typing, and saying it is
+      // sends them back to re-read a code that was fine.
+      //
+      // join_group does raise P0001 for a signed-out caller too, but this form
+      // never gets that far: it renders Sign in instead of the field.
+      const field = error.code === 'P0001' ? 'code' : null
+      return { data: null, error: error.message, field }
+    }
+
+    return { data: toGroup(data), error: null, field: null }
   }
 
   /**

@@ -33,6 +33,17 @@ export function SignupForm() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // Two kinds of wrong, kept apart on purpose. `error` is the server saying
+  // no — that email is taken, the network is down — and belongs under the
+  // form. `fieldError` is one field being wrong, and belongs ON that field:
+  // passing it to MUI as `error` + `helperText` is what sets aria-invalid and
+  // wires aria-describedby, so a screen reader says WHICH box to go back to
+  // instead of reading a sentence that floats free of all three.
+  const [fieldError, setFieldError] = useState(null)
+
+  const problemWith = (field) =>
+    fieldError?.field === field ? fieldError.message : null
+
   // Not an error: the "we sent you an email" state. Separate variable because
   // it replaces the form rather than sitting under it.
   const [notice, setNotice] = useState(null)
@@ -47,14 +58,21 @@ export function SignupForm() {
   function validate() {
     // `.trim()` matters: a single space would pass a length check and give you
     // a group member who appears to have no name at all.
-    if (name.trim() === '') return 'Please enter your name.'
+    if (name.trim() === '') {
+      return { field: 'name', message: 'Please enter your name.' }
+    }
 
     // Deliberately crude — regex email validation is a rabbit hole, and the
     // real test is whether the confirmation email arrives.
-    if (!email.includes('@')) return "That email doesn't look right."
+    if (!email.includes('@')) {
+      return { field: 'email', message: "That email doesn't look right." }
+    }
 
     if (password.length < MIN_PASSWORD_LENGTH) {
-      return `Use at least ${MIN_PASSWORD_LENGTH} characters.`
+      return {
+        field: 'password',
+        message: `Use at least ${MIN_PASSWORD_LENGTH} characters.`,
+      }
     }
 
     return null
@@ -67,9 +85,11 @@ export function SignupForm() {
     // Caught here, so a fixable typo never costs a network round-trip.
     const problem = validate()
     if (problem) {
-      setError(problem)
+      setFieldError(problem)
       return
     }
+
+    setFieldError(null)
 
     setSubmitting(true)
 
@@ -118,8 +138,15 @@ export function SignupForm() {
         <TextField
           label="Your name"
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            setName(event.target.value)
+            // Cleared on the first keystroke: a message that stays red while
+            // you fix it teaches people to stop reading it.
+            if (fieldError?.field === 'name') setFieldError(null)
+          }}
           autoComplete="name"
+          error={Boolean(problemWith('name'))}
+          helperText={problemWith('name')}
           fullWidth
           required
           disabled={submitting}
@@ -134,9 +161,14 @@ export function SignupForm() {
         label="Email"
         type="email"
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(event) => {
+          setEmail(event.target.value)
+          if (fieldError?.field === 'email') setFieldError(null)
+        }}
         autoComplete="email"
         inputMode="email"
+        error={Boolean(problemWith('email'))}
+        helperText={problemWith('email')}
         fullWidth
         required
         disabled={submitting}
@@ -146,11 +178,19 @@ export function SignupForm() {
         label="Password"
         type="password"
         value={password}
-        onChange={(event) => setPassword(event.target.value)}
+        onChange={(event) => {
+          setPassword(event.target.value)
+          if (fieldError?.field === 'password') setFieldError(null)
+        }}
         // "new-password" is the hint that makes a password manager offer to
         // GENERATE one instead of autofilling.
         autoComplete="new-password"
-        helperText={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+        error={Boolean(problemWith('password'))}
+        // The rule is already written under this field. When it is broken the
+        // same line says so instead of a second line appearing beside it.
+        helperText={
+          problemWith('password') ?? `At least ${MIN_PASSWORD_LENGTH} characters.`
+        }
         fullWidth
         required
         disabled={submitting}

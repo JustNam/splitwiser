@@ -33,21 +33,29 @@ export function JoinGroupForm() {
   const [submitting, setSubmitting] = useState(false)
   const [joined, setJoined] = useState(null)
 
+  // A wrong code is a wrong FIELD, and this screen has exactly one. Marking
+  // it is what gives the input aria-invalid and points a screen reader at the
+  // box to fix, rather than leaving a sentence underneath that is attached to
+  // nothing.
+  const [codeError, setCodeError] = useState(null)
+
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    setCodeError(null)
 
     if (code.trim() === '') {
-      setError('Please enter an invite code.')
+      setCodeError('Please enter an invite code.')
       return
     }
 
     setSubmitting(true)
 
-    const { data, error: apiError } = await GroupsApi.join(code.trim())
+    const { data, error: apiError, field } = await GroupsApi.join(code.trim())
 
     if (apiError) {
-      setError(apiError)
+      if (field === 'code') setCodeError(apiError)
+      else setError(apiError)
       setSubmitting(false)
       return
     }
@@ -103,8 +111,13 @@ export function JoinGroupForm() {
       <TextField
         label="Invite code"
         value={code}
-        onChange={(event) => setCode(event.target.value)}
+        onChange={(event) => {
+          setCode(event.target.value)
+          setCodeError(null)
+        }}
         placeholder="ABCD-2345"
+        error={Boolean(codeError)}
+        helperText={codeError}
         // Codes are stored and compared in upper case; the SQL uppercases what
         // it receives, so this is only about matching what the user sees.
         slotProps={{ htmlInput: { style: { textTransform: 'uppercase' } } }}
