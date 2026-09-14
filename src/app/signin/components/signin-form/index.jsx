@@ -9,6 +9,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import { AuthApi } from '@/api/auth'
 import { Button } from '@/components/Button'
@@ -97,7 +98,8 @@ export function SigninForm() {
 
       {/* type="submit" is explicit — our Button defaults to type="button". */}
       <Button type="submit" fullWidth disabled={!canSubmit}>
-        {submitting ? 'Signing in…' : 'Sign in'}
+        {submitting && <CircularProgress size={16} color="inherit" />}
+          {submitting ? 'Signing in…' : 'Sign in'}
       </Button>
     </form>
   )

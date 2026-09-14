@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import AvatarGroup from '@mui/material/AvatarGroup'
+import { Avatar } from '@/components/Avatar'
 import { SectionHeader } from '@/components/SectionHeader'
 import { formatVnd } from '@/services/money.service'
 import { LinkButton } from '@/components/LinkButton'
@@ -53,6 +55,17 @@ export function SessionList({ rows, limit, seeAllHref, from }) {
                 </span>
                 <span className={Style.subtitle}>{row.subtitle}</span>
               </span>
+
+              {/* Who played, as stacked discs. AvatarGroup does the overlap
+                  and the "+3" for the ones that do not fit, which is the
+                  whole reason to use it rather than a row of our own. */}
+              {row.playerNames.length > 0 && (
+                <AvatarGroup max={4} className={Style.players} spacing="small">
+                  {row.playerNames.map((name) => (
+                    <Avatar key={name} name={name} size="sm" />
+                  ))}
+                </AvatarGroup>
+              )}
 
               <span className={Style.total}>{formatVnd(row.total)}</span>
               <ChevronRightIcon className={Style.chevron} fontSize="small" />

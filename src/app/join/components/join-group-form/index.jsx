@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
@@ -142,7 +143,8 @@ export function JoinGroupForm() {
       )}
 
       <Button type="submit" fullWidth disabled={code.trim() === '' || submitting}>
-        {submitting ? 'Joining…' : 'Join'}
+        {submitting && <CircularProgress size={16} color="inherit" />}
+          {submitting ? 'Joining…' : 'Join'}
       </Button>
     </form>
   )

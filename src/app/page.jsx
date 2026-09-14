@@ -18,6 +18,7 @@ import GroupsIcon from '@mui/icons-material/Groups'
 import HistoryIcon from '@mui/icons-material/History'
 import Badge from '@mui/material/Badge'
 import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
 import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup, writeCurrentGroupId } from '@/lib/current-group'
@@ -197,9 +198,14 @@ export default function HomePage() {
             it these are two unnamed buttons to anybody not looking at them. */}
         <ActivityLink group={group} snapshot={snapshot} accountId={user.id} />
 
-        <IconButton component={Link} href="/group" aria-label="Group">
-          <GroupsIcon />
-        </IconButton>
+        {/* A tooltip is the desktop half of what aria-label already does for
+            a screen reader. It never fires on a touch screen, which is fine:
+            there the icons sit under a thumb, not a hovering pointer. */}
+        <Tooltip title="Group">
+          <IconButton component={Link} href="/group" aria-label="Group">
+            <GroupsIcon />
+          </IconButton>
+        </Tooltip>
       </header>
 
       <HomeBody
@@ -306,8 +312,10 @@ function ActivityLink({ group, snapshot, accountId }) {
 
 function ActivityButton() {
   return (
-    <IconButton component={Link} href="/activity" aria-label="Activity">
-      <HistoryIcon />
-    </IconButton>
+    <Tooltip title="Activity">
+      <IconButton component={Link} href="/activity" aria-label="Activity">
+        <HistoryIcon />
+      </IconButton>
+    </Tooltip>
   )
 }

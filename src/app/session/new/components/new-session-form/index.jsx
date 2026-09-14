@@ -27,6 +27,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
+import CircularProgress from '@mui/material/CircularProgress'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
@@ -850,6 +851,7 @@ export function NewSessionForm() {
         </div>
 
         <Button type="submit" fullWidth disabled={Boolean(blockedText) || submitting}>
+          {submitting && <CircularProgress size={16} color="inherit" />}
           {submitting ? 'Saving…' : 'Save session'}
         </Button>
       </footer>

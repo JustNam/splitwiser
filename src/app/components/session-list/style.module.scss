@@ -106,3 +106,26 @@
   color: var(--text-muted);
 }
 
+
+/* Stacked, so a full line-up costs about the width of two names rather than
+   thirty. Hidden on the narrowest phones: the date, the total and the
+   chevron are what the row is for, and they come first. */
+.players {
+  flex: none;
+}
+
+/* The "+3" is MUI's own Avatar and defaults to 40px, while ours are 24px.
+   Only the surplus carries .MuiAvatar-root — AvatarGroup gives our spans
+   .MuiAvatarGroup-avatar and nothing else — so this reaches it alone. */
+.players :global(.MuiAvatar-root) {
+  width: 24px;
+  height: 24px;
+  font-size: var(--fs-10);
+  font-weight: var(--fw-bold);
+}
+
+@media (max-width: 380px) {
+  .players {
+    display: none;
+  }
+}

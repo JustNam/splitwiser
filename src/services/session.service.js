@@ -45,7 +45,7 @@ export function formatSessionDate(isoDate) {
  * @param {string} params.groupId
  * @returns {Array<{
  *   id: string, date: string, dateLabel: string, total: number,
- *   subtitle: string, isEdited: boolean,
+ *   subtitle: string, isEdited: boolean, playerNames: string[],
  * }>}
  */
 export function sessionSummaries({
@@ -71,7 +71,14 @@ export function sessionSummaries({
       const notes = lines.map((c) => c.note).filter(Boolean).join(' + ')
 
       const payerIds = [...new Set(lines.map((c) => c.payerMemberId))]
-      const headCount = participants.filter((p) => p.sessionId === session.id).length
+
+      // Names, not just a count: the row shows them as stacked discs, which
+      // answers "was I in this one" without opening it.
+      const playerNames = participants
+        .filter((p) => p.sessionId === session.id)
+        .map((p) => nameOf(p.memberId))
+
+      const headCount = playerNames.length
 
       const who =
         payerIds.length === 1
@@ -85,6 +92,7 @@ export function sessionSummaries({
         dateLabel: formatSessionDate(session.date),
         total,
         subtitle: notes ? `${notes} · ${who}` : who,
+        playerNames,
         isEdited: Boolean(session.updatedAt),
       }
     })

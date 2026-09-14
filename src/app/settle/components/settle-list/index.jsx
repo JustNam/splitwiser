@@ -23,6 +23,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import CircularProgress from '@mui/material/CircularProgress'
 import Checkbox from '@mui/material/Checkbox'
 import Dialog from '@mui/material/Dialog'
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -374,7 +375,8 @@ export function SettleList() {
           </p>
 
           <Button fullWidth onClick={handleConfirm} disabled={submitting}>
-            {submitting ? 'Recording…' : 'Yes, it’s settled'}
+            {submitting && <CircularProgress size={16} color="inherit" />}
+          {submitting ? 'Recording…' : 'Yes, it’s settled'}
           </Button>
 
           <TextButton

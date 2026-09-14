@@ -14,6 +14,11 @@ html {
      address bar, so a "full height" screen ends up taller than what you can
      actually see and the page scrolls when it shouldn't. */
   min-height: 100dvh;
+
+  /* The same arrow as <body>. <html> is the one box body's rule cannot
+     reach, and its default is `auto` — which is the I-beam over anything
+     that looks like text. */
+  cursor: default;
 }
 
 body {

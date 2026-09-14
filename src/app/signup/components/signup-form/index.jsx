@@ -9,6 +9,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import AlertTitle from '@mui/material/AlertTitle'
 import TextField from '@mui/material/TextField'
@@ -211,7 +212,8 @@ export function SignupForm() {
       )}
 
       <Button type="submit" fullWidth disabled={!canSubmit}>
-        {submitting ? 'Creating account…' : 'Create account'}
+        {submitting && <CircularProgress size={16} color="inherit" />}
+          {submitting ? 'Creating account…' : 'Create account'}
       </Button>
     </form>
   )

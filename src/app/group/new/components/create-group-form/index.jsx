@@ -12,6 +12,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { Button } from '@/components/Button'
@@ -178,7 +179,8 @@ export function CreateGroupForm() {
       {/* Disabled on an empty name so the request is never sent without one,
           and on `submitting` so a second tap can't create a second group. */}
       <Button type="submit" fullWidth disabled={name.trim() === '' || submitting}>
-        {submitting ? 'Creating…' : 'Create group'}
+        {submitting && <CircularProgress size={16} color="inherit" />}
+          {submitting ? 'Creating…' : 'Create group'}
       </Button>
     </form>
   )
