@@ -74,6 +74,8 @@
 }
 
 .noGroupTitle {
+  -webkit-user-select: none;
+  user-select: none;
   font: var(--text-h3);
   color: var(--text-strong);
 }

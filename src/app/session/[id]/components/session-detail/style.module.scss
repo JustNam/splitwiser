@@ -55,6 +55,13 @@
   color: var(--text-muted);
 }
 
+/* `.rowSub` also carries a payer's name and an editor's name, which are
+   data. This is the one use of it that is a label. */
+.guestTag {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .rowAmount {
   font: var(--text-body-md);
   color: var(--text-strong);

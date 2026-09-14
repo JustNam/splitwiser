@@ -94,6 +94,8 @@
 }
 
 .emptyTitle {
+  -webkit-user-select: none;
+  user-select: none;
   font: var(--text-body-md);
   font-weight: var(--fw-bold);
   color: var(--text-strong);

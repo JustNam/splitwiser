@@ -53,6 +53,8 @@
   text-align: right;
 }
 .suffix {
+  -webkit-user-select: none;
+  user-select: none;
   font: var(--text-body-md);
   color: var(--text-muted);
 }

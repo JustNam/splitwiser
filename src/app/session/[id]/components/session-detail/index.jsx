@@ -147,7 +147,9 @@ export function SessionDetail() {
             <li key={person.memberId} className={Style.row}>
               <span className={Style.rowInfo}>
                 <span className={Style.rowLabel}>{person.name}</span>
-                {person.isGuest && <span className={Style.rowSub}>Guest</span>}
+                {person.isGuest && (
+                  <span className={clsx(Style.rowSub, Style.guestTag)}>Guest</span>
+                )}
               </span>
 
               {/* Words carry the meaning; the class only tints them. */}

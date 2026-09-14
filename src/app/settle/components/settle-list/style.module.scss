@@ -104,6 +104,8 @@
 }
 
 .netLabel {
+  -webkit-user-select: none;
+  user-select: none;
   font: var(--text-caption);
   color: var(--text-muted);
 }
@@ -124,6 +126,8 @@
 }
 
 .emptyTitle {
+  -webkit-user-select: none;
+  user-select: none;
   font: var(--text-h3);
   color: var(--text-strong);
 }
@@ -177,6 +181,8 @@
 }
 
 .confirmTitle {
+  -webkit-user-select: none;
+  user-select: none;
   font: var(--text-h3);
   color: var(--text-strong);
 }
