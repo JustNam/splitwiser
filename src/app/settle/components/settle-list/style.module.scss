@@ -188,6 +188,8 @@
 }
 
 .confirmHeading {
+  -webkit-user-select: none;
+  user-select: none;
   padding: var(--space-8) 0 var(--space-4);
   font: var(--text-caption);
   color: var(--text-label);

@@ -59,6 +59,8 @@
 /* A stepper, not a field: share counts are 1, 2, maybe 3, and typing is the
    wrong tool for a number you nudge. */
 .stepper {
+  -webkit-user-select: none;
+  user-select: none;
   display: flex;
   align-items: center;
   gap: var(--space-4);

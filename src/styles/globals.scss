@@ -52,13 +52,23 @@ button {
 }
 
 /* `cursor` is inherited, so the rule on <body> would reach into the fields
-   too. Typing IS the I-beam's job, so it is asked for again here. */
-input,
+   too. Typing IS the I-beam's job, so it is asked for again here — but only
+   for the inputs you actually type into. `input` is one tag covering a dozen
+   unrelated controls, and a tickbox is not a field you type in. */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not(
+    [type='color']
+  ):not([type='file']),
 textarea {
   cursor: text;
 }
 
-select {
+/* MUI's Select is a <div role="combobox">, not a <select>, so the tag
+   selector below misses it. Both are the same control to whoever is using
+   it, so they get the same pointer. */
+select,
+[role='combobox'],
+input[type='checkbox'],
+input[type='radio'] {
   cursor: pointer;
 }
 
@@ -72,6 +82,7 @@ select {
 button,
 a,
 select,
+[role='combobox'],
 label,
 summary {
   -webkit-user-select: none; /* Safari */

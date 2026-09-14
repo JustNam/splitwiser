@@ -120,6 +120,8 @@
 /* A count, not a dot: "3 changes" is worth a tap and "1" often isn't, and the
    dot makes you open the screen to find out which. */
 .badge {
+  -webkit-user-select: none;
+  user-select: none;
   display: inline-grid;
   place-items: center;
   min-width: 18px;

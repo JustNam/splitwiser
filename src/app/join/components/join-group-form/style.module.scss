@@ -21,6 +21,8 @@
 }
 
 .doneTag {
+  -webkit-user-select: none;
+  user-select: none;
   color: var(--feedback-success);
   font: var(--text-micro);
   font-weight: var(--fw-bold);
