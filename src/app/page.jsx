@@ -14,7 +14,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import GroupsIcon from '@mui/icons-material/Groups'
+import HistoryIcon from '@mui/icons-material/History'
 import Badge from '@mui/material/Badge'
+import IconButton from '@mui/material/IconButton'
 import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup, writeCurrentGroupId } from '@/lib/current-group'
@@ -185,10 +188,18 @@ export default function HomePage() {
       <header className={Style.topBar}>
         <GroupSwitcher groups={groups} current={group} onSwitch={handleSwitch} />
 
-        {/* The wireframe puts these behind a "..." menu together with Sign
-            out. Plain links until there is a fourth thing to put in a menu. */}
+        {/* Icons, not words. The group name is the long thing on this line
+            and it is the thing that matters; two labels beside it left it
+            about half the width on a phone, and both of these are errands
+            you take rather than things you read.
+
+            aria-label is doing the work the visible text used to — without
+            it these are two unnamed buttons to anybody not looking at them. */}
         <ActivityLink group={group} snapshot={snapshot} accountId={user.id} />
-        <TextLink href="/group">Group</TextLink>
+
+        <IconButton component={Link} href="/group" aria-label="Group">
+          <GroupsIcon />
+        </IconButton>
       </header>
 
       <HomeBody
@@ -267,7 +278,7 @@ function HomeBody({ group, snapshot, onRetry }) {
  * tap teaches you to ignore the badge.
  */
 function ActivityLink({ group, snapshot, accountId }) {
-  if (snapshot.status !== 'ready') return <TextLink href="/activity">Activity</TextLink>
+  if (snapshot.status !== 'ready') return <ActivityButton />
 
   const me = snapshot.data.members.find((member) => member.id === group.myMemberId)
   const myName = me ? displayName(me, snapshot.data.accounts) : ''
@@ -284,11 +295,19 @@ function ActivityLink({ group, snapshot, accountId }) {
   const unread = unreadCount(events, readLastSeen(accountId), myName)
 
   // MUI's Badge rather than our own span: it positions the count against the
-  // word, hides itself at zero, and caps at "9+" without any of that being
+  // icon, hides itself at zero, and caps at "9+" without any of that being
   // three more lines here.
   return (
-    <Badge badgeContent={unread} color="primary" max={9}>
-      <TextLink href="/activity">Activity</TextLink>
+    <Badge badgeContent={unread} color="primary" max={9} overlap="circular">
+      <ActivityButton />
     </Badge>
+  )
+}
+
+function ActivityButton() {
+  return (
+    <IconButton component={Link} href="/activity" aria-label="Activity">
+      <HistoryIcon />
+    </IconButton>
   )
 }

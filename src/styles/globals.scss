@@ -72,6 +72,15 @@ input[type='radio'] {
   cursor: pointer;
 }
 
+/* ...and the box around it. MUI builds Select out of OutlinedInput, which is
+   an InputBase, and InputBase puts `cursor: text` on its whole root — border,
+   padding and all. So "Who paid" and "Split" were showing an I-beam
+   everywhere except the one strip in the middle the rule above reaches.
+   A dropdown is not a field you type in, at any point on it. */
+.MuiInputBase-root:has([role='combobox']) {
+  cursor: pointer;
+}
+
 /* A control is not text.
    `cursor` only changes what the pointer LOOKS like while hovering — it does
    nothing to stop a drag from selecting words. And while a selection drag is

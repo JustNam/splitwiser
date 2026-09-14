@@ -1,4 +1,8 @@
+/* Takes the row. The two icons beside it are fixed-width, so everything left
+   over belongs to the name — which is the one thing on this line that can be
+   long, and the one thing that says where you are. */
 .heading {
+  flex: 1;
   min-width: 0;
 }
 

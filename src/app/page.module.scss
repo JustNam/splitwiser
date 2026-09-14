@@ -7,11 +7,19 @@
     calc(var(--safe-bottom) + var(--space-16));
 }
 
+/* No space-between any more: with three children it pushed the two icons
+   apart. The name takes the room it needs and the two errands sit together
+   at the end, which is where a thumb reaches for them. */
 .topBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-12);
+  gap: var(--space-4);
+
+  /* Cancels the last IconButton's own padding so the icon lines up with the
+     page edge rather than looking inset from it. */
+  > :last-child {
+    margin-right: calc(var(--space-8) * -1);
+  }
 }
 
 .groupName {
