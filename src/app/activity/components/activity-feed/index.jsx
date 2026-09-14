@@ -12,7 +12,7 @@
 
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
-import { Loading } from '@/components/Loading'
+import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
@@ -53,7 +53,7 @@ export function ActivityFeed() {
       <>
         <PageHeader title="Activity" />
 
-        {state.status === 'loading' && <Loading />}
+        {state.status === 'loading' && <LoadingRows rows={4} />}
 
         {state.status === 'signed-out' && (
           <p className={Style.error} role="alert">

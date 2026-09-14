@@ -9,6 +9,8 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Alert from '@mui/material/Alert'
+import AlertTitle from '@mui/material/AlertTitle'
 import TextField from '@mui/material/TextField'
 import { AuthApi } from '@/api/auth'
 import { Button } from '@/components/Button'
@@ -128,10 +130,10 @@ export function SignupForm() {
   // again just invites a second signup with the same email.
   if (notice) {
     return (
-      <div className={Style.notice} role="status">
-        <p className={Style.noticeTitle}>Almost there</p>
-        <p>{notice}</p>
-      </div>
+      <Alert severity="success" role="status">
+        <AlertTitle>Almost there</AlertTitle>
+        {notice}
+      </Alert>
     )
   }
 

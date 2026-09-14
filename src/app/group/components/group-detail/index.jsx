@@ -12,12 +12,14 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
+import { Avatar } from '@/components/Avatar'
 import { Button } from '@/components/Button'
 import { SectionHeader } from '@/components/SectionHeader'
-import { Loading } from '@/components/Loading'
+import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
+import Alert from '@mui/material/Alert'
 import TextField from '@mui/material/TextField'
 import { TextButton } from '@/components/TextButton'
 import { LinkButton } from '@/components/LinkButton'
@@ -86,7 +88,7 @@ export function GroupDetail() {
       <>
         <PageHeader title="Group" />
 
-        {(authLoading || state.status === 'loading') && <Loading />}
+        {(authLoading || state.status === 'loading') && <LoadingRows rows={3} />}
 
         {!authLoading && !user && (
           <p className={Style.error} role="alert">
@@ -226,8 +228,11 @@ export function GroupDetail() {
     <>
       <PageHeader title={group.name} />
 
+      {/* MUI's Alert rather than a tinted <p>: it brings the icon and the
+          severity wiring, and a tick beside the sentence is read faster than
+          the sentence is. */}
       {changed && (
-        <p className={Style.banner}>New code created. The old link no longer works.</p>
+        <Alert severity="success">New code created. The old link no longer works.</Alert>
       )}
 
       <section className={Style.section}>
@@ -245,6 +250,8 @@ export function GroupDetail() {
         <ul className={Style.rows}>
           {rows.map((row) => (
             <li key={row.id} className={Style.row}>
+              <Avatar name={row.name} />
+
               <span className={Style.rowInfo}>
                 <span className={Style.rowName}>
                   {row.name}

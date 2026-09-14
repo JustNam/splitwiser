@@ -1,0 +1,46 @@
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+
+  border-radius: var(--radius-pill);
+  color: var(--text-inverse);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0;
+
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sm {
+  width: 24px;
+  height: 24px;
+  font-size: var(--fs-10);
+}
+
+.md {
+  width: 32px;
+  height: 32px;
+  font-size: var(--fs-12);
+}
+
+/* Every one of these clears 4.5:1 against the white letters on it — measured,
+   not chosen by eye. That is the constraint that decided the set. */
+.plum {
+  background: #7b3f6b;
+}
+.teal {
+  background: #1f6b6b;
+}
+.indigo {
+  background: #3b4c9c;
+}
+.clay {
+  background: #96522f;
+}
+.moss {
+  background: #3a6b2a;
+}
+.slate {
+  background: #4a5568;
+}

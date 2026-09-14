@@ -18,8 +18,9 @@ import { pickCurrentGroup } from '@/lib/current-group'
 import { readFromPath } from '@/lib/next-path'
 import { formatVnd } from '@/services/money.service'
 import { sessionDetail } from '@/services/session-detail.service'
-import { Loading } from '@/components/Loading'
+import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
+import { Avatar } from '@/components/Avatar'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextLink } from '@/components/TextLink'
@@ -89,7 +90,7 @@ export function SessionDetail() {
       <>
         <PageHeader backHref={backHref} title="Session" />
 
-        {(authLoading || state.status === 'loading') && <Loading />}
+        {(authLoading || state.status === 'loading') && <LoadingRows rows={3} />}
 
         {!authLoading && !user && (
           <p className={Style.error} role="alert">
@@ -171,6 +172,8 @@ export function SessionDetail() {
         <ul className={Style.rows}>
           {detail.people.map((person) => (
             <li key={person.memberId} className={Style.row}>
+              <Avatar name={person.name} size="sm" />
+
               <span className={Style.rowInfo}>
                 <span className={Style.rowLabel}>{person.name}</span>
                 {person.isGuest && (

@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import { formatVnd } from '@/services/money.service'
 import { LinkButton } from '@/components/LinkButton'
+import { Avatar } from '@/components/Avatar'
 import { SectionHeader } from '@/components/SectionHeader'
 import { withFrom } from '@/lib/next-path'
 import Style from './style.module.scss'
@@ -75,6 +76,10 @@ function BalanceRow({ row, from }) {
   return (
     <li>
       <Link href={withFrom(`/settle?member=${row.memberId}`, from)} className={Style.row}>
+        {/* aria-hidden inside the Avatar: the name is right there in the
+            sentence, and "T T" read out before it is noise. */}
+        <Avatar name={row.name} />
+
         <span className={Style.phrase}>
           {owedToMe ? 'You lent ' : 'You owe '}
           <span className={Style.name}>{row.name}</span>

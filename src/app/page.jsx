@@ -23,10 +23,11 @@ import { displayName } from '@/services/money.service'
 import { groupBalances } from '@/services/balance.service'
 import { sessionSummaries } from '@/services/session.service'
 import { BalanceList } from './components/balance-list'
+import { GroupSwitcher } from './components/group-switcher'
 import { SessionList } from './components/session-list'
 import { TextLink } from '@/components/TextLink'
 import { LinkButton } from '@/components/LinkButton'
-import { Loading } from '@/components/Loading'
+import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import Style from './page.module.scss'
 
@@ -104,7 +105,7 @@ export default function HomePage() {
     }
   }, [groupId, snapshotAttempt])
 
-  if (authLoading) return <Loading />
+  if (authLoading) return <LoadingRows rows={3} />
 
   if (!user) {
     return (
@@ -124,7 +125,7 @@ export default function HomePage() {
   if (state.status === 'loading') {
     return (
       <main className={Style.page}>
-        <Loading />
+        <LoadingRows rows={3} />
       </main>
     )
   }
@@ -167,9 +168,7 @@ export default function HomePage() {
   const { groups } = state
   const group = groups.find((row) => row.id === groupId) ?? groups[0]
 
-  function handleSwitch(event) {
-    const nextId = event.target.value
-
+  function handleSwitch(nextId) {
     // Written before the fetch, so a reload lands on the same group — and so
     // every other screen picks up the same one.
     writeCurrentGroupId(nextId)
@@ -183,33 +182,7 @@ export default function HomePage() {
           belong to several, and logging a session into the wrong one is the
           mistake this line exists to prevent. */}
       <header className={Style.topBar}>
-        {groups.length > 1 ? (
-          <>
-            {/* The switcher is the visible title, but a <select> is not a
-                heading, and this page's two blocks are <h2>. The hidden <h1>
-                gives the document the level they sit under. */}
-            <h1 className={Style.srOnly}>{group.name}</h1>
-
-            {/* Native, not a custom dropdown: on a phone it opens the OS
-                picker, familiar and accessible with no code of ours. Hidden
-                entirely at one group — a dropdown with a single option asks a
-                question that has no answer. */}
-            <select
-              className={Style.groupSelect}
-              value={group.id}
-              onChange={handleSwitch}
-              aria-label="Group"
-            >
-              {groups.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
-          </>
-        ) : (
-          <h1 className={Style.groupName}>{group.name}</h1>
-        )}
+        <GroupSwitcher groups={groups} current={group} onSwitch={handleSwitch} />
 
         {/* The wireframe puts these behind a "..." menu together with Sign
             out. Plain links until there is a fourth thing to put in a menu. */}
@@ -240,7 +213,7 @@ export default function HomePage() {
  * blank the whole screen.
  */
 function HomeBody({ group, snapshot, onRetry }) {
-  if (snapshot.status === 'loading') return <Loading />
+  if (snapshot.status === 'loading') return <LoadingRows rows={4} />
 
   if (snapshot.status === 'error') {
     return <RetryMessage message={snapshot.error} onRetry={onRetry} />

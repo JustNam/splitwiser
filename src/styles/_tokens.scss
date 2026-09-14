@@ -65,9 +65,15 @@
      collision that no longer exists. */
   --semantic-red: #dc0034;
   --semantic-red-100: #fef2f4;
-  --semantic-green-500: #538e3b;
-  --semantic-green-300: #49c14a;
+  /* #538e3b read at 3.96:1 on white and 2.80:1 on the old tint below — the
+     "ALL SETTLED" caption was failing against its own background. Darkened
+     until it passes both: 6.33:1 and 5.77:1. */
+  --semantic-green-500: #3a6b2a;
+  --semantic-green-300: #49c14a; /* decorative only — the toast marker */
   --semantic-green-100: #bbe3bb;
+  /* A wash rather than a slab. The old tint was the largest block of colour
+     on Home, spent on the news that nothing has happened. */
+  --semantic-green-50: #eef7ec;
 
   /* ============================================================
      Semantic aliases — reference THESE in components
@@ -108,7 +114,7 @@
   /* Feedback */
   --feedback-error: var(--semantic-red);
   --feedback-success: var(--semantic-green-500);
-  --feedback-success-tint: var(--semantic-green-100);
+  --feedback-success-tint: var(--semantic-green-50);
   /* Three boxes on three screens meant "careful" and got their background
      from --surface-tint, which worked only for as long as the brand happened
      to be a red. It isn't any more, and a red border on a blue fill is

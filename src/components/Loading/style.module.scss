@@ -38,3 +38,26 @@
     opacity: 0.6;
   }
 }
+
+/* --- Skeleton rows -------------------------------------------------------- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-8) 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+}

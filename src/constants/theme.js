@@ -24,7 +24,7 @@ export const theme = createTheme({
       contrastText: '#ffffff',
     },
     error: { main: '#dc0034' }, // --semantic-red
-    success: { main: '#538e3b' }, // --semantic-green-500
+    success: { main: '#3a6b2a' }, // --semantic-green-500
     text: {
       primary: '#231f20', // --neutral-900
       secondary: '#716a68', // --charcoal-500

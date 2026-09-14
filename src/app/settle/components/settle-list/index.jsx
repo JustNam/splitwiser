@@ -28,7 +28,7 @@ import { GroupsApi } from '@/api/groups'
 import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
-import { Loading } from '@/components/Loading'
+import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
@@ -105,7 +105,7 @@ export function SettleList() {
       <>
         <PageHeader backHref={backHref} title="Settle up" />
 
-        {(authLoading || state.status === 'loading') && <Loading />}
+        {(authLoading || state.status === 'loading') && <LoadingRows rows={3} />}
 
         {!authLoading && !user && (
           <p className={Style.error} role="alert">
