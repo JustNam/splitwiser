@@ -428,7 +428,7 @@ export function NewSessionForm() {
         onChange={(event) => setDate(event.target.value)}
         // Without shrink the label sits on top of the date placeholder, which
         // a date input always shows.
-        InputLabelProps={{ shrink: true }}
+        slotProps={{ inputLabel: { shrink: true } }}
         fullWidth
         disabled={submitting}
       />
@@ -446,7 +446,9 @@ export function NewSessionForm() {
             placeholder="0đ"
             // A numeric keypad on a phone. type="number" gives one too, but it
             // also allows "e", "-" and spinner arrows.
-            inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
+            slotProps={{
+              htmlInput: { inputMode: 'numeric', className: Style.amountInput },
+            }}
             fullWidth
             disabled={submitting}
           />
@@ -506,7 +508,7 @@ export function NewSessionForm() {
                     label="Amount"
                     value={line.amountText === '' ? '' : formatVnd(lineTotals[index])}
                     onChange={(event) => setLineAmount(line.key, event.target.value)}
-                    inputProps={{ inputMode: 'numeric' }}
+                    slotProps={{ htmlInput: { inputMode: 'numeric' } }}
                     size="small"
                     className={Style.costAmount}
                     disabled={submitting}
@@ -657,7 +659,7 @@ export function NewSessionForm() {
                 label="Email (optional)"
                 value={guestEmail}
                 onChange={(event) => setGuestEmail(event.target.value)}
-                inputProps={{ inputMode: 'email' }}
+                slotProps={{ htmlInput: { inputMode: 'email' } }}
                 size="small"
                 disabled={submitting}
               />

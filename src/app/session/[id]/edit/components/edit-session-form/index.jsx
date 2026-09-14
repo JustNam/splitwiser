@@ -362,7 +362,7 @@ export function EditSessionForm() {
         type="date"
         value={date}
         onChange={(event) => setDate(event.target.value)}
-        InputLabelProps={{ shrink: true }}
+        slotProps={{ inputLabel: { shrink: true } }}
         fullWidth
         disabled={submitting}
       />
@@ -378,7 +378,9 @@ export function EditSessionForm() {
             value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
             onChange={(event) => setLineAmount(lines[0].costLineId, event.target.value)}
             placeholder="0đ"
-            inputProps={{ inputMode: 'numeric', className: Style.amountInput }}
+            slotProps={{
+              htmlInput: { inputMode: 'numeric', className: Style.amountInput },
+            }}
             helperText={
               lineTotals[0] !== lines[0].amountWas
                 ? `Was ${formatVnd(lines[0].amountWas)}`
@@ -443,7 +445,7 @@ export function EditSessionForm() {
                     onChange={(event) =>
                       setLineAmount(line.costLineId, event.target.value)
                     }
-                    inputProps={{ inputMode: 'numeric' }}
+                    slotProps={{ htmlInput: { inputMode: 'numeric' } }}
                     helperText={
                       lineTotals[index] !== line.amountWas
                         ? `Was ${formatVnd(line.amountWas)}`

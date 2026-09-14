@@ -195,10 +195,12 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
           <TextField
             value={method === SPLIT_ADJUSTED && value > 0 ? `+${value}` : String(value)}
             onChange={handleText}
-            inputProps={{
-              inputMode: 'numeric',
-              'aria-label': `${name}'s share`,
-              className: Style.input,
+            slotProps={{
+              htmlInput: {
+                inputMode: 'numeric',
+                'aria-label': `${name}'s share`,
+                className: Style.input,
+              },
             }}
             size="small"
             disabled={disabled}

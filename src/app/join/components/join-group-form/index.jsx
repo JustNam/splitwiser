@@ -107,7 +107,7 @@ export function JoinGroupForm() {
         placeholder="ABCD-2345"
         // Codes are stored and compared in upper case; the SQL uppercases what
         // it receives, so this is only about matching what the user sees.
-        inputProps={{ style: { textTransform: 'uppercase' } }}
+        slotProps={{ htmlInput: { style: { textTransform: 'uppercase' } } }}
         fullWidth
         required
         disabled={submitting}
