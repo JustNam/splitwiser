@@ -58,6 +58,8 @@
 }
 
 .guest {
+  -webkit-user-select: none;
+  user-select: none;
   margin-left: var(--space-6);
   padding: 0 var(--space-6);
   border-radius: var(--radius-pill);
@@ -95,6 +97,8 @@
 }
 
 .settledTag {
+  -webkit-user-select: none;
+  user-select: none;
   color: var(--feedback-success);
   font: var(--text-micro);
   font-weight: var(--fw-bold);

@@ -66,6 +66,8 @@
 }
 
 .guest {
+  -webkit-user-select: none;
+  user-select: none;
   padding: 0 var(--space-6);
   border-radius: var(--radius-pill);
   background: var(--surface-muted);

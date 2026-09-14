@@ -18,6 +18,8 @@
 /* Fixed width so the three kinds line up as a column you can scan down
    without reading. */
 .tag {
+  -webkit-user-select: none;
+  user-select: none;
   flex: none;
   width: 60px;
   padding: var(--space-2) 0;
@@ -71,6 +73,8 @@
 }
 
 .mine {
+  -webkit-user-select: none;
+  user-select: none;
   padding: 0 var(--space-6);
   border-radius: var(--radius-pill);
   background: var(--surface-tint);

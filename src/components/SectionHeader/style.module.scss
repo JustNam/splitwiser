@@ -1,4 +1,9 @@
 .header {
+  /* Furniture: it labels the block rather than saying anything. Dragging
+     across "BALANCES" should not select it. */
+  -webkit-user-select: none;
+  user-select: none;
+
   display: flex;
   align-items: baseline;
   justify-content: space-between;

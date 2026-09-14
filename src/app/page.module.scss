@@ -29,6 +29,9 @@
 }
 
 .groupName {
+  -webkit-user-select: none;
+  user-select: none;
+
   font: var(--text-h2);
   color: var(--text-strong);
 }

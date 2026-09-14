@@ -61,3 +61,19 @@ textarea {
 select {
   cursor: pointer;
 }
+
+/* A control is not text.
+   `cursor` only changes what the pointer LOOKS like while hovering — it does
+   nothing to stop a drag from selecting words. And while a selection drag is
+   in progress the browser shows the I-beam whatever `cursor` says, which is
+   the I-beam that survives `cursor: default`: press on a button, move a few
+   pixels, and you are selecting its label.
+   Nobody has ever wanted to copy the words on a button. */
+button,
+a,
+select,
+label,
+summary {
+  -webkit-user-select: none; /* Safari */
+  user-select: none;
+}
