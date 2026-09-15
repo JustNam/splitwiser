@@ -13,6 +13,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import AlertTitle from '@mui/material/AlertTitle'
 import TextField from '@mui/material/TextField'
+import { PasswordField } from '@/components/PasswordField'
 import { AuthApi } from '@/api/auth'
 import { Button } from '@/components/Button'
 import { useToast } from '@/components/Toast'
@@ -160,7 +161,6 @@ export function SignupForm() {
           required
           disabled={submitting}
         />
-        <p className={Style.hint}>Everyone sees this name, in every group.</p>
       </div>
 
       <TextField
@@ -180,9 +180,8 @@ export function SignupForm() {
         disabled={submitting}
       />
 
-      <TextField
+      <PasswordField
         label="Password"
-        type="password"
         value={password}
         onChange={(event) => {
           setPassword(event.target.value)

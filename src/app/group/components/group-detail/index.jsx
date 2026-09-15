@@ -9,7 +9,6 @@
  */
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
 import { Avatar } from '@/components/Avatar'
@@ -22,7 +21,6 @@ import { PageHeader } from '@/components/PageHeader'
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import LogoutIcon from '@mui/icons-material/Logout'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import Alert from '@mui/material/Alert'
 import Collapse from '@mui/material/Collapse'
@@ -36,8 +34,7 @@ import { displayName } from '@/services/money.service'
 import Style from './style.module.scss'
 
 export function GroupDetail() {
-  const { user, loading: authLoading, signOut } = useAuth()
-  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const toast = useToast()
 
   const [state, setState] = useState({ status: 'loading' })
@@ -189,12 +186,6 @@ export function GroupDetail() {
     setChanged(true)
     setCopied(false)
     setWorking(false)
-  }
-
-  async function handleSignOut() {
-    await signOut()
-    toast.success('Signed out')
-    router.push('/signin')
   }
 
   async function handleAddGuest() {
@@ -395,15 +386,6 @@ export function GroupDetail() {
           being asked. Two places offering the same two actions is two places
           to keep in step, and one of them was always going to drift. */}
 
-      {/* Not in the C1 wireframe — the prototype keeps Sign out in Home's
-          overflow menu, which doesn't exist yet. It goes here because without
-          it there is no way out of an account at all. */}
-      <footer className={Style.actions}>
-        <Button variant="secondary" onClick={handleSignOut}>
-          <LogoutIcon fontSize="small" />
-          Sign out
-        </Button>
-      </footer>
     </>
   )
 }

@@ -15,6 +15,7 @@
 import Image from 'next/image'
 import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 import GroupsIcon from '@mui/icons-material/Groups'
 import HistoryIcon from '@mui/icons-material/History'
 import Badge from '@mui/material/Badge'
@@ -221,6 +222,12 @@ export default function HomePage() {
         <Tooltip title="Group">
           <IconButton component={Link} href="/group" aria-label="Group">
             <GroupsIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Account">
+          <IconButton component={Link} href="/account" aria-label="Account">
+            <AccountCircleIcon />
           </IconButton>
         </Tooltip>
       </header>

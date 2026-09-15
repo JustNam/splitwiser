@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
+import { PasswordField } from '@/components/PasswordField'
 import { AuthApi } from '@/api/auth'
 import { Button } from '@/components/Button'
 import { useToast } from '@/components/Toast'
@@ -78,9 +79,8 @@ export function SigninForm() {
         disabled={submitting}
       />
 
-      <TextField
+      <PasswordField
         label="Password"
-        type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="current-password"
