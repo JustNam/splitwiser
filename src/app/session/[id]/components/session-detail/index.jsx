@@ -15,6 +15,7 @@ import clsx from 'clsx'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { readFromPath } from '@/lib/next-path'
 import { formatVnd } from '@/services/money.service'
+import { formatMoment } from '@/services/activity.service'
 import { sessionDetail } from '@/services/session-detail.service'
 import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
@@ -166,13 +167,18 @@ export function SessionDetail() {
           <ul className={Style.rows}>
             {detail.edits.map((edit) => (
               <li key={edit.id} className={Style.editRow}>
-                <span className={Style.rowLabel}>{edit.text}</span>
-                <span className={Style.rowSub}>{edit.by}</span>
+                <span className={Style.editText}>{edit.text}</span>
+
+                {/* Who and when on the same line as what. Stacked, two edits
+                    with no reason typed both read "Session edited" over a
+                    name, in two lines each, and the only thing telling them
+                    apart was missing. */}
+                <span className={Style.editBy}>
+                  {edit.by} · <time dateTime={edit.at}>{formatMoment(edit.at)}</time>
+                </span>
               </li>
             ))}
           </ul>
-
-          <p className={Style.note}>Nothing is overwritten — edits are listed here.</p>
         </section>
       )}
 

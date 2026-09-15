@@ -97,12 +97,30 @@
 
 /* --- Edits -------------------------------------------------------------- */
 
+/* One line, not two. An edit is a short sentence and a signature; stacking
+   them gave each one the height of a cost row for a third of the content. */
 .editRow {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-12) 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-12);
+  padding: var(--space-8) 0;
   border-bottom: 1px solid var(--border-subtle);
+}
+
+.editText {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-body-md);
+  color: var(--text-strong);
+}
+
+.editBy {
+  flex: none;
+  font: var(--text-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .trail {
