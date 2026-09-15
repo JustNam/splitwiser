@@ -8,7 +8,7 @@ import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextButton } from '@/components/TextButton'
 import { formatVnd } from '@/services/money.service'
-import { methodsFor } from '@/services/split-plan.service'
+import { SPLIT_METHODS, methodsFor } from '@/services/split-plan.service'
 import {
   SPLIT_ADJUSTED,
   SPLIT_EQUAL,
@@ -44,6 +44,11 @@ export function SplitPicker({
 }) {
   const { total, shares, problem, readout } = plan
 
+  // Exact and Adjusted are typed in đồng, and computeSplit runs once per cost
+  // line — so the same figure would be applied to every line whole, instead
+  // of divided between them. Weights have no such problem.
+  const allowed = new Set(methodsFor(multiLine).map((option) => option.value))
+
   const amounts = Object.values(shares)
   const baseShare = amounts.length > 0 ? Math.min(...amounts) : 0
 
@@ -78,18 +83,27 @@ export function SplitPicker({
           to make them are truncating the labels — unreadable — or scrolling
           sideways, which hides options again and undoes the reason for the
           change. Two lines on a phone is the honest answer. */}
+      {/* All five, always — the two that cannot be used are shown greyed
+          rather than removed. Taking them off the row meant somebody adding a
+          second cost watched two options vanish with no account given, and
+          the first person to see it asked why. An option you can see and
+          cannot press explains itself; one that is not there does not. */}
       <ChipGroup>
-        {methodsFor(multiLine).map((option) => (
+        {SPLIT_METHODS.map((option) => (
           <Chip
             key={option.value}
             selected={option.value === method}
             onClick={() => onMethodChange(option.value)}
-            disabled={disabled}
+            disabled={disabled || !allowed.has(option.value)}
           >
             {option.label}
           </Chip>
         ))}
       </ChipGroup>
+
+      {multiLine && (
+        <p className={Style.hint}>Exact and Adjusted need a single cost.</p>
+      )}
 
       {missing ? (
         <p className={Style.hint}>{missing}</p>
