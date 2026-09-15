@@ -20,12 +20,16 @@ import {
   leftToAssign,
 } from './split.service'
 
+// Short, because these are now five buttons on a row rather than five lines
+// in a dropdown, and "By exact amounts" on a button is a button nothing else
+// fits beside. Under a heading that already says Split, none of them is
+// ambiguous on its own.
 export const SPLIT_METHODS = [
   { value: SPLIT_EQUAL, label: 'Equally' },
-  { value: SPLIT_EXACT, label: 'By exact amounts' },
-  { value: SPLIT_PERCENT, label: 'By percentage' },
-  { value: SPLIT_SHARES, label: 'By shares' },
-  { value: SPLIT_ADJUSTED, label: 'Equally, adjusted' },
+  { value: SPLIT_EXACT, label: 'Exact' },
+  { value: SPLIT_PERCENT, label: 'Percent' },
+  { value: SPLIT_SHARES, label: 'Shares' },
+  { value: SPLIT_ADJUSTED, label: 'Adjusted' },
 ]
 
 /**

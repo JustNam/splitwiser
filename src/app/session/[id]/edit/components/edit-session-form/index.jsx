@@ -29,10 +29,6 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
 import CircularProgress from '@mui/material/CircularProgress'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
@@ -43,6 +39,7 @@ import { LoadingForm } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
+import { PayerPicker } from '@/components/PayerPicker'
 import { TextLink } from '@/components/TextLink'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName, formatVnd } from '@/services/money.service'
@@ -395,24 +392,13 @@ export function EditSessionForm() {
             disabled={submitting}
           />
 
-          <FormControl fullWidth disabled={submitting}>
-            <InputLabel id="payer-label">Paid by</InputLabel>
-            <Select
-              labelId="payer-label"
-              label="Paid by"
-              value={lines[0].payerId}
-              onChange={(event) =>
-                updateLine(lines[0].costLineId, { payerId: event.target.value })
-              }
-            >
-              {members.map((member) => (
-                <MenuItem key={member.id} value={member.id}>
-                  {nameOf(member)}
-                  {member.type === 'guest' ? ' (guest)' : ''}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <PayerPicker
+            members={members}
+            nameOf={nameOf}
+            value={lines[0].payerId}
+            onChange={(payerId) => updateLine(lines[0].costLineId, { payerId })}
+            disabled={submitting}
+          />
 
           <TextField
             label="What for"
@@ -462,24 +448,14 @@ export function EditSessionForm() {
                   />
                 </div>
 
-                <FormControl size="small" fullWidth disabled={submitting}>
-                  <InputLabel id={`payer-${line.costLineId}`}>Paid by</InputLabel>
-                  <Select
-                    labelId={`payer-${line.costLineId}`}
-                    label="Paid by"
-                    value={line.payerId}
-                    onChange={(event) =>
-                      updateLine(line.costLineId, { payerId: event.target.value })
-                    }
-                  >
-                    {members.map((member) => (
-                      <MenuItem key={member.id} value={member.id}>
-                        {nameOf(member)}
-                        {member.type === 'guest' ? ' (guest)' : ''}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <PayerPicker
+                  members={members}
+                  nameOf={nameOf}
+                  value={line.payerId}
+                  onChange={(payerId) => updateLine(line.costLineId, { payerId })}
+                  size="small"
+                  disabled={submitting}
+                />
               </li>
             ))}
           </ul>

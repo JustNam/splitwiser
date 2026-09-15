@@ -28,10 +28,6 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import CircularProgress from '@mui/material/CircularProgress'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import { GroupsApi } from '@/api/groups'
 import { InvitesApi } from '@/api/invites'
@@ -46,6 +42,7 @@ import AddIcon from '@mui/icons-material/Add'
 import Collapse from '@mui/material/Collapse'
 import { LoadingForm } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
+import { PayerPicker } from '@/components/PayerPicker'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { LinkButton } from '@/components/LinkButton'
@@ -529,28 +526,13 @@ export function NewSessionForm() {
             disabled={submitting}
           />
 
-          {/* A Select, not a TextField with `select` set. MUI offers that
-              shortcut and it renders identically, but the code should say
-              which of the two a control is: one is typed into, the other is
-              chosen from. */}
-          <FormControl fullWidth disabled={submitting}>
-            <InputLabel id="payer-label">Paid by</InputLabel>
-            <Select
-              labelId="payer-label"
-              label="Paid by"
-              value={lines[0].payerId}
-              onChange={(event) =>
-                updateLine(lines[0].key, { payerId: event.target.value })
-              }
-            >
-              {members.map((member) => (
-                <MenuItem key={member.id} value={member.id}>
-                  {nameOf(member)}
-                  {member.type === 'guest' ? ' (guest)' : ''}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <PayerPicker
+            members={members}
+            nameOf={nameOf}
+            value={lines[0].payerId}
+            onChange={(payerId) => updateLine(lines[0].key, { payerId })}
+            disabled={submitting}
+          />
 
           <TextField
             label="What for"
@@ -592,24 +574,14 @@ export function NewSessionForm() {
                 </div>
 
                 <div className={Style.costRow}>
-                  <FormControl size="small" fullWidth disabled={submitting}>
-                    <InputLabel id={`payer-${line.key}`}>Paid by</InputLabel>
-                    <Select
-                      labelId={`payer-${line.key}`}
-                      label="Paid by"
-                      value={line.payerId}
-                      onChange={(event) =>
-                        updateLine(line.key, { payerId: event.target.value })
-                      }
-                    >
-                      {members.map((member) => (
-                        <MenuItem key={member.id} value={member.id}>
-                          {nameOf(member)}
-                          {member.type === 'guest' ? ' (guest)' : ''}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <PayerPicker
+                    members={members}
+                    nameOf={nameOf}
+                    value={line.payerId}
+                    onChange={(payerId) => updateLine(line.key, { payerId })}
+                    size="small"
+                    disabled={submitting}
+                  />
 
                   <TextButton
                     onClick={() => removeLine(line.key)}
@@ -672,9 +644,15 @@ export function NewSessionForm() {
               </>
             )}
 
-            {lastSession && (
+            {/* Says what it means, and only while it is true.
+                "Starting from 14 Sep" named a date without saying what
+                started, and it stayed on screen after the line-up had been
+                changed — at which point it was simply wrong. `seed` is the
+                line-up this screen opened with, so comparing against it is
+                how the sentence knows to leave. */}
+            {lastSession && [...participantIds].sort().join(',') === seed && (
               <p className={Style.pickNote}>
-                Starting from {formatSessionDate(lastSession.date)}
+                Same players as {formatSessionDate(lastSession.date)}
               </p>
             )}
           </div>

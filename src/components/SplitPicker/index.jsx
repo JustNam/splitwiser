@@ -3,11 +3,8 @@
 import clsx from 'clsx'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
+import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextButton } from '@/components/TextButton'
 import { formatVnd } from '@/services/money.service'
@@ -72,21 +69,27 @@ export function SplitPicker({
     <section className={Style.section}>
       <SectionHeader>Split</SectionHeader>
 
-      <FormControl fullWidth disabled={disabled}>
-        <InputLabel id="split-label">How</InputLabel>
-        <Select
-          labelId="split-label"
-          label="How"
-          value={method}
-          onChange={(event) => onMethodChange(event.target.value)}
-        >
-          {methodsFor(multiLine).map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      {/* Buttons, not a dropdown. A dropdown showed one method and hid the
+          other four, so the app could split by shares and nobody knew unless
+          they opened it to find out.
+
+          The row wraps rather than being forced onto one line. Five of these
+          do fit on a desktop; on a 328px phone they cannot, and the two ways
+          to make them are truncating the labels — unreadable — or scrolling
+          sideways, which hides options again and undoes the reason for the
+          change. Two lines on a phone is the honest answer. */}
+      <ChipGroup>
+        {methodsFor(multiLine).map((option) => (
+          <Chip
+            key={option.value}
+            selected={option.value === method}
+            onClick={() => onMethodChange(option.value)}
+            disabled={disabled}
+          >
+            {option.label}
+          </Chip>
+        ))}
+      </ChipGroup>
 
       {multiLine && (
         <p className={Style.hint}>Several costs: split by shares or percent.</p>
