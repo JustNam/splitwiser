@@ -153,10 +153,17 @@ export function SettleList() {
     setChecked((current) => ({ ...current, [itemId]: !current[itemId] }))
   }
 
-  function selectAll(entry) {
+  /**
+   * Tick everything in one group, or clear it.
+   *
+   * One button, because the two are the same thought: "all of these" and
+   * "none of these". A separate Clear beside Select all is a second control
+   * that is wrong half the time.
+   */
+  function toggleAll(entry, select) {
     setChecked((current) => {
       const next = { ...current }
-      for (const item of entry.items) next[item.id] = true
+      for (const item of entry.items) next[item.id] = select
       return next
     })
   }
@@ -246,7 +253,7 @@ export function SettleList() {
           heading={`You owe ${entry.name} ${formatVnd(entry.total)}`}
           checked={checked}
           onToggle={toggle}
-          onSelectAll={selectAll}
+          onToggleAll={toggleAll}
           disabled={submitting}
         />
       ))}
@@ -258,7 +265,7 @@ export function SettleList() {
           heading={`${entry.name} owes you ${formatVnd(entry.total)}`}
           checked={checked}
           onToggle={toggle}
-          onSelectAll={selectAll}
+          onToggleAll={toggleAll}
           disabled={submitting}
         />
       ))}
@@ -372,7 +379,13 @@ export function SettleList() {
  * One person's debts in one direction. The same block either way round — only
  * the heading says which.
  */
-function DebtGroup({ entry, heading, checked, onToggle, onSelectAll, disabled }) {
+function DebtGroup({ entry, heading, checked, onToggle, onToggleAll, disabled }) {
+  // Whether the button offers to tick or to clear. Read from the boxes
+  // themselves rather than remembered, so ticking every row by hand also
+  // turns the button into Clear all — the screen and the button cannot
+  // disagree about what is selected.
+  const allSelected = entry.items.every((item) => checked[item.id])
+
   return (
     <section className={Style.group}>
       <header className={Style.groupHeader}>
@@ -383,8 +396,8 @@ function DebtGroup({ entry, heading, checked, onToggle, onSelectAll, disabled })
           {heading}
           {entry.isGuest && <span className={Style.guest}>Guest</span>}
         </h2>
-        <TextButton onClick={() => onSelectAll(entry)} disabled={disabled}>
-          Select all
+        <TextButton onClick={() => onToggleAll(entry, !allSelected)} disabled={disabled}>
+          {allSelected ? 'Clear all' : 'Select all'}
         </TextButton>
       </header>
 
