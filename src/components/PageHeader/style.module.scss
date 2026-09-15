@@ -10,8 +10,11 @@
 .back {
   display: grid;
   place-items: center;
-  width: var(--control-h-40);
-  height: var(--control-h-40);
+  /* 44, not 40. It is the way out of every screen below Home, reached with
+     the thumb at the far corner of the phone — the worst place on the screen
+     to ask for accuracy. The chips and text buttons were already 44. */
+  width: var(--control-h-44);
+  height: var(--control-h-44);
 
   /* Pulls the arrow to the page edge while the tap target stays 40px. An icon
      button looks inset otherwise. */

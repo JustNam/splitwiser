@@ -22,6 +22,21 @@
   }
 }
 
+/* The three icons are not three of a kind, and drawing them as one run of
+   three said they were.
+   Activity and Group both mean "of the group named on the left", and both
+   change the moment you switch group. Account is yours, the same in every
+   group and when you are in none. One hairline is enough to say so: a label
+   would be three words explaining a thing nobody had asked about, and moving
+   the avatar somewhere else would put it where no app keeps it. */
+.accountDivider {
+  align-self: center;
+  width: 1px;
+  height: var(--space-20);
+  margin: 0 var(--space-4);
+  background: var(--border-default);
+}
+
 .groupName {
   -webkit-user-select: none;
   user-select: none;
@@ -36,16 +51,25 @@
 }
 
 .actions {
-  /* Pins the buttons to the bottom of the column while the page is still
-     short. Once the sessions list makes it scroll, this becomes
-     `position: sticky; bottom: 0` with a background — see the note in
-     layout.module.scss about sticky vs fixed. */
+  /* Pinned to the bottom of the column while the page is short, and stuck
+     there once it scrolls. The two things you came to Home to do should not
+     be something you scroll to find — and on a phone the bottom of the
+     screen is the only part of it a thumb reaches without shifting grip. */
   margin-top: auto;
+  position: sticky;
+  bottom: 0;
 
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  padding-top: var(--space-8);
+  padding-top: var(--space-12);
+
+  /* Sticky sticks to the VIEWPORT, not to the page's padding box, so without
+     this the lower button sits under the iPhone home indicator. */
+  padding-bottom: var(--safe-bottom);
+
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-page);
 }
 
 /* --- No group yet: what a brand-new account lands on ------------------- */

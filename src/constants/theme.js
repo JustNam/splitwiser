@@ -54,7 +54,34 @@ export const theme = createTheme({
   components: {
     // Every tappable target is >= 44px in the design (thumb-sized).
     MuiButtonBase: {
+      // No ripple: it is MUI's look, not ours, and it spreads from wherever
+      // the finger landed rather than describing the control.
+      //
+      // What it WAS also doing, though, was being the only answer a tap got
+      // on any MUI control here — the icons in the top bar, the group menu,
+      // the tickboxes on Settle up. Turning it off left them dead to the
+      // touch, so the press state comes back below in our own terms.
       defaultProps: { disableRipple: true },
+    },
+
+    // Activity, Group, Account, the search toggle. All four live in a corner
+    // of the screen a thumb reaches badly, so the confirmation matters most
+    // exactly where there was none.
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          '&:active': { backgroundColor: 'rgba(35, 31, 32, 0.12)' },
+        },
+      },
+    },
+
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          minHeight: 44,
+          '&:active': { backgroundColor: 'rgba(35, 31, 32, 0.08)' },
+        },
+      },
     },
     MuiButton: {
       defaultProps: { disableElevation: true },

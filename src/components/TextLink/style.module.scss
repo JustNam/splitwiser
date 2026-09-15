@@ -3,7 +3,35 @@
   font-weight: var(--fw-bold);
   text-decoration: none;
 
-  &:hover {
+  /* Two of these are real controls, not decoration in a sentence: Edit in
+     the corner of a session, and Open on every row of Activity. As text they
+     are about 20px tall, and a thumb does not land inside 20px.
+
+     Grown with a pseudo-element rather than with padding, because the same
+     component also sits mid-sentence ("No account yet? Create one") where a
+     44px box would push the line apart. Vertical only, for the same reason —
+     widening it would have it reach across the words either side.
+
+     Only where there is no hover: a mouse does not need the help, and an
+     invisible box is one more thing that can catch a click it shouldn't. */
+  @media (hover: none) {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -12px 0;
+    }
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &:active {
+    color: var(--brand-primary-strong);
     text-decoration: underline;
   }
 }

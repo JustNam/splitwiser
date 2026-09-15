@@ -35,7 +35,13 @@
 .quiet {
   color: var(--text-muted);
 
-  &:hover:not(:disabled) {
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      color: var(--text-strong);
+    }
+  }
+
+  &:active:not(:disabled) {
     color: var(--text-strong);
   }
 }
@@ -43,7 +49,13 @@
 .danger {
   color: var(--text-muted);
 
-  &:hover:not(:disabled) {
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      color: var(--feedback-error);
+    }
+  }
+
+  &:active:not(:disabled) {
     color: var(--feedback-error);
   }
 }

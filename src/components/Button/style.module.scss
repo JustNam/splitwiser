@@ -46,6 +46,12 @@
       background: var(--brand-primary-strong);
     }
   }
+
+  /* The guard above was right and left nothing in its place: on a phone the
+     one real button on the screen answered a tap with nothing at all. */
+  &:active:not(:disabled) {
+    background: var(--brand-primary-strong);
+  }
 }
 
 .secondary {
@@ -57,6 +63,10 @@
     &:hover:not(:disabled) {
       background: var(--surface-subtle);
     }
+  }
+
+  &:active:not(:disabled) {
+    background: var(--surface-muted);
   }
 }
 
@@ -72,6 +82,11 @@
       color: var(--brand-primary-strong);
       text-decoration: underline;
     }
+  }
+
+  &:active:not(:disabled) {
+    color: var(--brand-primary-strong);
+    text-decoration: underline;
   }
 }
 

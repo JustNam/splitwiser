@@ -124,4 +124,50 @@ label,
 summary {
   -webkit-user-select: none; /* Safari */
   user-select: none;
+
+  /* And the iOS half of the same idea: long-pressing a link pops a sheet
+     offering to copy or preview it. On a card that is the whole row, that
+     sheet arrives every time somebody scrolls with their thumb resting. */
+  -webkit-touch-callout: none;
+}
+
+/* ===========================================================================
+   Touch
+   ===========================================================================
+
+   Three things go wrong on a phone that never show up on a laptop, and all
+   three were happening at once.
+
+   1. The grey flash. A mobile browser paints a translucent box over whatever
+      you tap. It appears a beat after the finger lands and fades a beat after
+      it leaves, so it never lines up with the tap that caused it — it reads
+      as the page twitching rather than as the app answering.
+
+   2. :hover that sticks. A touchscreen has no hover, so the browser fakes one
+      on tap and leaves it there until you touch something else. Tap a session
+      card, go back, and the card you tapped is still highlighted — pointing
+      at the wrong thing on a screen you have already moved on from.
+
+   3. Nothing in the middle. Take those two away and a tap gives no answer at
+      all. So every control gets :active, which is the honest one: it is on
+      while the finger is down and gone the moment it lifts, on touch and
+      mouse alike.
+
+   The rule is therefore: hover is for devices that have one, :active is for
+   everybody. Each component says what its own press looks like — this file
+   only removes what the browser was doing instead. */
+
+a,
+button,
+label,
+summary,
+[role='button'],
+[role='combobox'] {
+  -webkit-tap-highlight-color: transparent;
+
+  /* Switches off double-tap-to-zoom ON CONTROLS ONLY, which is what the
+     browser waits ~300ms after every tap to find out about. Pinch zoom and
+     double-tap on the page itself are untouched — this app has real text in
+     it and taking that away would be a worse trade than the delay. */
+  touch-action: manipulation;
 }

@@ -25,9 +25,20 @@
   text-decoration: none;
   border-radius: var(--radius);
 
-  &:hover {
+  /* Hover only where hover is real: on a touchscreen it sticks after a tap
+     and leaves the row you have navigated away from still lit. */
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--border-default);
+      background: var(--surface-subtle);
+    }
+  }
+
+  /* The answer to the tap itself. On while the finger is down, gone when it
+     lifts — which is the part the sticky hover could never do. */
+  &:active {
     border-color: var(--border-default);
-    background: var(--surface-subtle);
+    background: var(--surface-muted);
   }
 }
 
@@ -98,4 +109,33 @@
 .settledText {
   font: var(--text-body-md);
   color: var(--text-strong);
+}
+
+/* --- Net across everyone -------------------------------------------------- */
+
+/* The same shape the top of Settle up uses. Stacked rather than label-left /
+   value-right: at 320px "Net across everyone" and "You're owed 102.500đ" on
+   one line wrap into each other, and a summary that reflows is a summary you
+   stop trusting. */
+.netBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-12);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.netLabel {
+  -webkit-user-select: none;
+  user-select: none;
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+/* One step below Settle up's h3. There the net IS the screen; here it opens a
+   block that the two buttons at the bottom still have to out-weigh. */
+.netText {
+  font: var(--text-body-lg);
+  font-weight: var(--fw-bold);
 }

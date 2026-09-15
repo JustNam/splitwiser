@@ -13,7 +13,13 @@
   background: var(--brand-primary);
   color: var(--text-on-brand);
 
-  &:hover {
+  @media (hover: hover) {
+    &:hover {
+      background: var(--brand-primary-strong);
+    }
+  }
+
+  &:active {
     background: var(--brand-primary-strong);
   }
 }
@@ -22,7 +28,13 @@
   background: var(--surface-muted);
   color: var(--text-strong);
 
-  &:hover {
+  @media (hover: hover) {
+    &:hover {
+      background: var(--surface-warm);
+    }
+  }
+
+  &:active {
     background: var(--surface-warm);
   }
 }
@@ -33,7 +45,15 @@
   background: none;
   color: var(--brand-primary);
 
-  &:hover {
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  /* No fill to darken, so the press is carried by the text itself. */
+  &:active {
+    color: var(--brand-primary-strong);
     text-decoration: underline;
   }
 }

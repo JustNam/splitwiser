@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -35,6 +35,101 @@ export function PageHeader({ backHref = '/', title, action, guard }) {
 
   const armed = Boolean(guard?.when)
 
+  // ---- leaving by any route other than the arrow --------------------------
+  //
+  // On a phone the arrow is not how people go back. They swipe from the edge,
+  // or press the system button, or pull down and refresh — and all three used
+  // to throw a half-filled session away without a word, on a screen whose own
+  // back arrow asks politely.
+  //
+  // Two mechanisms, because the browser gives two different events:
+
+  // A reload, a closed tab, or a link out of the app. The browser shows its
+  // own wording here — nothing we pass is displayed — and only offers it at
+  // all if the person has interacted with the page, which by definition they
+  // have.
+  useEffect(() => {
+    if (!armed) return
+
+    const ask = (event) => {
+      event.preventDefault()
+      // Legacy, and still what several browsers actually check.
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', ask)
+    return () => window.removeEventListener('beforeunload', ask)
+  }, [armed])
+
+  // The back gesture. There is no cancellable event for it — by the time
+  // anything fires, the browser has already moved. So the trick is to give it
+  // somewhere harmless to move TO: one extra history entry for the same URL,
+  // pushed the moment the form has something worth losing. Back then lands on
+  // us instead of leaving, and we can ask.
+  //
+  // `dirty` and `decoy` are refs, not state: the listener is registered once
+  // and has to read what is true when it FIRES, not what was true when it was
+  // registered.
+  const dirty = useRef(armed)
+  const decoy = useRef(false)
+
+  useEffect(() => {
+    dirty.current = armed
+  }, [armed])
+
+  useEffect(() => {
+    if (!armed || decoy.current) return
+
+    decoy.current = true
+    // Same URL, so the address bar does not change and nothing re-renders.
+    window.history.pushState(null, '')
+  }, [armed])
+
+  useEffect(() => {
+    function onPop() {
+      // Anything we pushed has now been spent.
+      if (!decoy.current) return
+      decoy.current = false
+
+      if (!dirty.current) {
+        // Saved, or emptied, while the extra entry was still in the stack.
+        // Carry on going back rather than making them press it twice — and
+        // this cannot loop, because decoy is false from here on.
+        window.history.back()
+        return
+      }
+
+      setAsking(true)
+    }
+
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  /** Staying put. The entry that was just spent is put back, so the next
+      swipe asks again rather than leaving in silence. */
+  function keepEditing() {
+    setAsking(false)
+
+    if (!decoy.current && dirty.current) {
+      decoy.current = true
+      window.history.pushState(null, '')
+    }
+  }
+
+  /** Going anyway. Disarmed first, or beforeunload would ask a second time
+      on the way out.
+   *
+   * replace, not push: the entry we are standing on is the spare one this
+   * guard pushed, and replace lands on top of it rather than beside it. Push
+   * left it in the stack, so the next Back went to a copy of the screen just
+   * abandoned and the press looked like it had done nothing. */
+  function leave() {
+    dirty.current = false
+    setAsking(false)
+    router.replace(backHref)
+  }
+
   return (
     <header className={Style.header}>
       {armed ? (
@@ -60,7 +155,7 @@ export function PageHeader({ backHref = '/', title, action, guard }) {
           trap, Escape, scroll lock. The look is ours. */}
       <Dialog
         open={asking}
-        onClose={() => setAsking(false)}
+        onClose={keepEditing}
         aria-labelledby="leave-confirm-title"
         // `xs` (444px), not MUI's default `sm` (600px). This asks one
         // question in one sentence, and the whole app is a 480px column — a
@@ -79,11 +174,11 @@ export function PageHeader({ backHref = '/', title, action, guard }) {
           {/* Both are buttons, because both are commands. Weight says which
               is which: staying is filled, leaving is outlined. Text alone
               reads as a link — somewhere to go, not something to do. */}
-          <Button fullWidth onClick={() => setAsking(false)}>
+          <Button fullWidth onClick={keepEditing}>
             Keep editing
           </Button>
 
-          <Button variant="secondary" fullWidth onClick={() => router.push(backHref)}>
+          <Button variant="secondary" fullWidth onClick={leave}>
             Discard and leave
           </Button>
         </div>

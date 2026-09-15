@@ -38,7 +38,10 @@ import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import Style from './page.module.scss'
 
-const HOME_ROW_LIMIT = 5
+// Three, not five. Home is a glance, not a list: past three rows each block
+// pushes the other one — and the two buttons at the bottom — further down,
+// and "See all" is one tap for anybody who wanted the rest.
+const HOME_ROW_LIMIT = 3
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -156,6 +159,14 @@ export default function HomePage() {
           </IconButton>
         </Tooltip>
 
+        {/* Activity and Group are both "of the group named to the left" and
+            both change when you switch group. Account is yours and never
+            does. Drawn as one run of three icons, all three read as the same
+            kind of thing — so a hairline says where the group ends.
+            aria-hidden: a screen reader gets the scoping from the labels on
+            the buttons themselves, and a decorative line is noise. */}
+        <span className={Style.accountDivider} aria-hidden="true" />
+
         <AccountButton />
       </header>
 
@@ -182,7 +193,9 @@ function HomeBody({ group, snapshot }) {
 
   const { members, accounts, sessions, costLines, participants, ledger } = snapshot
 
-  const { rows } = groupBalances({
+  // `net` as well as the rows: it is worked out in the same pass, and the
+  // block's summary line has no business adding the rows up a second time.
+  const { rows, net } = groupBalances({
     ledger,
     members,
     accounts,
@@ -198,12 +211,13 @@ function HomeBody({ group, snapshot }) {
     groupId: group.id,
   })
 
-  // Five each. Home answers "where do I stand" at a glance; a long list of
+  // Three each. Home answers "where do I stand" at a glance; a long list of
   // old sessions pushes the two buttons off the screen and answers nothing.
   return (
     <>
       <BalanceList
         rows={rows}
+        net={net}
         memberCount={members.length}
         limit={HOME_ROW_LIMIT}
         seeAllHref="/balances"

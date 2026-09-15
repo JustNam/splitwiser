@@ -21,7 +21,7 @@ import Style from './style.module.scss'
  *
  * No 'use client': nothing here has state or handlers.
  */
-export function BalanceList({ rows, memberCount, limit, seeAllHref, from }) {
+export function BalanceList({ rows, net, memberCount, limit, seeAllHref, from }) {
   const shown = limit ? rows.slice(0, limit) : rows
   const hidden = rows.length - shown.length
   return (
@@ -35,6 +35,25 @@ export function BalanceList({ rows, memberCount, limit, seeAllHref, from }) {
       >
         Balances
       </SectionHeader>
+
+      {/* Where you stand once everybody is added up, above the people it is
+          added up from.
+          The rows answer "how do I stand with Nam"; nothing answered "am I up
+          or down" — and with three people owing you and two you owe, that is
+          not a sum anybody does in their head off a list. Same wording and
+          same two colours as the top of Settle up, because it is the same
+          number: two screens disagreeing about which way round a net reads is
+          worse than either of them not showing it.
+          Not drawn when everything is settled: the block below already says
+          so in a sentence, and "You're owed 0đ" says it worse. */}
+      {rows.length > 0 && (
+        <div className={Style.netBox}>
+          <p className={Style.netLabel}>Net across everyone</p>
+          <p className={clsx(Style.netText, net >= 0 ? Style.lent : Style.owed)}>
+            {net >= 0 ? `You’re owed ${formatVnd(net)}` : `You owe ${formatVnd(-net)}`}
+          </p>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         // Not an empty state so much as an achievement — hence the tag rather

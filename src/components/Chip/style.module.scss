@@ -20,6 +20,14 @@
     opacity: 0.5;
     cursor: default;
   }
+
+  /* Ticking names is the most repeated action here, and it was silent: the
+     chip changed to its selected colours only once React had re-rendered.
+     This lands on the frame the finger does. */
+  &:active:not(:disabled) {
+    border-color: var(--border-strong);
+    background: var(--surface-muted);
+  }
 }
 
 /* Filled, not tinted. At two people an outline is enough; at thirty you are
