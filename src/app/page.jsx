@@ -169,8 +169,13 @@ export default function HomePage() {
   if (state.status === 'no-group') {
     return (
       <main className={Style.page}>
+        {/* Account, and only Account. Activity and Group both lead to "you
+            are not in a group yet", which is the screen you are already on —
+            but your own name and your way out of the account are yours
+            whether you have joined anything or not. */}
         <header className={Style.topBar}>
           <h1 className={Style.groupName}>SplitWiser</h1>
+          <AccountButton />
         </header>
 
         <div className={Style.noGroup}>
@@ -225,11 +230,7 @@ export default function HomePage() {
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="Account">
-          <IconButton component={Link} href="/account" aria-label="Account">
-            <AccountCircleIcon />
-          </IconButton>
-        </Tooltip>
+        <AccountButton />
       </header>
 
       <HomeBody
@@ -331,6 +332,16 @@ function ActivityLink({ group, snapshot, accountId }) {
     <Badge badgeContent={unread} color="primary" max={9} overlap="circular">
       <ActivityButton />
     </Badge>
+  )
+}
+
+function AccountButton() {
+  return (
+    <Tooltip title="Account">
+      <IconButton component={Link} href="/account" aria-label="Account">
+        <AccountCircleIcon />
+      </IconButton>
+    </Tooltip>
   )
 }
 

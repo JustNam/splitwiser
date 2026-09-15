@@ -26,6 +26,11 @@
   -webkit-user-select: none;
   user-select: none;
 
+  /* Takes the row, so the account icon beside it sits at the far edge — the
+     same place it sits once you are in a group. */
+  flex: 1;
+  min-width: 0;
+
   font: var(--text-h2);
   color: var(--text-strong);
 }
