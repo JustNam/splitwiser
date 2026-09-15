@@ -63,6 +63,11 @@ export function PageHeader({ backHref = '/', title, action, guard }) {
         open={asking}
         onClose={() => setAsking(false)}
         aria-labelledby="leave-confirm-title"
+        // `xs` (444px), not MUI's default `sm` (600px). This asks one
+        // question in one sentence, and the whole app is a 480px column — a
+        // dialog wider than the screen it interrupts reads as a different
+        // app arriving rather than as a question about this one.
+        maxWidth="xs"
         fullWidth
       >
         <div className={Style.confirm}>

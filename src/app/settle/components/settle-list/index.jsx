@@ -349,6 +349,11 @@ export function SettleList() {
         // reads out the name of the thing it has just trapped focus inside,
         // and there was no name to read.
         aria-labelledby="settle-confirm-title"
+        // Same 444px as the leave-guard dialog, and for the same reason: the
+        // app is a 480px column, so MUI's default 600px made a dialog wider
+        // than the screen it was interrupting. Rows of "who / what / how
+        // much" fit in it comfortably.
+        maxWidth="xs"
         fullWidth
         fullScreen={fullScreen}
       >
