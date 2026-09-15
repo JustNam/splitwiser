@@ -39,7 +39,7 @@ export async function POST(request) {
     return Response.json({ error: 'Bad request.' }, { status: 400 })
   }
 
-  const { email, groupId } = body ?? {}
+  const { email, groupId, name } = body ?? {}
   if (!email || !groupId) {
     return Response.json({ error: 'Bad request.' }, { status: 400 })
   }
@@ -79,8 +79,16 @@ export async function POST(request) {
   // adds them to the roster rather than as a guest.
   const origin = new URL(request.url).origin
 
+  // The name whoever added them typed, carried into user_metadata so that
+  // handle_new_user writes it onto the accounts row instead of falling back
+  // to the email's local part. It is a display name and nothing more — no
+  // decision in this app is made on it — so trimming and capping it is the
+  // whole of the checking it needs.
+  const displayName = typeof name === 'string' ? name.trim().slice(0, 80) : ''
+
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${origin}/`,
+    ...(displayName === '' ? {} : { data: { name: displayName } }),
   })
 
   if (error) {

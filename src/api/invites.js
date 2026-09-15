@@ -16,12 +16,20 @@ export class InvitesApi {
    * Never throws and never blocks anything: a session that saved correctly
    * must not be reported as failed because an email could not go out.
    *
+   * `name` is the name whoever added them typed. It rides along because
+   * inviting someone creates their auth user THERE AND THEN, which fires the
+   * trigger that writes their `accounts` row — so whatever name that row gets
+   * is the name the whole group will see once they claim their guest row.
+   * Without it the trigger falls back to the part of the email before the @,
+   * and "Nam" silently became "nam" for everybody, on the day they signed up.
+   *
    * @param {object} params
    * @param {string} params.email
    * @param {string} params.groupId
+   * @param {string} [params.name]
    * @returns {Promise<{ data: { ok: true }|null, error: string|null }>}
    */
-  static async send({ email, groupId }) {
+  static async send({ email, groupId, name }) {
     try {
       const {
         data: { session },
@@ -37,7 +45,7 @@ export class InvitesApi {
           // than trusting anything in the body.
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ email, groupId }),
+        body: JSON.stringify({ email, groupId, name }),
       })
 
       const payload = await response.json()

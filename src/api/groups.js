@@ -159,13 +159,21 @@ export class GroupsApi {
    * they are added to the roster directly, so there is nothing to migrate.
    * The returned row says which happened, in its `type`.
    *
+   * `account` is that person's accounts row, and only ever set in that case.
+   * A roster member carries NO name of its own — the name lives on the
+   * account — so a screen that adds the member to its cached snapshot and
+   * not the account ends up rendering a row with no name in it. That is
+   * exactly what both screens were doing.
+   *
    * @param {string} groupId
    * @param {string} name
    * @param {string} [email]
-   * @returns {Promise<{ data: object|null, error: string|null }>}
+   * @returns {Promise<{ data: object|null, account: object|null, error: string|null }>}
    */
   static async addGuest(groupId, name, email) {
-    if (!isSupabaseConfigured) return { data: null, error: MISSING_CONFIG_MESSAGE }
+    if (!isSupabaseConfigured) {
+      return { data: null, account: null, error: MISSING_CONFIG_MESSAGE }
+    }
 
     const { data, error } = await supabase.rpc('add_guest', {
       p_group_id: groupId,
@@ -173,10 +181,27 @@ export class GroupsApi {
       p_email: email?.trim() === '' ? null : (email ?? null),
     })
 
-    if (error) return { data: null, error: error.message }
+    if (error) return { data: null, account: null, error: error.message }
 
     // The function returns one members row, but toMembers() takes a list.
-    return { data: toMembers([data])[0], error: null }
+    const member = toMembers([data])[0]
+
+    if (!member.accountId) return { data: member, account: null, error: null }
+
+    // One extra round trip, and only down the rare branch: add_guest()
+    // returns a members row and has no account to hand back with it.
+    const { data: account, error: accountError } = await supabase
+      .from('accounts')
+      .select('id, name, email')
+      .eq('id', member.accountId)
+      .single()
+
+    // Not an error the caller should see: the person IS in the group, and
+    // the next full fetch fills the name in. Reporting a failure here would
+    // claim the add itself did not happen.
+    if (accountError) return { data: member, account: null, error: null }
+
+    return { data: member, account, error: null }
   }
 
   /**
@@ -302,6 +327,10 @@ export class GroupsApi {
           type: row.type,
           sessionId: row.session_id,
           costLineId: row.cost_line_id,
+          // The sentence whoever edited the session wrote. Missing here
+          // until migration 0014, which is why every edit in the Activity
+          // feed read "edited a session" no matter what had been changed.
+          note: row.note,
           createdByMemberId: row.created_by_member_id,
           createdAt: row.created_at,
         })),

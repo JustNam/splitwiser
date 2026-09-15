@@ -87,6 +87,12 @@ export class SessionsApi {
         cost_line_id: line.costLineId,
         note: line.note,
         amount: line.amount,
+        // Missing here until now, which is why changing who paid did nothing.
+        // edit_session() reads `payer_member_id` and treats absent as
+        // unchanged — a deliberate kindness to old callers that turned a
+        // dropped field into silence instead of an error. The form has always
+        // sent it; this mapping threw it away.
+        payer_member_id: line.payerMemberId,
         shares: Object.entries(line.shares).map(([memberId, amount]) => ({
           member_id: memberId,
           amount,
