@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
+import { InvitesApi } from '@/api/invites'
 import { Avatar } from '@/components/Avatar'
 import { Button } from '@/components/Button'
 import { SectionHeader } from '@/components/SectionHeader'
@@ -176,6 +177,16 @@ export function GroupDetail() {
       toast.error(apiError)
       setSavingGuest(false)
       return
+    }
+
+    // Only a guest gets invited. An email that already has an account comes
+    // back as a roster member — they are in the group already and need no
+    // invitation.
+    //
+    // Not awaited: the person is in the group either way, and a mail server
+    // having a bad day must not make it look otherwise.
+    if (guestEmail.trim() !== '' && data.type === 'guest') {
+      InvitesApi.send({ email: guestEmail.trim(), groupId: group.id })
     }
 
     // Only the roster changed, so only the roster is added to — refetching
