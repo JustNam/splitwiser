@@ -1,41 +1,77 @@
-.form {
+.rows {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
   padding-top: var(--space-8);
 }
 
-.section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-8);
-  margin-top: var(--space-24);
-}
-
-.error {
-  font: var(--text-body-md);
-  color: var(--feedback-error);
-}
-
-/* --- A value you can read, not a field you can fill ----------------------- */
-
-.readOnly {
+/* Both rows are the same shape. That is the point of the screen: the one
+   that can be changed is marked by its Edit, not by having a border the
+   other one lacks. */
+.row {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.readOnlyLabel {
+.label {
   font: var(--text-caption);
   color: var(--text-muted);
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Selectable, unlike the label above it: an address is a thing people copy. */
-.readOnlyValue {
+.value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: var(--control-h-36);
+}
+
+/* Selectable, unlike the label above it: a name and an address are things
+   people copy. */
+.text {
+  flex: 1;
+  min-width: 0;
   font: var(--text-body-lg);
   color: var(--text-strong);
   word-break: break-all;
+}
+
+/* Shorter than a form's submit button. This one sits on a row beside a value
+   rather than at the end of a screen, and 44px there makes the row look like
+   it is mostly button. */
+.editButton {
+  flex: none;
+  min-height: var(--control-h-36);
+  padding: 0 var(--space-16);
+  font-size: var(--fs-14);
+}
+
+/* --- Editing ------------------------------------------------------------- */
+
+.edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding-top: var(--space-4);
+}
+
+.editActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* --- Elsewhere ----------------------------------------------------------- */
+
+.signOut {
+  align-self: flex-start;
+  margin-top: var(--space-24);
+}
+
+.error {
+  font: var(--text-body-md);
+  color: var(--feedback-error);
 }

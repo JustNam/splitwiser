@@ -3,13 +3,15 @@
 /**
  * Account — who you are, across every group.
  *
- * Two facts and one of them is editable. The name is the one everybody sees
- * next to every number, and until now it was whatever you typed at signup,
- * for good: a typo was permanent.
+ * Two facts, one of them editable, and the screen has to say which without
+ * looking like two different screens stacked up. So both are the same shape —
+ * a small label over a value — and the only thing marking the name out is the
+ * Edit beside it. A bordered box next to a bare line said "these are
+ * different kinds of thing", which they are not.
  *
- * The email is shown and not editable. It is what you sign in with, and what
- * decides a guest row is really you when you claim one — changing it belongs
- * to Supabase Auth's confirmed-email flow, not to a field on this screen.
+ * The email is not editable at all. It is what you sign in with, and what
+ * decides a guest row is really you when you claim one; changing it belongs
+ * to Supabase Auth's confirmed-email flow, not to a field here.
  */
 
 import { useEffect, useState } from 'react'
@@ -35,6 +37,7 @@ export function AccountDetail() {
   const [state, setState] = useState({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
 
+  const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
   const [nameError, setNameError] = useState(null)
@@ -88,20 +91,25 @@ export function AccountDetail() {
 
   const { account } = state
   const trimmed = name.trim()
-  const changed = trimmed !== account.name
+
+  function cancel() {
+    setName(account.name)
+    setNameError(null)
+    setEditing(false)
+  }
 
   async function handleSave(event) {
     event.preventDefault()
     setNameError(null)
 
-    // Enter still submits the form when the button is not on screen, so the
-    // "nothing changed" case has to be caught here rather than by hiding it.
-    if (!changed) return
-
     if (trimmed === '') {
       setNameError('Your name cannot be empty.')
       return
     }
+
+    // Closed without a request: there is nothing to send, and "Name updated"
+    // when nothing was is a lie this screen would tell often.
+    if (trimmed === account.name) return cancel()
 
     setSaving(true)
 
@@ -118,8 +126,9 @@ export function AccountDetail() {
     // nothing else to update — the groups catch up on their next fetch.
     setState({ status: 'ready', account: data })
     setName(data.name)
-    toast.success('Name updated')
+    setEditing(false)
     setSaving(false)
+    toast.success('Name updated')
   }
 
   async function handleSignOut() {
@@ -132,47 +141,70 @@ export function AccountDetail() {
     <>
       <PageHeader title="Account" />
 
-      <form className={Style.form} onSubmit={handleSave} noValidate>
-        <TextField
-          label="Your name"
-          value={name}
-          onChange={(event) => {
-            setName(event.target.value)
-            setNameError(null)
-          }}
-          autoComplete="name"
-          error={Boolean(nameError)}
-          helperText={nameError}
-          fullWidth
-          disabled={saving}
-        />
+      {/* A description list, because that is what these are: a term and the
+          value belonging to it. The <div> wrappers group each pair. */}
+      <dl className={Style.rows}>
+        <div className={Style.row}>
+          <dt className={Style.label}>Your name</dt>
 
-        {/* Not a TextField. A box with a border and a floating label is the
-            app's way of saying "type here", and putting the one thing nobody
-            can change inside one is a promise the screen cannot keep. This is
-            a label and a value, which is what it is. */}
-        <div className={Style.readOnly}>
-          <span className={Style.readOnlyLabel}>Email</span>
-          <span className={Style.readOnlyValue}>{account.email}</span>
+          {editing ? (
+            <dd>
+              <form className={Style.edit} onSubmit={handleSave} noValidate>
+                <TextField
+                  label="Your name"
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value)
+                    setNameError(null)
+                  }}
+                  autoComplete="name"
+                  autoFocus
+                  size="small"
+                  error={Boolean(nameError)}
+                  helperText={nameError}
+                  fullWidth
+                  disabled={saving}
+                />
+
+                <div className={Style.editActions}>
+                  <Button type="submit" disabled={saving}>
+                    {saving && <CircularProgress size={16} color="inherit" />}
+                    {saving ? 'Saving…' : 'Save'}
+                  </Button>
+
+                  <Button variant="secondary" onClick={cancel} disabled={saving}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </dd>
+          ) : (
+            <dd className={Style.value}>
+              <span className={Style.text}>{account.name}</span>
+
+              <Button
+                variant="secondary"
+                className={Style.editButton}
+                onClick={() => setEditing(true)}
+              >
+                Edit
+              </Button>
+            </dd>
+          )}
         </div>
 
-        {/* Shown only once there is something to save. A button that is
-            always there and almost always disabled teaches you to stop
-            looking at it. */}
-        {changed && (
-          <Button type="submit" fullWidth disabled={saving}>
-            {saving && <CircularProgress size={16} color="inherit" />}
-            {saving ? 'Saving…' : 'Save name'}
-          </Button>
-        )}
-      </form>
+        <div className={Style.row}>
+          <dt className={Style.label}>Email</dt>
+          <dd className={Style.value}>
+            <span className={Style.text}>{account.email}</span>
+          </dd>
+        </div>
+      </dl>
 
-      <section className={Style.section}>
-        <Button variant="secondary" onClick={handleSignOut}>
-          <LogoutIcon fontSize="small" />
-          Sign out
-        </Button>
-      </section>
+      <Button variant="secondary" className={Style.signOut} onClick={handleSignOut}>
+        <LogoutIcon fontSize="small" />
+        Sign out
+      </Button>
     </>
   )
 }
