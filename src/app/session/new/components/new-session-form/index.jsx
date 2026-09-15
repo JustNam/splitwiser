@@ -24,7 +24,7 @@
  * often, usually standing at the court with one more person turning up.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -49,8 +49,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { LinkButton } from '@/components/LinkButton'
-import { useAuth } from '@/hooks/useAuth'
-import { pickCurrentGroup } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName, formatVnd } from '@/services/money.service'
 import {
   formatSessionDate,
@@ -79,20 +78,23 @@ function todayIso() {
 }
 
 export function NewSessionForm() {
-  const { user, loading: authLoading } = useAuth()
+  const {
+    status,
+    group,
+    snapshot,
+    error: loadError,
+    reload,
+    revalidate,
+    patch,
+  } = useGroupData()
+
   const router = useRouter()
   const toast = useToast()
 
-  // The group and its people. One object because they arrive together and are
-  // useless apart.
-  const [data, setData] = useState(null)
-  const [loadError, setLoadError] = useState(null)
-  const [attempt, setAttempt] = useState(0)
-
-  function reload() {
-    setLoadError(null)
-    setAttempt((n) => n + 1)
-  }
+  // Which group this screen's opening line-up was worked out from. Seeding
+  // has to happen once per group, not once per render and not again every
+  // time the shared copy is refreshed underneath.
+  const [seededFor, setSeededFor] = useState(null)
 
   const [date, setDate] = useState(todayIso)
 
@@ -151,62 +153,32 @@ export function NewSessionForm() {
 
   const nextLineKey = useRef(2)
 
-  useEffect(() => {
-    if (authLoading || !user) return
+  // Seeding the form from the data it was fetched with, during render rather
+  // than in an effect. This is React's own pattern for adjusting state when
+  // what it was derived from changes: setting state while rendering makes
+  // React re-run this component before it paints, so nobody sees the empty
+  // version first. An effect would run after the paint, and the screen would
+  // flash an empty line-up.
+  if (status === 'ready' && seededFor !== group.id) {
+    // Start from last week's line-up: the same people mostly turn up, so the
+    // common case is no taps at all. A group that has never played falls back
+    // to everyone, which is right when there are two of you.
+    const lineUp = latestLineUp(snapshot.sessions, snapshot.participants)
+    const starting = lineUp.length > 0 ? lineUp : snapshot.members.map((m) => m.id)
 
-    let cancelled = false
+    setSeed([...starting].sort().join(','))
+    setPresent(Object.fromEntries(starting.map((memberId) => [memberId, true])))
 
-    async function load() {
-      const { data: groups, error: groupsError } = await GroupsApi.listMine(user.id)
-      if (cancelled) return
-      if (groupsError) return setLoadError(groupsError)
-      if (groups.length === 0) return setLoadError('You are not in a group yet.')
+    // "I paid" pre-selected: it is the common case, and the select is right
+    // there for the weeks it isn't.
+    setLines([{ key: 1, note: '', amountText: '', payerId: group.myMemberId }])
 
-      const group = pickCurrentGroup(groups)
-
-      // The whole snapshot rather than just the roster: who played last week,
-      // and who plays often, both decide what this screen shows first.
-      const { data: snapshot, error: snapshotError } = await GroupsApi.getSnapshot(
-        group.id
-      )
-      if (cancelled) return
-      if (snapshotError) return setLoadError(snapshotError)
-
-      setData({ group, ...snapshot })
-
-      // Start from last week's line-up: the same people mostly turn up, so
-      // the common case is no taps at all. A group that has never played
-      // falls back to everyone, which is right when there are two of you.
-      const lineUp = latestLineUp(snapshot.sessions, snapshot.participants)
-      const starting = lineUp.length > 0 ? lineUp : snapshot.members.map((m) => m.id)
-
-      setSeed([...starting].sort().join(','))
-      setPresent(Object.fromEntries(starting.map((memberId) => [memberId, true])))
-
-      // "I paid" pre-selected: it is the common case, and the select is right
-      // there for the weeks it isn't.
-      setLines([{ key: 1, note: '', amountText: '', payerId: group.myMemberId }])
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [authLoading, user, attempt])
+    setSeededFor(group.id)
+  }
 
   const header = <PageHeader title="New session" />
 
-  if (authLoading) {
-    return (
-      <>
-        {header}
-        <LoadingForm fields={3} />
-      </>
-    )
-  }
-
-  if (!user) {
+  if (status === 'signed-out') {
     return (
       <>
         {header}
@@ -218,35 +190,37 @@ export function NewSessionForm() {
     )
   }
 
-  if (loadError) {
-    // "Not in a group" is not an error, it is a missing prerequisite — and
-    // the two ways to fix it are one tap away, so they go here rather than
-    // leaving the screen as a sentence with no way out of it.
-    const noGroup = loadError.startsWith('You are not in a group')
-
+  if (status === 'error') {
     return (
       <>
         {header}
-
-        {noGroup ? (
-          <p className={Style.hint}>{loadError}</p>
-        ) : (
-          <RetryMessage message={loadError} onRetry={reload} />
-        )}
-
-        {noGroup && (
-          <div className={Style.noGroupActions}>
-            <LinkButton href="/group/new">New group</LinkButton>
-            <LinkButton variant="secondary" href="/join">
-              Join with a code
-            </LinkButton>
-          </div>
-        )}
+        <RetryMessage message={loadError} onRetry={reload} />
       </>
     )
   }
 
-  if (!data) {
+  // Not an error, a missing prerequisite — and the two ways to fix it are one
+  // tap away, so they go here rather than leaving the screen as a sentence
+  // with no way out of it.
+  if (status === 'no-group') {
+    return (
+      <>
+        {header}
+        <p className={Style.hint}>You are not in a group yet.</p>
+
+        <div className={Style.noGroupActions}>
+          <LinkButton href="/group/new">New group</LinkButton>
+          <LinkButton variant="secondary" href="/join">
+            Join with a code
+          </LinkButton>
+        </div>
+      </>
+    )
+  }
+
+  // Waiting on the fetch, or on the line-up being worked out from it. Both
+  // are "there is nothing to show yet".
+  if (status !== 'ready' || seededFor !== group.id) {
     return (
       <>
         {header}
@@ -254,6 +228,8 @@ export function NewSessionForm() {
       </>
     )
   }
+
+  const data = { group, ...snapshot }
 
   // ---- everything below is derived from state, recomputed every render ----
 
@@ -450,9 +426,13 @@ export function NewSessionForm() {
         InvitesApi.send({ email: guest.email, groupId: data.group.id })
       }
 
-      setData((current) => ({
-        ...current,
-        members: [...current.members, member],
+      // Into the shared copy, so the roster this screen shows and the one
+      // every other screen shows stay the same list.
+      patch((current) => ({
+        snapshot: {
+          ...current.snapshot,
+          members: [...current.snapshot.members, member],
+        },
       }))
       setPendingGuests((current) => current.filter((row) => row.id !== guest.id))
       setPresent((current) => ({ ...current, [member.id]: true }))
@@ -485,6 +465,11 @@ export function NewSessionForm() {
     }
 
     toast.success('Session saved')
+
+    // B3 is about to render this session out of the shared copy, which does
+    // not have it yet. Background refresh: the screen fills in rather than
+    // blanking on arrival.
+    revalidate()
 
     // Straight to B3, which the spec calls the confirmation you see right
     // after logging a session. This used to go to Home because B3 did not

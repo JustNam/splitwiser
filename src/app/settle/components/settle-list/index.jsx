@@ -21,14 +21,13 @@
  * row on Home lands. Only a filter over the same data.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CircularProgress from '@mui/material/CircularProgress'
 import Checkbox from '@mui/material/Checkbox'
 import Dialog from '@mui/material/Dialog'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme } from '@mui/material/styles'
-import { GroupsApi } from '@/api/groups'
 import { PaymentsApi } from '@/api/payments'
 import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
@@ -38,15 +37,19 @@ import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
-import { useAuth } from '@/hooks/useAuth'
-import { pickCurrentGroup } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { readFromPath } from '@/lib/next-path'
 import { displayName, formatVnd } from '@/services/money.service'
 import { payableDebts } from '@/services/settle.service'
 import Style from './style.module.scss'
 
 export function SettleList() {
-  const { user, loading: authLoading } = useAuth()
+  // One shared copy of the group, fetched by GroupDataProvider. This screen
+  // used to run its own listMine + getSnapshot, so arriving here from Home
+  // downloaded the same seven kilobytes a second time.
+  const { status, group, snapshot, error: loadError, reload, revalidate } =
+    useGroupData()
+
   const router = useRouter()
   const toast = useToast()
 
@@ -63,14 +66,6 @@ export function SettleList() {
   // drop you out of the list you were working through.
   const backHref = readFromPath(searchParams)
 
-  const [state, setState] = useState({ status: 'loading' })
-  const [attempt, setAttempt] = useState(0)
-
-  function reload() {
-    setState({ status: 'loading' })
-    setAttempt((n) => n + 1)
-  }
-
   // item id → true. Item ids are `${costLineId}|${memberId}`, built in
   // payableDebts(). A pair can only lean one way at a time, so one map covers
   // both directions without collisions.
@@ -80,61 +75,31 @@ export function SettleList() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    if (authLoading || !user) return
-
-    let cancelled = false
-
-    async function load() {
-      const { data: groups, error: groupsError } = await GroupsApi.listMine(user.id)
-      if (cancelled) return
-      if (groupsError) return setState({ status: 'error', error: groupsError })
-      if (groups.length === 0) return setState({ status: 'no-group' })
-
-      const group = pickCurrentGroup(groups)
-      const { data: snapshot, error: snapshotError } = await GroupsApi.getSnapshot(
-        group.id
-      )
-      if (cancelled) return
-      if (snapshotError) return setState({ status: 'error', error: snapshotError })
-
-      setState({ status: 'ready', group, snapshot })
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [authLoading, user, attempt])
-
   // Header in every state. This screen was the worst of them: its states are
   // reached by tapping a button on Home, and none of them drew a back arrow.
-  if (authLoading || !user || state.status !== 'ready') {
+  if (status !== 'ready') {
     return (
       <>
         <PageHeader backHref={backHref} title="Settle up" />
 
-        {(authLoading || state.status === 'loading') && <LoadingRows rows={3} />}
+        {status === 'loading' && <LoadingRows rows={3} />}
 
-        {!authLoading && !user && (
+        {status === 'signed-out' && (
           <p className={Style.error} role="alert">
             You need to <TextLink href="/signin">sign in</TextLink> first.
           </p>
         )}
 
-        {user && state.status === 'error' && (
-          <RetryMessage message={state.error} onRetry={reload} />
+        {status === 'error' && (
+          <RetryMessage message={loadError} onRetry={reload} />
         )}
 
-        {user && state.status === 'no-group' && (
+        {status === 'no-group' && (
           <p className={Style.emptyBody}>You’re not in a group yet.</p>
         )}
       </>
     )
   }
-
-  const { group, snapshot } = state
 
   const all = payableDebts({
     ledger: snapshot.ledger,
@@ -223,6 +188,11 @@ export function SettleList() {
     // above the router — which is the whole reason it is up there.
     const count = picked.length
     toast.success(`${count} ${count === 1 ? 'item' : 'items'} settled`)
+
+    // Home is about to render from the shared copy, which still has these
+    // debts in it. Background refresh, not reload: the numbers correct
+    // themselves rather than the screen blanking on arrival.
+    revalidate()
 
     router.push('/')
   }

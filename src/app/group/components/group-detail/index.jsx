@@ -8,7 +8,7 @@
  * again. A code you can't look up is a group nobody else can join.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
 import { Avatar } from '@/components/Avatar'
@@ -28,22 +28,23 @@ import TextField from '@mui/material/TextField'
 import { TextButton } from '@/components/TextButton'
 import { LinkButton } from '@/components/LinkButton'
 import { TextLink } from '@/components/TextLink'
-import { useAuth } from '@/hooks/useAuth'
-import { pickCurrentGroup } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName } from '@/services/money.service'
 import Style from './style.module.scss'
 
 export function GroupDetail() {
-  const { user, loading: authLoading } = useAuth()
+  // The roster comes out of the shared snapshot rather than its own
+  // listMembers call. It is the same rows Home already has.
+  const {
+    status,
+    group,
+    snapshot,
+    error: loadError,
+    reload,
+    patch,
+  } = useGroupData()
+
   const toast = useToast()
-
-  const [state, setState] = useState({ status: 'loading' })
-  const [attempt, setAttempt] = useState(0)
-
-  function reload() {
-    setState({ status: 'loading' })
-    setAttempt((n) => n + 1)
-  }
 
   // Adding a guest used to be possible only from inside New session, on a
   // screen about one evening's badminton. This is the screen about who is in
@@ -59,52 +60,24 @@ export function GroupDetail() {
   const [working, setWorking] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    if (authLoading || !user) return
-
-    let cancelled = false
-
-    async function load() {
-      const { data: groups, error: groupsError } = await GroupsApi.listMine(user.id)
-      if (cancelled) return
-      if (groupsError) return setState({ status: 'error', error: groupsError })
-      if (groups.length === 0) return setState({ status: 'no-group' })
-
-      const group = pickCurrentGroup(groups)
-      const { data: roster, error: rosterError } = await GroupsApi.listMembers(group.id)
-      if (cancelled) return
-      if (rosterError) return setState({ status: 'error', error: rosterError })
-
-      setState({ status: 'ready', group, ...roster })
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [authLoading, user, attempt])
-
   // Header in every state, so a failed load still has a way back.
-  if (authLoading || !user || state.status !== 'ready') {
+  if (status !== 'ready') {
     return (
       <>
         <PageHeader title="Group" />
 
-        {(authLoading || state.status === 'loading') && <LoadingRows rows={3} />}
+        {status === 'loading' && <LoadingRows rows={3} />}
 
-        {!authLoading && !user && (
+        {status === 'signed-out' && (
           <p className={Style.error} role="alert">
             You need to <TextLink href="/signin">sign in</TextLink> first.
           </p>
         )}
 
-        {user && state.status === 'error' && (
-          <RetryMessage message={state.error} onRetry={reload} />
-        )}
+        {status === 'error' && <RetryMessage message={loadError} onRetry={reload} />}
 
         {/* The two ways out, on the one screen that is about groups. */}
-        {user && state.status === 'no-group' && (
+        {status === 'no-group' && (
           <>
             <p className={Style.note}>You’re not in a group yet.</p>
             <div className={Style.otherActions}>
@@ -119,7 +92,7 @@ export function GroupDetail() {
     )
   }
 
-  const { group, members, accounts } = state
+  const { members, accounts } = snapshot
 
   // Roster before guests: the people with accounts are the group, and the
   // guests are attached to it.
@@ -177,10 +150,10 @@ export function GroupDetail() {
 
     // Only the code changed, so only the code is replaced — reloading the
     // whole screen would throw away the members list for nothing.
-    setState((current) => ({
-      ...current,
-      group: { ...current.group, ...data },
-    }))
+    // Patched, not refetched: the only thing that changed is the code, and
+    // asking for the whole group back to learn one field is a round trip
+    // spent on nothing.
+    patch((current) => ({ group: { ...current.group, ...data } }))
     toast.success('New invite code created')
     setConfirming(false)
     setChanged(true)
@@ -207,7 +180,12 @@ export function GroupDetail() {
 
     // Only the roster changed, so only the roster is added to — refetching
     // the screen would throw away the invite code for nothing.
-    setState((current) => ({ ...current, members: [...current.members, data] }))
+    patch((current) => ({
+      snapshot: {
+        ...current.snapshot,
+        members: [...current.snapshot.members, data],
+      },
+    }))
 
     toast.success(
       guestEmail.trim() === ''

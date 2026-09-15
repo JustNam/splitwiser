@@ -13,7 +13,7 @@
  */
 
 import Image from 'next/image'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import Link from 'next/link'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 import GroupsIcon from '@mui/icons-material/Groups'
@@ -22,9 +22,8 @@ import Badge from '@mui/material/Badge'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import { SigninForm } from '@/app/signin/components/signin-form'
-import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
-import { pickCurrentGroup, writeCurrentGroupId } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { readLastSeen } from '@/lib/last-seen'
 import { activityFeed, unreadCount } from '@/services/activity.service'
 import { displayName } from '@/services/money.service'
@@ -42,83 +41,21 @@ import Style from './page.module.scss'
 const HOME_ROW_LIMIT = 5
 
 export default function HomePage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
 
-  const [state, setState] = useState({ status: 'loading' })
-  const [groupId, setGroupId] = useState(null)
-  const [snapshot, setSnapshot] = useState({ status: 'loading' })
-
-  // One counter per fetch, because they fail for their own reasons: the list
-  // of groups and the contents of one group are two requests, and retrying
-  // the wrong one leaves the screen exactly as broken as it was.
-  const [groupsAttempt, setGroupsAttempt] = useState(0)
-  const [snapshotAttempt, setSnapshotAttempt] = useState(0)
-
-  function reloadGroups() {
-    setState({ status: 'loading' })
-    setGroupsAttempt((n) => n + 1)
-  }
-
-  function reloadSnapshot() {
-    setSnapshot({ status: 'loading' })
-    setSnapshotAttempt((n) => n + 1)
-  }
-
-  useEffect(() => {
-    if (authLoading) return
-
-    // No setState here on purpose: the signed-out screen is chosen during
-    // render, so the effect has nothing to record.
-    if (!user) return
-
-    let cancelled = false
-
-    async function load() {
-      const { data: groups, error } = await GroupsApi.listMine(user.id)
-      if (cancelled) return
-
-      if (error) return setState({ status: 'error', error })
-      if (groups.length === 0) return setState({ status: 'no-group' })
-
-      setState({ status: 'ready', groups })
-      setGroupId(pickCurrentGroup(groups).id)
-    }
-
-    load()
-
-    // Runs when the effect is torn down. Without it, a response arriving after
-    // the user has navigated away sets state on a screen that is gone.
-    return () => {
-      cancelled = true
-    }
-  }, [authLoading, user, groupsAttempt])
-
-  useEffect(() => {
-    if (!groupId) return
-
-    let cancelled = false
-
-    async function load() {
-      const { data, error } = await GroupsApi.getSnapshot(groupId)
-      if (cancelled) return
-
-      if (error) return setSnapshot({ status: 'error', error })
-      setSnapshot({ status: 'ready', data })
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [groupId, snapshotAttempt])
-
-  if (authLoading) return <LoadingRows rows={3} />
+  // The group list and its contents both come from the one shared copy. Home
+  // used to own two fetches and two retry counters; every other screen owned
+  // the same two again.
+  const { status, groups, group, snapshot, error, reload, switchGroup } =
+    useGroupData()
 
   // Signed out, Home IS the sign-in screen. Sending people to /signin first
   // was a tap that asked nothing and told them nothing; /signin still exists
   // because ?next= links point at it.
-  if (!user) {
+  //
+  // `status` covers the wait for auth too — the provider reports 'loading'
+  // until it knows who is signed in, so there is no second flag here.
+  if (status === 'signed-out') {
     return (
       <main className={Style.page}>
         <div className={Style.auth}>
@@ -148,7 +85,7 @@ export default function HomePage() {
     )
   }
 
-  if (state.status === 'loading') {
+  if (status === 'loading') {
     return (
       <main className={Style.page}>
         <LoadingRows rows={3} />
@@ -156,17 +93,17 @@ export default function HomePage() {
     )
   }
 
-  if (state.status === 'error') {
+  if (status === 'error') {
     return (
       <main className={Style.page}>
-        <RetryMessage message={state.error} onRetry={reloadGroups} />
+        <RetryMessage message={error} onRetry={reload} />
       </main>
     )
   }
 
   // What every brand-new account lands on. Without this the app dead-ends
   // right after sign-up: there is no group, so Home has nothing to show.
-  if (state.status === 'no-group') {
+  if (status === 'no-group') {
     return (
       <main className={Style.page}>
         {/* Account, and only Account. Activity and Group both lead to "you
@@ -193,24 +130,13 @@ export default function HomePage() {
     )
   }
 
-  const { groups } = state
-  const group = groups.find((row) => row.id === groupId) ?? groups[0]
-
-  function handleSwitch(nextId) {
-    // Written before the fetch, so a reload lands on the same group — and so
-    // every other screen picks up the same one.
-    writeCurrentGroupId(nextId)
-    setGroupId(nextId)
-    setSnapshot({ status: 'loading' })
-  }
-
   return (
     <main className={Style.page}>
       {/* Which group you're looking at has to stay visible: one account can
           belong to several, and logging a session into the wrong one is the
           mistake this line exists to prevent. */}
       <header className={Style.topBar}>
-        <GroupSwitcher groups={groups} current={group} onSwitch={handleSwitch} />
+        <GroupSwitcher groups={groups} current={group} onSwitch={switchGroup} />
 
         {/* Icons, not words. The group name is the long thing on this line
             and it is the thing that matters; two labels beside it left it
@@ -233,12 +159,7 @@ export default function HomePage() {
         <AccountButton />
       </header>
 
-      <HomeBody
-        group={group}
-        snapshot={snapshot}
-        accountId={user.id}
-        onRetry={reloadSnapshot}
-      />
+      <HomeBody group={group} snapshot={snapshot} accountId={user.id} />
 
       <footer className={Style.actions}>
         <LinkButton href="/session/new">New session</LinkButton>
@@ -251,18 +172,15 @@ export default function HomePage() {
 }
 
 /**
- * The two lists. Split out so the top bar and the buttons stay put while
- * another group's numbers are being fetched — switching group shouldn't
- * blank the whole screen.
+ * The two lists.
+ *
+ * Kept separate from the page above it even now that it takes plain data:
+ * the top bar and the buttons are about the group, and these are about its
+ * numbers.
  */
-function HomeBody({ group, snapshot, onRetry }) {
-  if (snapshot.status === 'loading') return <LoadingRows rows={4} />
+function HomeBody({ group, snapshot }) {
 
-  if (snapshot.status === 'error') {
-    return <RetryMessage message={snapshot.error} onRetry={onRetry} />
-  }
-
-  const { members, accounts, sessions, costLines, participants, ledger } = snapshot.data
+  const { members, accounts, sessions, costLines, participants, ledger } = snapshot
 
   const { rows } = groupBalances({
     ledger,
@@ -309,17 +227,15 @@ function HomeBody({ group, snapshot, onRetry }) {
  * tap teaches you to ignore the badge.
  */
 function ActivityLink({ group, snapshot, accountId }) {
-  if (snapshot.status !== 'ready') return <ActivityButton />
-
-  const me = snapshot.data.members.find((member) => member.id === group.myMemberId)
-  const myName = me ? displayName(me, snapshot.data.accounts) : ''
+  const me = snapshot.members.find((member) => member.id === group.myMemberId)
+  const myName = me ? displayName(me, snapshot.accounts) : ''
 
   const events = activityFeed({
-    sessions: snapshot.data.sessions,
-    costLines: snapshot.data.costLines,
-    ledger: snapshot.data.ledger,
-    members: snapshot.data.members,
-    accounts: snapshot.data.accounts,
+    sessions: snapshot.sessions,
+    costLines: snapshot.costLines,
+    ledger: snapshot.ledger,
+    members: snapshot.members,
+    accounts: snapshot.accounts,
     myMemberId: group.myMemberId,
   })
 

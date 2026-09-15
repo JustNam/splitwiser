@@ -3,6 +3,7 @@
 import { ThemeProvider } from '@mui/material/styles'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter'
 import { AuthProvider } from '@/components/AuthProvider'
+import { GroupDataProvider } from '@/components/GroupDataProvider'
 import { ToastProvider } from '@/components/Toast'
 import { theme } from '@/constants/theme'
 
@@ -21,7 +22,12 @@ export function AppProviders({ children }) {
     <AppRouterCacheProvider options={{ key: 'mui' }}>
       <ThemeProvider theme={theme}>
         <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
+          {/* Below AuthProvider because it needs to know who is signed in,
+              and above everything else because it is what stops each screen
+              downloading the same group again. */}
+          <GroupDataProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </GroupDataProvider>
         </AuthProvider>
       </ThemeProvider>
     </AppRouterCacheProvider>

@@ -8,13 +8,10 @@
  * wrong. Both want the same thing on screen, so it is one component.
  */
 
-import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
-import { GroupsApi } from '@/api/groups'
-import { useAuth } from '@/hooks/useAuth'
-import { pickCurrentGroup } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { readFromPath } from '@/lib/next-path'
 import { formatVnd } from '@/services/money.service'
 import { sessionDetail } from '@/services/session-detail.service'
@@ -28,88 +25,50 @@ import { LinkButton } from '@/components/LinkButton'
 import Style from './style.module.scss'
 
 export function SessionDetail() {
-  const { user, loading: authLoading } = useAuth()
+  // The group comes from the shared copy. This screen used to fetch the whole
+  // snapshot itself to show one session, so opening a session from a list
+  // downloaded everything the list had just downloaded.
+  const { status, group, snapshot, error: loadError, reload } = useGroupData()
 
   // useParams reads the [id] out of the URL. The server-component way of
   // getting it doesn't apply here — this component is a client one, because
   // it needs to know who is signed in.
   const { id } = useParams()
 
-  const [state, setState] = useState({ status: 'loading' })
-  const [attempt, setAttempt] = useState(0)
-
-  function reload() {
-    setState({ status: 'loading' })
-    setAttempt((n) => n + 1)
-  }
-
   // Which list this session was opened out of. Back used to be hardcoded to
   // Home, so tapping a session from /sessions or /activity and coming back
   // lost your place in the list you were reading.
   const backHref = readFromPath(useSearchParams())
 
-  useEffect(() => {
-    if (authLoading || !user) return
-
-    let cancelled = false
-
-    async function load() {
-      const { data: groups, error: groupsError } = await GroupsApi.listMine(user.id)
-      if (cancelled) return
-      if (groupsError) return setState({ status: 'error', error: groupsError })
-      if (groups.length === 0) return setState({ status: 'not-found' })
-
-      const group = pickCurrentGroup(groups)
-
-      // The whole group's snapshot for one session — more than is needed, but
-      // it reuses the query Home already relies on. A query for one session
-      // is worth writing once sessions get numerous enough to notice.
-      const { data: snapshot, error: snapshotError } = await GroupsApi.getSnapshot(
-        group.id
-      )
-      if (cancelled) return
-      if (snapshotError) return setState({ status: 'error', error: snapshotError })
-
-      const session = snapshot.sessions.find((row) => row.id === id)
-      if (!session) return setState({ status: 'not-found' })
-
-      setState({ status: 'ready', group, snapshot, session })
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [authLoading, user, id, attempt])
+  // The session is found in the shared snapshot rather than fetched. A URL
+  // naming a session from another group, or one that has been removed, ends
+  // up here as `undefined` — which is the not-found case.
+  const session =
+    status === 'ready' ? snapshot.sessions.find((row) => row.id === id) : null
 
   // Header in every state. A failed load used to leave a bare sentence with
   // no back arrow anywhere on it.
-  if (authLoading || !user || state.status !== 'ready') {
+  if (status !== 'ready' || !session) {
     return (
       <>
         <PageHeader backHref={backHref} title="Session" />
 
-        {(authLoading || state.status === 'loading') && <LoadingRows rows={3} />}
+        {status === 'loading' && <LoadingRows rows={3} />}
 
-        {!authLoading && !user && (
+        {status === 'signed-out' && (
           <p className={Style.error} role="alert">
             You need to <TextLink href="/signin">sign in</TextLink> first.
           </p>
         )}
 
-        {user && state.status === 'error' && (
-          <RetryMessage message={state.error} onRetry={reload} />
-        )}
+        {status === 'error' && <RetryMessage message={loadError} onRetry={reload} />}
 
-        {user && state.status === 'not-found' && (
+        {(status === 'no-group' || (status === 'ready' && !session)) && (
           <p className={Style.note}>That session isn’t in your group.</p>
         )}
       </>
     )
   }
-
-  const { group, snapshot, session } = state
 
   const detail = sessionDetail({
     session,

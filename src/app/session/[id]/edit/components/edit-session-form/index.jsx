@@ -24,7 +24,7 @@
  * old payer ends up owed that money back instead of quietly losing it.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
@@ -34,7 +34,6 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
-import { GroupsApi } from '@/api/groups'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
 import { Chip, ChipGroup } from '@/components/Chip'
@@ -45,8 +44,7 @@ import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
-import { useAuth } from '@/hooks/useAuth'
-import { pickCurrentGroup } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName, formatVnd } from '@/services/money.service'
 import { formatSessionDate } from '@/services/session.service'
 import { sessionDetail } from '@/services/session-detail.service'
@@ -55,18 +53,23 @@ import { SPLIT_EQUAL } from '@/services/split.service'
 import Style from './style.module.scss'
 
 export function EditSessionForm() {
-  const { user, loading: authLoading } = useAuth()
+  const {
+    status,
+    group,
+    snapshot,
+    error: loadError,
+    reload,
+    revalidate,
+  } = useGroupData()
+
   const { id } = useParams()
   const router = useRouter()
   const toast = useToast()
 
-  const [state, setState] = useState({ status: 'loading' })
-  const [attempt, setAttempt] = useState(0)
-
-  function reload() {
-    setState({ status: 'loading' })
-    setAttempt((n) => n + 1)
-  }
+  // Which session this form was filled in from. Prefilling happens once per
+  // session, not on every render and not again when the shared copy refreshes
+  // underneath — that would throw away what is being typed.
+  const [seededFor, setSeededFor] = useState(null)
 
   const [date, setDate] = useState('')
 
@@ -84,66 +87,43 @@ export function EditSessionForm() {
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    if (authLoading || !user) return
+  const session =
+    status === 'ready' ? snapshot.sessions.find((row) => row.id === id) : null
 
-    let cancelled = false
+  const costLines = session
+    ? snapshot.costLines.filter((line) => line.sessionId === session.id)
+    : []
 
-    async function load() {
-      const { data: groups, error: groupsError } = await GroupsApi.listMine(user.id)
-      if (cancelled) return
-      if (groupsError) return setState({ status: 'error', error: groupsError })
-      if (groups.length === 0) return setState({ status: 'not-found' })
-
-      const group = pickCurrentGroup(groups)
-      const { data: snapshot, error: snapshotError } = await GroupsApi.getSnapshot(
-        group.id
+  // Prefilled with what is recorded now — the point of the screen is to
+  // change one thing, not to retype the session. During render rather than in
+  // an effect: React re-runs this before painting, so nobody sees the empty
+  // form first.
+  if (session && seededFor !== session.id) {
+    setDate(session.date)
+    setLines(
+      costLines.map((line) => ({
+        costLineId: line.id,
+        note: line.note ?? '',
+        amountText: String(line.amount),
+        payerId: line.payerMemberId,
+        amountWas: line.amount,
+        noteWas: line.note ?? '',
+        payerWas: line.payerMemberId,
+      }))
+    )
+    setPresent(
+      Object.fromEntries(
+        snapshot.participants
+          .filter((row) => row.sessionId === session.id)
+          .map((row) => [row.memberId, true])
       )
-      if (cancelled) return
-      if (snapshotError) return setState({ status: 'error', error: snapshotError })
-
-      const session = snapshot.sessions.find((row) => row.id === id)
-      if (!session) return setState({ status: 'not-found' })
-
-      const costLines = snapshot.costLines.filter(
-        (line) => line.sessionId === session.id
-      )
-
-      setState({ status: 'ready', group, snapshot, session, costLines })
-
-      // Prefilled with what is recorded now — the point of the screen is to
-      // change one thing, not to retype the session.
-      setDate(session.date)
-      setLines(
-        costLines.map((line) => ({
-          costLineId: line.id,
-          note: line.note ?? '',
-          amountText: String(line.amount),
-          payerId: line.payerMemberId,
-          amountWas: line.amount,
-          noteWas: line.note ?? '',
-          payerWas: line.payerMemberId,
-        }))
-      )
-      setPresent(
-        Object.fromEntries(
-          snapshot.participants
-            .filter((row) => row.sessionId === session.id)
-            .map((row) => [row.memberId, true])
-        )
-      )
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [authLoading, user, id, attempt])
+    )
+    setSeededFor(session.id)
+  }
 
   // Header in every state. A failed load used to leave a bare sentence with
   // no back arrow anywhere on it.
-  if (authLoading || !user || state.status !== 'ready') {
+  if (status !== 'ready' || !session || seededFor !== session.id) {
     // backHref is the default '/' here on purpose: the session id in the URL
     // is the one thing that just failed to resolve, so sending someone back
     // to /session/<that id> is sending them to the same wall.
@@ -151,26 +131,25 @@ export function EditSessionForm() {
       <>
         <PageHeader title="Edit session" />
 
-        {(authLoading || state.status === 'loading') && <LoadingForm fields={3} />}
+        {(status === 'loading' || (status === 'ready' && session)) && (
+          <LoadingForm fields={3} />
+        )}
 
-        {!authLoading && !user && (
+        {status === 'signed-out' && (
           <p className={Style.error} role="alert">
             You need to <TextLink href="/signin">sign in</TextLink> first.
           </p>
         )}
 
-        {user && state.status === 'error' && (
-          <RetryMessage message={state.error} onRetry={reload} />
-        )}
+        {status === 'error' && <RetryMessage message={loadError} onRetry={reload} />}
 
-        {user && state.status === 'not-found' && (
+        {(status === 'no-group' || (status === 'ready' && !session)) && (
           <p className={Style.hint}>That session isn’t in your group.</p>
         )}
       </>
     )
   }
 
-  const { group, snapshot, session, costLines } = state
 
   // What is recorded right now, from the same function B3 renders.
   const current = sessionDetail({
@@ -363,6 +342,7 @@ export function EditSessionForm() {
     }
 
     toast.success('Changes saved')
+    revalidate()
     router.push(`/session/${session.id}`)
   }
 

@@ -254,51 +254,23 @@ export class GroupsApi {
   static async getSnapshot(groupId) {
     if (!isSupabaseConfigured) return { data: null, error: MISSING_CONFIG_MESSAGE }
 
-    const [memberRes, sessionRes, costLineRes, participantRes, ledgerRes] =
-      await Promise.all([
-        supabase
-          .from('members')
-          .select(MEMBER_SELECT)
-          .eq('group_id', groupId),
-        supabase
-          .from('sessions')
-          .select(
-            'id, group_id, date, created_at, created_by_member_id, updated_by_member_id, updated_at'
-          )
-          .eq('group_id', groupId)
-          // Newest first, decided by the database rather than left to
-          // whatever order the rows happen to come back in.
-          .order('date', { ascending: false })
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('cost_lines')
-          .select('id, session_id, note, amount, payer_member_id, sessions!inner (group_id)')
-          .eq('sessions.group_id', groupId),
-        supabase
-          .from('participants')
-          .select('id, session_id, member_id, sessions!inner (group_id)')
-          .eq('sessions.group_id', groupId),
-        // Ledger rows carry no group_id of their own, so the filter goes
-        // through the session they belong to. `sessions!inner` makes that a
-        // real inner join, which is what lets .eq() target a joined column.
-        supabase
-          .from('ledger')
-          .select(
-            'id, debtor_id, creditor_id, amount, type, session_id, cost_line_id, created_by_member_id, created_at, sessions!inner (group_id)'
-          )
-          .eq('sessions.group_id', groupId),
-      ])
+    // One request, not five. The five ran in parallel and still took about
+    // 850ms against this project, because each round trip costs ~350ms
+    // whether it carries 574 bytes or 3.7KB — the whole snapshot is under
+    // 7KB. get_group_snapshot() (migration 0012) returns the same shape the
+    // five queries did, snake_case and all, so the mapping below is
+    // unchanged.
+    const { data, error } = await supabase.rpc('get_group_snapshot', {
+      p_group_id: groupId,
+    })
 
-    const failure = [memberRes, sessionRes, costLineRes, participantRes, ledgerRes].find(
-      (res) => res.error
-    )
-    if (failure) return { data: null, error: failure.error.message }
+    if (error) return { data: null, error: error.message }
 
     return {
       data: {
-        members: toMembers(memberRes.data),
-        accounts: toAccounts(memberRes.data),
-        sessions: sessionRes.data.map((row) => ({
+        members: toMembers(data.members),
+        accounts: toAccounts(data.members),
+        sessions: data.sessions.map((row) => ({
           id: row.id,
           groupId: row.group_id,
           date: row.date,
@@ -307,19 +279,19 @@ export class GroupsApi {
           updatedByMemberId: row.updated_by_member_id,
           updatedAt: row.updated_at,
         })),
-        costLines: costLineRes.data.map((row) => ({
+        costLines: data.cost_lines.map((row) => ({
           id: row.id,
           sessionId: row.session_id,
           note: row.note,
           amount: row.amount,
           payerMemberId: row.payer_member_id,
         })),
-        participants: participantRes.data.map((row) => ({
+        participants: data.participants.map((row) => ({
           id: row.id,
           sessionId: row.session_id,
           memberId: row.member_id,
         })),
-        ledger: ledgerRes.data.map((row) => ({
+        ledger: data.ledger.map((row) => ({
           id: row.id,
           debtorId: row.debtor_id,
           creditorId: row.creditor_id,
