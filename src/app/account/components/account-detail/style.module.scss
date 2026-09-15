@@ -17,3 +17,25 @@
   font: var(--text-body-md);
   color: var(--feedback-error);
 }
+
+/* --- A value you can read, not a field you can fill ----------------------- */
+
+.readOnly {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.readOnlyLabel {
+  font: var(--text-caption);
+  color: var(--text-muted);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Selectable, unlike the label above it: an address is a thing people copy. */
+.readOnlyValue {
+  font: var(--text-body-lg);
+  color: var(--text-strong);
+  word-break: break-all;
+}

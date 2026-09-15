@@ -22,7 +22,6 @@ import { Button } from '@/components/Button'
 import { LoadingForm } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { RetryMessage } from '@/components/RetryMessage'
-import { SectionHeader } from '@/components/SectionHeader'
 import { TextLink } from '@/components/TextLink'
 import { useToast } from '@/components/Toast'
 import { useAuth } from '@/hooks/useAuth'
@@ -95,6 +94,10 @@ export function AccountDetail() {
     event.preventDefault()
     setNameError(null)
 
+    // Enter still submits the form when the button is not on screen, so the
+    // "nothing changed" case has to be caught here rather than by hiding it.
+    if (!changed) return
+
     if (trimmed === '') {
       setNameError('Your name cannot be empty.')
       return
@@ -144,25 +147,27 @@ export function AccountDetail() {
           disabled={saving}
         />
 
-        <TextField
-          label="Email"
-          value={account.email}
-          // Not disabled: a disabled field is greyed out and skipped by the
-          // keyboard, and this one is worth reading. Read-only says the same
-          // thing to a screen reader without hiding it.
-          slotProps={{ input: { readOnly: true } }}
-          fullWidth
-        />
+        {/* Not a TextField. A box with a border and a floating label is the
+            app's way of saying "type here", and putting the one thing nobody
+            can change inside one is a promise the screen cannot keep. This is
+            a label and a value, which is what it is. */}
+        <div className={Style.readOnly}>
+          <span className={Style.readOnlyLabel}>Email</span>
+          <span className={Style.readOnlyValue}>{account.email}</span>
+        </div>
 
-        <Button type="submit" fullWidth disabled={!changed || saving}>
-          {saving && <CircularProgress size={16} color="inherit" />}
-          {saving ? 'Saving…' : 'Save name'}
-        </Button>
+        {/* Shown only once there is something to save. A button that is
+            always there and almost always disabled teaches you to stop
+            looking at it. */}
+        {changed && (
+          <Button type="submit" fullWidth disabled={saving}>
+            {saving && <CircularProgress size={16} color="inherit" />}
+            {saving ? 'Saving…' : 'Save name'}
+          </Button>
+        )}
       </form>
 
       <section className={Style.section}>
-        <SectionHeader>Session</SectionHeader>
-
         <Button variant="secondary" onClick={handleSignOut}>
           <LogoutIcon fontSize="small" />
           Sign out
