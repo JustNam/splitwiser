@@ -21,8 +21,8 @@ import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { LoadingForm } from '@/components/Loading'
 import { useToast } from '@/components/Toast'
-import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { useGroupData } from '@/components/GroupDataProvider'
 import Style from './style.module.scss'
 
@@ -30,6 +30,10 @@ export function CreateGroupForm() {
   const { isAuthenticated, loading } = useAuth()
   const toast = useToast()
   const { switchGroup } = useGroupData()
+
+  // This one asks useAuth directly rather than the group data, so it passes
+  // the status the hook expects.
+  useSignedOutRedirect(loading ? 'loading' : isAuthenticated ? 'ready' : 'signed-out')
 
   // useState gives back a pair: the current value, and the only function
   // allowed to change it. Assigning to `name` directly would not re-render.
@@ -115,14 +119,8 @@ export function CreateGroupForm() {
   // user sees "you need to sign in" for one frame.
   if (loading) return <LoadingForm fields={2} />
 
-  if (!isAuthenticated) {
-    return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> before you can create a
-        group.
-      </p>
-    )
-  }
+  // Redirected, not told off. See useSignedOutRedirect.
+  if (!isAuthenticated) return <LoadingForm fields={2} />
 
   if (group) {
     return (

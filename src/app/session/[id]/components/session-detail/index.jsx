@@ -9,6 +9,7 @@
  */
 
 import { useParams, useSearchParams } from 'next/navigation'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import Link from 'next/link'
 import clsx from 'clsx'
 import { useGroupData } from '@/components/GroupDataProvider'
@@ -29,6 +30,8 @@ export function SessionDetail() {
   // snapshot itself to show one session, so opening a session from a list
   // downloaded everything the list had just downloaded.
   const { status, group, snapshot, error: loadError, reload } = useGroupData()
+
+  useSignedOutRedirect(status)
 
   // useParams reads the [id] out of the URL. The server-component way of
   // getting it doesn't apply here — this component is a client one, because
@@ -54,12 +57,6 @@ export function SessionDetail() {
         <PageHeader backHref={backHref} title="Session" />
 
         {status === 'loading' && <LoadingRows rows={3} />}
-
-        {status === 'signed-out' && (
-          <p className={Style.error} role="alert">
-            You need to <TextLink href="/signin">sign in</TextLink> first.
-          </p>
-        )}
 
         {status === 'error' && <RetryMessage message={loadError} onRetry={reload} />}
 

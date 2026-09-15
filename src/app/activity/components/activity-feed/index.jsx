@@ -17,6 +17,7 @@ import { RetryMessage } from '@/components/RetryMessage'
 import { PageHeader } from '@/components/PageHeader'
 import { TextLink } from '@/components/TextLink'
 import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { writeLastSeen } from '@/lib/last-seen'
 import { withFrom } from '@/lib/next-path'
 import { useAuth } from '@/hooks/useAuth'
@@ -32,6 +33,8 @@ const KIND_LABEL = {
 
 export function ActivityFeed() {
   const state = useGroupSnapshot()
+
+  useSignedOutRedirect(state.status)
   const { user } = useAuth()
 
   // Marked once per visit, not on every render. Reading the feed is what
@@ -54,12 +57,6 @@ export function ActivityFeed() {
         <PageHeader title="Activity" />
 
         {state.status === 'loading' && <LoadingRows rows={4} />}
-
-        {state.status === 'signed-out' && (
-          <p className={Style.error} role="alert">
-            You need to <TextLink href="/signin">sign in</TextLink> first.
-          </p>
-        )}
 
         {state.status === 'error' && (
           <RetryMessage message={state.error} onRetry={state.reload} />

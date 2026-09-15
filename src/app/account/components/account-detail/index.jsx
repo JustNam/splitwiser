@@ -24,17 +24,19 @@ import { Button } from '@/components/Button'
 import { LoadingForm } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { RetryMessage } from '@/components/RetryMessage'
-import { TextLink } from '@/components/TextLink'
 import { useToast } from '@/components/Toast'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { useAuth } from '@/hooks/useAuth'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import Style from './style.module.scss'
 
 export function AccountDetail() {
   const { user, loading: authLoading, signOut } = useAuth()
   const router = useRouter()
   const toast = useToast()
-  const { patch } = useGroupData()
+  const { patch, status: authStatus } = useGroupData()
+
+  useSignedOutRedirect(authStatus)
 
   const [state, setState] = useState({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
@@ -77,12 +79,6 @@ export function AccountDetail() {
         <PageHeader title="Account" />
 
         {(authLoading || state.status === 'loading') && <LoadingForm fields={2} />}
-
-        {!authLoading && !user && (
-          <p className={Style.error} role="alert">
-            You need to <TextLink href="/signin">sign in</TextLink> first.
-          </p>
-        )}
 
         {user && state.status === 'error' && (
           <RetryMessage message={state.error} onRetry={reload} />

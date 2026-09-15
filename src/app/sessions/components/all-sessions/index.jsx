@@ -6,9 +6,9 @@
  */
 
 import { useGroupSnapshot } from '@/hooks/useGroupSnapshot'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { sessionSummaries } from '@/services/session.service'
 import { SessionList } from '@/app/components/session-list'
-import { TextLink } from '@/components/TextLink'
 import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
 import Style from './style.module.scss'
@@ -16,15 +16,9 @@ import Style from './style.module.scss'
 export function AllSessions() {
   const state = useGroupSnapshot()
 
-  if (state.status === 'loading') return <LoadingRows rows={4} />
+  useSignedOutRedirect(state.status)
 
-  if (state.status === 'signed-out') {
-    return (
-      <p className={Style.error} role="alert">
-        You need to <TextLink href="/signin">sign in</TextLink> first.
-      </p>
-    )
-  }
+  if (state.status === 'loading') return <LoadingRows rows={4} />
 
   if (state.status === 'error') {
     return <RetryMessage message={state.error} onRetry={state.reload} />

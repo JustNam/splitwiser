@@ -22,6 +22,7 @@
  */
 
 import { useState } from 'react'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CircularProgress from '@mui/material/CircularProgress'
 import Checkbox from '@mui/material/Checkbox'
@@ -36,7 +37,6 @@ import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { TextButton } from '@/components/TextButton'
-import { TextLink } from '@/components/TextLink'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { readFromPath } from '@/lib/next-path'
 import { displayName, formatVnd } from '@/services/money.service'
@@ -49,6 +49,8 @@ export function SettleList() {
   // downloaded the same seven kilobytes a second time.
   const { status, group, snapshot, error: loadError, reload, revalidate } =
     useGroupData()
+
+  useSignedOutRedirect(status)
 
   const router = useRouter()
   const toast = useToast()
@@ -83,12 +85,6 @@ export function SettleList() {
         <PageHeader backHref={backHref} title="Settle up" />
 
         {status === 'loading' && <LoadingRows rows={3} />}
-
-        {status === 'signed-out' && (
-          <p className={Style.error} role="alert">
-            You need to <TextLink href="/signin">sign in</TextLink> first.
-          </p>
-        )}
 
         {status === 'error' && (
           <RetryMessage message={loadError} onRetry={reload} />

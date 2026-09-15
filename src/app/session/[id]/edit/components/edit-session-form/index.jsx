@@ -25,6 +25,7 @@
  */
 
 import { useState } from 'react'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
@@ -40,7 +41,6 @@ import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { PayerPicker } from '@/components/PayerPicker'
-import { TextLink } from '@/components/TextLink'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName, formatVnd } from '@/services/money.service'
 import { formatSessionDate } from '@/services/session.service'
@@ -58,6 +58,8 @@ export function EditSessionForm() {
     reload,
     revalidate,
   } = useGroupData()
+
+  useSignedOutRedirect(status)
 
   const { id } = useParams()
   const router = useRouter()
@@ -130,12 +132,6 @@ export function EditSessionForm() {
 
         {(status === 'loading' || (status === 'ready' && session)) && (
           <LoadingForm fields={3} />
-        )}
-
-        {status === 'signed-out' && (
-          <p className={Style.error} role="alert">
-            You need to <TextLink href="/signin">sign in</TextLink> first.
-          </p>
         )}
 
         {status === 'error' && <RetryMessage message={loadError} onRetry={reload} />}

@@ -25,6 +25,7 @@
  */
 
 import { useRef, useState } from 'react'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -37,7 +38,6 @@ import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { SplitPicker } from '@/components/SplitPicker'
 import { TextButton } from '@/components/TextButton'
-import { TextLink } from '@/components/TextLink'
 import AddIcon from '@mui/icons-material/Add'
 import Collapse from '@mui/material/Collapse'
 import { LoadingForm } from '@/components/Loading'
@@ -84,6 +84,8 @@ export function NewSessionForm() {
     revalidate,
     patch,
   } = useGroupData()
+
+  useSignedOutRedirect(status)
 
   const router = useRouter()
   const toast = useToast()
@@ -175,17 +177,6 @@ export function NewSessionForm() {
 
   const header = <PageHeader title="New session" />
 
-  if (status === 'signed-out') {
-    return (
-      <>
-        {header}
-        <p className={Style.error} role="alert">
-          You need to <TextLink href="/signin">sign in</TextLink> before you can log a
-          session.
-        </p>
-      </>
-    )
-  }
 
   if (status === 'error') {
     return (

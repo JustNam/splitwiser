@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react'
+import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import Link from 'next/link'
 import { GroupsApi } from '@/api/groups'
 import { InvitesApi } from '@/api/invites'
@@ -28,7 +29,6 @@ import Collapse from '@mui/material/Collapse'
 import TextField from '@mui/material/TextField'
 import { TextButton } from '@/components/TextButton'
 import { LinkButton } from '@/components/LinkButton'
-import { TextLink } from '@/components/TextLink'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName } from '@/services/money.service'
 import Style from './style.module.scss'
@@ -44,6 +44,8 @@ export function GroupDetail() {
     reload,
     patch,
   } = useGroupData()
+
+  useSignedOutRedirect(status)
 
   const toast = useToast()
 
@@ -68,12 +70,6 @@ export function GroupDetail() {
         <PageHeader title="Group" />
 
         {status === 'loading' && <LoadingRows rows={3} />}
-
-        {status === 'signed-out' && (
-          <p className={Style.error} role="alert">
-            You need to <TextLink href="/signin">sign in</TextLink> first.
-          </p>
-        )}
 
         {status === 'error' && <RetryMessage message={loadError} onRetry={reload} />}
 
