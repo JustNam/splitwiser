@@ -24,6 +24,7 @@
 import { useState } from 'react'
 import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import { useRouter, useSearchParams } from 'next/navigation'
+import clsx from 'clsx'
 import CircularProgress from '@mui/material/CircularProgress'
 import Checkbox from '@mui/material/Checkbox'
 import Dialog from '@mui/material/Dialog'
@@ -170,7 +171,7 @@ export function SettleList() {
 
     // Only which debt and with whom. settle_up() reads the amount and works
     // out the direction from the ledger itself.
-    const { error: apiError } = await PaymentsApi.settle({
+    const { data, error: apiError } = await PaymentsApi.settle({
       groupId: group.id,
       items: picked.map((item) => ({
         costLineId: item.costLineId,
@@ -189,8 +190,18 @@ export function SettleList() {
     // The screen is about to be replaced by Home, so the confirmation cannot
     // live on it. The toast outlives the navigation because its provider sits
     // above the router — which is the whole reason it is up there.
-    const count = picked.length
-    toast.success(`${count} ${count === 1 ? 'item' : 'items'} settled`)
+    // What settle_up() actually wrote, not what was ticked. Anything somebody
+    // else settled while this screen was open is skipped rather than taking
+    // the whole batch down with it (migration 0014) — so the two numbers can
+    // differ, and the one worth saying is the short one.
+    const count = data.paid
+    const skipped = picked.length - count
+
+    toast.success(
+      skipped > 0
+        ? `${count} settled · ${skipped} already done by someone else`
+        : `${count} ${count === 1 ? 'item' : 'items'} settled`
+    )
 
     // Home is about to render from the shared copy, which still has these
     // debts in it. Background refresh, not reload: the numbers correct
@@ -236,6 +247,28 @@ export function SettleList() {
     <>
       <PageHeader backHref={backHref} title={personName ?? 'Settle up'} />
 
+      {/* Where you stand, before the list rather than after it. It used to
+          sit under every group on the screen, so the one number that answers
+          "am I owed or do I owe" was the one you had to scroll past
+          everything else to reach. */}
+      <div className={Style.netBox}>
+        <p className={Style.netLabel}>
+          {personName ? `Net with ${personName}` : 'Net across everyone'}
+        </p>
+        {/* The same two colours Home puts on a balance row: green when
+            money is coming to you, red when it is going out. The words say it
+            either way — colour only agrees with them. */}
+        <p className={clsx(Style.netText, net >= 0 ? Style.netIn : Style.netOut)}>
+          {personName
+            ? net >= 0
+              ? `${personName} owes you ${formatVnd(net)}`
+              : `You owe ${personName} ${formatVnd(-net)}`
+            : net >= 0
+              ? `You’re owed ${formatVnd(net)}`
+              : `You owe ${formatVnd(-net)}`}
+        </p>
+      </div>
+
       <p className={Style.subtitle}>
         {personName
           ? `Every item between you and ${personName}. Tick what has actually changed hands — each is settled in full.`
@@ -265,21 +298,6 @@ export function SettleList() {
           disabled={submitting}
         />
       ))}
-
-      <div className={Style.netBox}>
-        <p className={Style.netLabel}>
-          {personName ? `Net with ${personName}` : 'Net across everyone'}
-        </p>
-        <p className={Style.netText}>
-          {personName
-            ? net >= 0
-              ? `${personName} owes you ${formatVnd(net)}`
-              : `You owe ${personName} ${formatVnd(-net)}`
-            : net >= 0
-              ? `You’re owed ${formatVnd(net)}`
-              : `You owe ${formatVnd(-net)}`}
-        </p>
-      </div>
 
       {error && (
         <p className={Style.error} role="alert">

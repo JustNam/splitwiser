@@ -49,7 +49,6 @@ export function SessionList({ rows, limit, seeAllHref, from }) {
                       dateTime gives the machine-readable form, so "10 Sep"
                       stays short for a human without the year being lost. */}
                   <time dateTime={row.date}>{row.dateLabel}</time>
-                  {row.isEdited && <span className={Style.edited}>Edited</span>}
                 </span>
                 <span className={Style.subtitle}>{row.subtitle}</span>
               </span>
@@ -59,8 +58,13 @@ export function SessionList({ rows, limit, seeAllHref, from }) {
                   whole reason to use it rather than a row of our own. */}
               {row.playerNames.length > 0 && (
                 <AvatarGroup max={4} className={Style.players} spacing="small">
-                  {row.playerNames.map((name) => (
-                    <Avatar key={name} name={name} size="sm" />
+                  {/* Keyed by position, not by name. Two people in a group
+                      can share one — two accounts both called Nam is not a
+                      mistake, it is a Tuesday — and React given the same key
+                      twice keeps one of them off the screen. Nothing here
+                      reorders, so the position is stable. */}
+                  {row.playerNames.map((name, index) => (
+                    <Avatar key={index} name={name} size="sm" />
                   ))}
                 </AvatarGroup>
               )}

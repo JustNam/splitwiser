@@ -18,19 +18,28 @@ export function AllBalances() {
 
   useSignedOutRedirect(state.status)
 
-  if (state.status === 'loading') return <LoadingRows rows={4} />
-
-  if (state.status === 'error') {
-    return <RetryMessage message={state.error} onRetry={state.reload} />
-  }
-
-  if (state.status === 'no-group') {
-    return <p className={Style.note}>You’re not in a group yet.</p>
+  if (state.status !== 'ready') {
+    return (
+      <>
+        {state.status === 'error' ? (
+          <RetryMessage message={state.error} onRetry={state.reload} />
+        ) : state.status === 'no-group' ? (
+          <p className={Style.note}>You’re not in a group yet.</p>
+        ) : (
+          // 'loading' and 'signed-out' both land here. Signed out used to
+          // fall past these checks and destructure an undefined snapshot,
+          // which threw before useSignedOutRedirect — an effect — ever got
+          // to run. Testing for 'ready' rather than listing the states is
+          // what stops the next status added doing the same thing.
+          <LoadingRows rows={4} />
+        )}
+      </>
+    )
   }
 
   const { group, snapshot } = state
 
-  const { rows } = groupBalances({
+  const { rows, net } = groupBalances({
     ledger: snapshot.ledger,
     members: snapshot.members,
     accounts: snapshot.accounts,
@@ -38,6 +47,11 @@ export function AllBalances() {
   })
 
   return (
-    <BalanceList rows={rows} memberCount={snapshot.members.length} from="/balances" />
+    <BalanceList
+      rows={rows}
+      net={net}
+      memberCount={snapshot.members.length}
+      from="/balances"
+    />
   )
 }

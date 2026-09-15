@@ -126,8 +126,23 @@
 /* --- Footer ------------------------------------------------------------- */
 
 .actions {
+  /* Stuck to the bottom, like the Save bars on the two forms and the one on
+     Settle up. This screen grows with the group — a hundred players and the
+     whole Activity list below them — and "Pay my share" was at the end of
+     all of it. The one thing the screen is asking you to do should not be
+     the thing furthest from your thumb. */
   margin-top: auto;
+  position: sticky;
+  bottom: 0;
+
   padding-top: var(--space-12);
+
+  /* Sticky sticks to the VIEWPORT, not to the page's padding box, so without
+     this the button sits under the iPhone home indicator. */
+  padding-bottom: var(--safe-bottom);
+
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-page);
 }
 
 .error {

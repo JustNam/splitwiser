@@ -37,17 +37,6 @@ export function ActivityFeed() {
   useSignedOutRedirect(state.status)
   const { user } = useAuth()
 
-  // Marked once per visit, not on every render. Reading the feed is what
-  // "seen" means, so the moment of opening is the right timestamp.
-  const marked = useRef(false)
-
-  useEffect(() => {
-    if (state.status !== 'ready' || !user || marked.current) return
-
-    marked.current = true
-    writeLastSeen(user.id, new Date().toISOString())
-  }, [state.status, user])
-
   // The header is drawn in EVERY state, not only the ready one. Without it a
   // screen that fails to load carries no back arrow and no link at all, and
   // the browser's own Back button becomes the only way out of the app.
@@ -69,8 +58,18 @@ export function ActivityFeed() {
     )
   }
 
-  const { group, snapshot } = state
+  return <Feed group={state.group} snapshot={state.snapshot} accountId={user?.id} />
+}
 
+/**
+ * The list, and the read receipt that goes with it.
+ *
+ * Its own component so the effect below can see the events. A hook cannot sit
+ * after the status checks above, and the events cannot be worked out before
+ * them — so the two were in different halves of one function, and the effect
+ * settled for "now" because that was all it could reach.
+ */
+function Feed({ group, snapshot, accountId }) {
   const events = activityFeed({
     sessions: snapshot.sessions,
     costLines: snapshot.costLines,
@@ -79,6 +78,22 @@ export function ActivityFeed() {
     accounts: snapshot.accounts,
     myMemberId: group.myMemberId,
   })
+
+  // Marked once per visit, not on every render.
+  const marked = useRef(false)
+
+  // The newest event ON SCREEN, not the clock. Marking "now" as seen also
+  // marked everything that arrived while the list was open — somebody editing
+  // your share thirty seconds after you opened this was counted as read
+  // before it had ever been drawn, and never raised the badge.
+  const newest = events[0]?.at ?? null
+
+  useEffect(() => {
+    if (!accountId || marked.current) return
+
+    marked.current = true
+    writeLastSeen(accountId, newest ?? new Date().toISOString())
+  }, [accountId, newest])
 
   return (
     <>

@@ -107,10 +107,20 @@
   color: var(--text-muted);
 }
 
+/* It is the first thing on the screen now, and the one number that answers
+   "am I owed or do I owe". Sized accordingly. */
 .netText {
-  font: var(--text-body-lg);
-  font-weight: var(--fw-bold);
-  color: var(--text-strong);
+  font: var(--text-h3);
+}
+
+/* The same pair Home puts on a balance row, so the two screens do not
+   disagree about which direction is which colour. */
+.netIn {
+  color: var(--feedback-success);
+}
+
+.netOut {
+  color: var(--feedback-error);
 }
 
 /* --- Nothing to settle --------------------------------------------------- */
@@ -145,6 +155,13 @@
   flex-direction: column;
   gap: var(--space-8);
   padding-top: var(--space-12);
+
+  /* The page's own bottom padding clears the home indicator, but a sticky
+     element sticks to the VIEWPORT, not to the padding box — so the Save
+     button sat under the bar on an iPhone. The padding goes on the bar
+     itself, so the background still runs to the edge of the screen. */
+  padding-bottom: var(--safe-bottom);
+
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-page);
 }

@@ -34,9 +34,20 @@ export function AccountDetail() {
   const { user, loading: authLoading, signOut } = useAuth()
   const router = useRouter()
   const toast = useToast()
-  const { patch, status: authStatus } = useGroupData()
+  const groupData = useGroupData()
+  const { patch, status: authStatus } = groupData
 
   useSignedOutRedirect(authStatus)
+
+  // The row is already here. Every screen holds the group, the group holds
+  // its accounts, and the person reading this one is in it by definition — a
+  // member row is what a group is made of. So the request below is only for
+  // somebody who belongs to no group at all, which is the one case the shared
+  // copy cannot answer.
+  const cached =
+    authStatus === 'ready'
+      ? (groupData.snapshot.accounts.find((row) => row.id === user?.id) ?? null)
+      : null
 
   const [state, setState] = useState({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
@@ -52,7 +63,7 @@ export function AccountDetail() {
   }
 
   useEffect(() => {
-    if (authLoading || !user) return
+    if (authLoading || !user || cached) return
 
     let cancelled = false
 
@@ -71,9 +82,13 @@ export function AccountDetail() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user, attempt])
+  }, [authLoading, user, attempt, cached])
 
-  if (authLoading || !user || state.status !== 'ready') {
+  // Whichever arrived. The cached row wins when there is one, so a rename
+  // patched into the shared copy shows here too without a second request.
+  const account = cached ?? (state.status === 'ready' ? state.account : null)
+
+  if (authLoading || !user || !account) {
     return (
       <>
         <PageHeader title="Account" />
@@ -87,7 +102,6 @@ export function AccountDetail() {
     )
   }
 
-  const { account } = state
   const trimmed = name.trim()
 
   function cancel() {
@@ -143,7 +157,11 @@ export function AccountDetail() {
   async function handleSignOut() {
     await signOut()
     toast.success('Signed out')
-    router.push('/signin')
+
+    // Home, not /signin. Signed out, Home IS the sign-in screen — /signin
+    // still exists only because ?next= links point at it, and sending people
+    // to the spare door meant the app had two front doors to keep in step.
+    router.push('/')
   }
 
   return (
@@ -194,7 +212,14 @@ export function AccountDetail() {
               <Button
                 variant="secondary"
                 className={Style.editButton}
-                onClick={() => setEditing(true)}
+                // Filled here rather than when the screen loads. The field
+                // only exists while editing, and the row can now arrive from
+                // the shared copy without the fetch that used to seed it —
+                // which would have opened the box empty.
+                onClick={() => {
+                  setName(account.name)
+                  setEditing(true)
+                }}
               >
                 Edit
               </Button>

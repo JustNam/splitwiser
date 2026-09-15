@@ -8,13 +8,16 @@
  * wrong. Both want the same thing on screen, so it is one component.
  */
 
+import { useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import Collapse from '@mui/material/Collapse'
+import TextField from '@mui/material/TextField'
 import { useSignedOutRedirect } from '@/hooks/useSignedOutRedirect'
 import Link from 'next/link'
 import clsx from 'clsx'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { readFromPath } from '@/lib/next-path'
-import { formatVnd } from '@/services/money.service'
+import { displayName, formatVnd } from '@/services/money.service'
 import { activityFeed, formatMoment } from '@/services/activity.service'
 import { sessionDetail } from '@/services/session-detail.service'
 import { LoadingRows } from '@/components/Loading'
@@ -22,6 +25,7 @@ import { RetryMessage } from '@/components/RetryMessage'
 import { Avatar } from '@/components/Avatar'
 import { PageHeader } from '@/components/PageHeader'
 import { SectionHeader } from '@/components/SectionHeader'
+import { TextButton } from '@/components/TextButton'
 import { TextLink } from '@/components/TextLink'
 import { LinkButton } from '@/components/LinkButton'
 import Style from './style.module.scss'
@@ -33,6 +37,14 @@ const KIND = {
   edited: 'Edited',
   settled: 'Settled',
 }
+
+// How many of the line-up to show before folding the rest away. Six covers a
+// normal game outright; past that the list stops being something you read and
+// becomes something you scroll through to reach the Activity below it.
+const PEOPLE_SHOWN = 6
+
+// And past this, finding one person in the opened list is a hunt.
+const SEARCHABLE_FROM = 12
 
 export function SessionDetail() {
   // The group comes from the shared copy. This screen used to fetch the whole
@@ -51,6 +63,9 @@ export function SessionDetail() {
   // Home, so tapping a session from /sessions or /activity and coming back
   // lost your place in the list you were reading.
   const backHref = readFromPath(useSearchParams())
+
+  const [showAllPeople, setShowAllPeople] = useState(false)
+  const [search, setSearch] = useState('')
 
   // The session is found in the shared snapshot rather than fetched. A URL
   // naming a session from another group, or one that has been removed, ends
@@ -74,6 +89,11 @@ export function SessionDetail() {
         )}
       </>
     )
+  }
+
+  const nameOf = (memberId) => {
+    const member = snapshot.members.find((row) => row.id === memberId)
+    return member ? displayName(member, snapshot.accounts) : 'Someone'
   }
 
   const detail = sessionDetail({
@@ -101,6 +121,31 @@ export function SessionDetail() {
     accounts: snapshot.accounts,
     myMemberId: group.myMemberId,
   }).filter((event) => event.sessionId === session.id)
+
+  // You first, then everybody else in the order they were ticked.
+  //
+  // On a list about to be cut short, the row you came to read is the one that
+  // must not be in the part that gets cut — the same rule the group roster
+  // follows. Nothing else is reordered: sorting the rest by who still owes
+  // would reshuffle the list every time somebody paid, and a list that moves
+  // between visits is one you have to re-read rather than glance at.
+  const people = [...detail.people].sort(
+    (a, b) =>
+      Number(b.memberId === group.myMemberId) -
+      Number(a.memberId === group.myMemberId)
+  )
+
+  const searchable = people.length >= SEARCHABLE_FROM
+  const query = search.trim().toLowerCase()
+
+  const matches = people.filter(
+    (person) => query === '' || person.name.toLowerCase().includes(query)
+  )
+
+  // Searching means you have already named who you want, so nothing is folded.
+  const folded = query === '' && !showAllPeople && matches.length > PEOPLE_SHOWN
+  const shownPeople = folded ? matches.slice(0, PEOPLE_SHOWN) : matches
+  const hiddenPeople = matches.length - shownPeople.length
 
   const me = detail.people.find((person) => person.memberId === group.myMemberId)
   const iOwe = (me?.outstanding ?? 0) > 0
@@ -147,8 +192,20 @@ export function SessionDetail() {
           Who played
         </SectionHeader>
 
+        {/* Only once the list is long enough to need it, and only once it is
+            open — folded to six, there is nothing to search. */}
+        <Collapse in={searchable && showAllPeople} unmountOnExit>
+          <TextField
+            label="Find someone"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            size="small"
+            fullWidth
+          />
+        </Collapse>
+
         <ul className={Style.rows}>
-          {detail.people.map((person) => (
+          {shownPeople.map((person) => (
             <li key={person.memberId} className={Style.row}>
               <Avatar name={person.name} size="sm" />
 
@@ -164,6 +221,17 @@ export function SessionDetail() {
                   )}
                 </span>
 
+                {/* Only when more than one person paid. With a single payer
+                    everybody owes the same person and this line would repeat
+                    their name on every row for nothing. */}
+                {detail.payerCount > 1 && person.owedTo.length > 0 && (
+                  <span className={Style.rowSub}>
+                    {person.owedTo
+                      .map((debt) => `${formatVnd(debt.amount)} to ${nameOf(debt.payerId)}`)
+                      .join(' · ')}
+                  </span>
+                )}
+
                 {/* Words carry the meaning; the class only tints them. */}
                 <span className={clsx(Style.status, Style[person.tone])}>
                   {person.status}
@@ -175,6 +243,28 @@ export function SessionDetail() {
             </li>
           ))}
         </ul>
+
+        {matches.length === 0 && (
+          <p className={Style.note}>Nobody here by that name.</p>
+        )}
+
+        {folded && (
+          <TextButton tone="quiet" onClick={() => setShowAllPeople(true)}>
+            Show {hiddenPeople} more
+          </TextButton>
+        )}
+
+        {showAllPeople && query === '' && people.length > PEOPLE_SHOWN && (
+          <TextButton
+            tone="quiet"
+            onClick={() => {
+              setShowAllPeople(false)
+              setSearch('')
+            }}
+          >
+            Show fewer
+          </TextButton>
+        )}
       </section>
 
       {/* Not just the edits. Who logged it, who has settled against it and

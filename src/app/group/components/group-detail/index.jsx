@@ -33,6 +33,9 @@ import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName } from '@/services/money.service'
 import Style from './style.module.scss'
 
+// Five rows, then a button. Six is where a roster stops being glanceable.
+const MEMBERS_SHOWN = 5
+
 export function GroupDetail() {
   // The roster comes out of the shared snapshot rather than its own
   // listMembers call. It is the same rows Home already has.
@@ -52,6 +55,11 @@ export function GroupDetail() {
   // Adding a guest used to be possible only from inside New session, on a
   // screen about one evening's badminton. This is the screen about who is in
   // the group, which is where you look when that is the thing you want.
+  // A roster is a reference list, not something anybody reads top to bottom.
+  // Past five rows it is just distance between the screen's heading and the
+  // invite code, which is the reason most people open this page.
+  const [showAllMembers, setShowAllMembers] = useState(false)
+
   const [addingGuest, setAddingGuest] = useState(false)
   const [guestName, setGuestName] = useState('')
   const [guestEmail, setGuestEmail] = useState('')
@@ -106,6 +114,13 @@ export function GroupDetail() {
         accounts.find((account) => account.id === member.accountId)?.email,
     }))
     .sort((a, b) => Number(a.isGuest) - Number(b.isGuest))
+
+  // You first, always: on a list that is about to be cut short, the row you
+  // came to check is the one that must not be in the part that is cut.
+  const ordered = [...rows].sort((a, b) => Number(b.isMe) - Number(a.isMe))
+
+  const shownRows = showAllMembers ? ordered : ordered.slice(0, MEMBERS_SHOWN)
+  const hiddenCount = ordered.length - shownRows.length
 
   const guestCount = rows.filter((row) => row.isGuest).length
   const accountCount = rows.length - guestCount
@@ -162,11 +177,11 @@ export function GroupDetail() {
     setSavingGuest(true)
     setError(null)
 
-    const { data, error: apiError } = await GroupsApi.addGuest(
-      group.id,
-      guestName.trim(),
-      guestEmail.trim()
-    )
+    const {
+      data,
+      account,
+      error: apiError,
+    } = await GroupsApi.addGuest(group.id, guestName.trim(), guestEmail.trim())
 
     if (apiError) {
       setError(apiError)
@@ -182,15 +197,27 @@ export function GroupDetail() {
     // Not awaited: the person is in the group either way, and a mail server
     // having a bad day must not make it look otherwise.
     if (guestEmail.trim() !== '' && data.type === 'guest') {
-      InvitesApi.send({ email: guestEmail.trim(), groupId: group.id })
+      InvitesApi.send({
+        email: guestEmail.trim(),
+        groupId: group.id,
+        name: guestName.trim(),
+      })
     }
 
     // Only the roster changed, so only the roster is added to — refetching
     // the screen would throw away the invite code for nothing.
+    //
+    // The account goes in alongside, and it is not optional: a roster
+    // member's `name` is always null, because the name lives on the account.
+    // Adding the member without it produced a row with a blank name, a blank
+    // email and an avatar reading "?" until the next full reload.
     patch((current) => ({
       snapshot: {
         ...current.snapshot,
         members: [...current.snapshot.members, data],
+        accounts: account
+          ? [...current.snapshot.accounts, account]
+          : current.snapshot.accounts,
       },
     }))
 
@@ -230,7 +257,7 @@ export function GroupDetail() {
         </SectionHeader>
 
         <ul className={Style.rows}>
-          {rows.map((row) => (
+          {shownRows.map((row) => (
             <li key={row.id} className={Style.row}>
               <Avatar name={row.name} />
 
@@ -252,6 +279,18 @@ export function GroupDetail() {
             </li>
           ))}
         </ul>
+
+        {hiddenCount > 0 && (
+          <TextButton tone="quiet" onClick={() => setShowAllMembers(true)}>
+            Show {hiddenCount} more
+          </TextButton>
+        )}
+
+        {showAllMembers && ordered.length > MEMBERS_SHOWN && (
+          <TextButton tone="quiet" onClick={() => setShowAllMembers(false)}>
+            Show fewer
+          </TextButton>
+        )}
 
         {/* Closed by default — the same shape B2 uses. The fields and their
             explanation appear only for the person who came to add someone. */}
