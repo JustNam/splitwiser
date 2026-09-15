@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { RetryMessage } from '@/components/RetryMessage'
 import { TextLink } from '@/components/TextLink'
 import { useToast } from '@/components/Toast'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { useAuth } from '@/hooks/useAuth'
 import Style from './style.module.scss'
 
@@ -33,6 +34,7 @@ export function AccountDetail() {
   const { user, loading: authLoading, signOut } = useAuth()
   const router = useRouter()
   const toast = useToast()
+  const { patch } = useGroupData()
 
   const [state, setState] = useState({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
@@ -122,9 +124,20 @@ export function AccountDetail() {
       return
     }
 
-    // Everything that shows a name reads it from this row, so there is
-    // nothing else to update — the groups catch up on their next fetch.
     setState({ status: 'ready', account: data })
+
+    // The name on screen in every group comes from the shared snapshot's
+    // `accounts`, not from this row — so without this, every other screen
+    // keeps showing the old name until the app is reloaded. That used to be
+    // true by accident: each screen refetched for itself.
+    patch((current) => ({
+      snapshot: {
+        ...current.snapshot,
+        accounts: current.snapshot.accounts.map((account) =>
+          account.id === data.id ? { ...account, name: data.name } : account
+        ),
+      },
+    }))
     setName(data.name)
     setEditing(false)
     setSaving(false)

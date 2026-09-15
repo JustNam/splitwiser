@@ -23,12 +23,13 @@ import { LoadingForm } from '@/components/Loading'
 import { useToast } from '@/components/Toast'
 import { TextLink } from '@/components/TextLink'
 import { useAuth } from '@/hooks/useAuth'
-import { writeCurrentGroupId } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import Style from './style.module.scss'
 
 export function CreateGroupForm() {
   const { isAuthenticated, loading } = useAuth()
   const toast = useToast()
+  const { switchGroup } = useGroupData()
 
   // useState gives back a pair: the current value, and the only function
   // allowed to change it. Assigning to `name` directly would not re-render.
@@ -66,9 +67,12 @@ export function CreateGroupForm() {
       return
     }
 
-    // The group you just created is the one you meant to open. Home reads
-    // this, so without it “Go to group” quietly shows the previous one.
-    writeCurrentGroupId(data.id)
+    // switchGroup, not writeCurrentGroupId. Writing the id only told the NEXT
+    // fetch which group to ask for; it did not ask. The shared copy was
+    // fetched when this account had no groups at all, so /group went on
+    // rendering "you're not in a group yet" from a snapshot taken before
+    // this one existed. switchGroup records the choice AND refetches.
+    switchGroup(data.id)
 
     toast.success(`${data.name} created`)
     setGroup(data)

@@ -18,7 +18,7 @@ import { Button } from '@/components/Button'
 import { LinkButton } from '@/components/LinkButton'
 import { LoadingForm } from '@/components/Loading'
 import { useAuth } from '@/hooks/useAuth'
-import { writeCurrentGroupId } from '@/lib/current-group'
+import { useGroupData } from '@/components/GroupDataProvider'
 import { useToast } from '@/components/Toast'
 import { withNextPath } from '@/lib/next-path'
 import Style from './style.module.scss'
@@ -27,6 +27,7 @@ export function JoinGroupForm() {
   const { isAuthenticated, loading } = useAuth()
   const searchParams = useSearchParams()
   const toast = useToast()
+  const { switchGroup } = useGroupData()
 
   // Read once, as the starting value. A useState initialiser runs on the first
   // render only, which is what we want — the user can edit the field
@@ -65,9 +66,12 @@ export function JoinGroupForm() {
       return
     }
 
-    // The group you just joined is the one you meant to open. Home reads
-    // this, so without it “Go to group” quietly shows the previous one.
-    writeCurrentGroupId(data.id)
+    // switchGroup, not writeCurrentGroupId. Writing the id only told the NEXT
+    // fetch which group to ask for; it did not ask. The shared copy was
+    // fetched when this account had no groups at all, so /group went on
+    // rendering "you're not in a group yet" from a snapshot taken before
+    // this one existed. switchGroup records the choice AND refetches.
+    switchGroup(data.id)
 
     toast.success(`Joined ${data.name}`)
     setJoined(data)
