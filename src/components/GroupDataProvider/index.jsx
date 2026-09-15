@@ -29,6 +29,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { GroupsApi } from '@/api/groups'
@@ -52,6 +53,16 @@ export function GroupDataProvider({ children }) {
 
   const [attempt, setAttempt] = useState(0)
 
+  // Groups this account was already a guest in, taken over the moment it
+  // signed up with the matching address. Held so something can say so:
+  // being added to a group by somebody else is the one thing in this app
+  // that happens TO you, and it used to arrive with no sentence attached.
+  const [claimedGroups, setClaimedGroups] = useState([])
+
+  // Once per page load, not once per auth event: the provider re-runs on a
+  // group switch and a retry too, and there is nothing new to claim then.
+  const claimAttempted = useRef(false)
+
   // `wantedId` is a parameter rather than a ref: a ref written during render
   // is a value React has not promised to have kept up to date, and eslint
   // says so. Passing it in makes every caller state which group it means.
@@ -66,10 +77,38 @@ export function GroupDataProvider({ children }) {
       // wrong, which it almost never is.
       const guessedId = wantedId ?? readCurrentGroupId()
 
-      const [groupsResult, guessedSnapshot] = await Promise.all([
+      // Claiming runs alongside the fetch rather than before it. Awaiting it
+      // first would add a round trip to every app start for a call that
+      // almost always has nothing to do; running it after means the snapshot
+      // is already taken and misses what it claimed.
+      const claiming = claimAttempted.current
+        ? null
+        : GroupsApi.claimGuestRows().then((result) => {
+            claimAttempted.current = true
+            return result
+          })
+
+      const [groupsResult, guessedSnapshot, claimResult] = await Promise.all([
         GroupsApi.listMine(accountId),
         guessedId ? GroupsApi.getSnapshot(guessedId) : null,
+        claiming,
       ])
+
+      // A claim means listMine ran against a roster this account was not in
+      // yet, so both answers above are stale. Start again rather than patch:
+      // it is once per sign-in, and only for somebody who was invited.
+      const claimed = claimResult?.data ?? []
+
+      if (claimed.length > 0) {
+        setClaimedGroups(claimed)
+
+        // Bumping the attempt re-runs the effect, which calls this again.
+        // Not a recursive call: a useCallback that names itself is a
+        // reference to a value that does not exist while it is being built,
+        // and eslint is right to refuse it. claimAttempted stops the second
+        // pass claiming again.
+        return setAttempt((n) => n + 1)
+      }
 
       const { data: groups, error: groupsError } = groupsResult
       if (groupsError) return setState({ status: 'error', error: groupsError })
@@ -124,6 +163,8 @@ export function GroupDataProvider({ children }) {
     load(user.id, groupId, { background: true })
   }, [load, user, groupId])
 
+  const dismissClaimed = useCallback(() => setClaimedGroups([]), [])
+
   const switchGroup = useCallback((nextId) => {
     // Written before the fetch, so a reload lands on the same group and every
     // other screen picks up the same one.
@@ -151,8 +192,26 @@ export function GroupDataProvider({ children }) {
         ? { status: 'signed-out' }
         : state
 
-    return { ...base, reload, revalidate, switchGroup, patch }
-  }, [authLoading, user, state, reload, revalidate, switchGroup, patch])
+    return {
+      ...base,
+      claimedGroups,
+      reload,
+      revalidate,
+      switchGroup,
+      patch,
+      dismissClaimed,
+    }
+  }, [
+    authLoading,
+    user,
+    state,
+    claimedGroups,
+    reload,
+    revalidate,
+    switchGroup,
+    patch,
+    dismissClaimed,
+  ])
 
   return <GroupDataContext.Provider value={value}>{children}</GroupDataContext.Provider>
 }
@@ -160,8 +219,10 @@ export function GroupDataProvider({ children }) {
 /**
  * @returns {{ status: 'loading'|'signed-out'|'no-group'|'error'|'ready',
  *             groups?: object[], group?: object, snapshot?: object,
- *             error?: string, reload: () => void, revalidate: () => void,
- *             switchGroup: (id: string) => void, patch: (fn) => void }}
+ *             error?: string, claimedGroups: object[],
+ *             reload: () => void, revalidate: () => void,
+ *             switchGroup: (id: string) => void, patch: (fn) => void,
+ *             dismissClaimed: () => void }}
  */
 export function useGroupData() {
   const value = useContext(GroupDataContext)

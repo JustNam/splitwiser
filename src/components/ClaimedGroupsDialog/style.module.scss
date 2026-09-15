@@ -1,0 +1,44 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-24) var(--space-20);
+  text-align: center;
+}
+
+.icon {
+  color: var(--brand-primary);
+}
+
+.title {
+  -webkit-user-select: none;
+  user-select: none;
+  font: var(--text-h3);
+  color: var(--text-strong);
+}
+
+.text {
+  font: var(--text-body-md);
+  color: var(--text-muted);
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The names are the point of the dialog, so they are the loudest thing in it. */
+.group {
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius);
+  background: var(--surface-tint);
+  font: var(--text-body-lg);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}

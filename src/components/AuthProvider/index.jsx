@@ -9,7 +9,6 @@
 
 import { createContext, useCallback, useEffect, useRef, useState } from 'react'
 import { AuthApi } from '@/api/auth'
-import { GroupsApi } from '@/api/groups'
 import { supabase } from '@/lib/supabase/client'
 
 /**
@@ -31,8 +30,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   // Once per page load, not once per auth event: onAuthStateChange also fires
-  // on every silent token refresh, and there is nothing new to claim then.
-  const claimed = useRef(false)
 
   useEffect(() => {
     /**
@@ -52,10 +49,9 @@ export function AuthProvider({ children }) {
       // deliberately silent: it changes nothing on this screen, and almost
       // every call has nothing to do. Here rather than in the sign-in form
       // because this also catches the arrival from a confirmation link.
-      if (newSession && !claimed.current) {
-        claimed.current = true
-        GroupsApi.claimGuestRows()
-      }
+      // Claiming moved to GroupDataProvider, which is below this one and can
+      // therefore do the two things that have to follow it: refetch, and say
+      // out loud which groups were claimed.
     })
 
     // useEffect can't be async itself, hence the inner function.

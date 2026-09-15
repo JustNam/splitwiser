@@ -193,7 +193,10 @@ export class GroupsApi {
     const { data, error } = await supabase.rpc('claim_guest_rows')
 
     if (error) return { data: null, error: error.message }
-    return { data: { claimed: data }, error: null }
+
+    // The groups just taken over, so the app can name them rather than
+    // leaving somebody to discover a group they never joined.
+    return { data: data ?? [], error: null }
   }
 
   /**

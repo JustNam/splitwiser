@@ -3,6 +3,7 @@
 import { ThemeProvider } from '@mui/material/styles'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter'
 import { AuthProvider } from '@/components/AuthProvider'
+import { ClaimedGroupsDialog } from '@/components/ClaimedGroupsDialog'
 import { GroupDataProvider } from '@/components/GroupDataProvider'
 import { ToastProvider } from '@/components/Toast'
 import { theme } from '@/constants/theme'
@@ -26,7 +27,13 @@ export function AppProviders({ children }) {
               and above everything else because it is what stops each screen
               downloading the same group again. */}
           <GroupDataProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              {children}
+
+              {/* App-wide, not on one screen: it has to appear wherever the
+                  first sign-in lands, and that is not always Home. */}
+              <ClaimedGroupsDialog />
+            </ToastProvider>
           </GroupDataProvider>
         </AuthProvider>
       </ThemeProvider>
