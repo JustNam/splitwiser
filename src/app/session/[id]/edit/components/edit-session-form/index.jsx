@@ -184,7 +184,7 @@ export function EditSessionForm() {
   // doesn't any more. The second half is what makes a removal visible.
   const touchedIds = [...new Set([...currentById.keys(), ...participantIds])]
 
-  const preview = touchedIds.map((memberId) => {
+  const everyone = touchedIds.map((memberId) => {
     const was = currentById.get(memberId)?.amount ?? 0
     const next = nextShares[memberId] ?? 0
 
@@ -199,16 +199,27 @@ export function EditSessionForm() {
     }
   })
 
+  // The section is called What changes, so it lists what changes. Everybody
+  // whose share is the same afterwards was a row saying "nothing happened to
+  // this person" — at thirty players, thirty of them.
+  // What the section below lists. The warnings and the checks underneath
+  // deliberately keep reading `everyone`: somebody who has already paid
+  // matters to the payer-change warning whether or not their own share
+  // moved, and filtering them out of that would drop a real warning to tidy
+  // a list.
+  const preview = everyone.filter((row) => row.changed)
+  const unchanged = everyone.length - preview.length
+
   // Someone who has handed money over and whose share is dropping ends up
   // owed the difference. It's not an error, but it is a consequence the
   // person editing has to see BEFORE saving.
-  const warnings = preview.filter((row) => row.paid > 0 && row.paid > row.next)
+  const warnings = everyone.filter((row) => row.paid > 0 && row.paid > row.next)
 
   // Changing who paid does not move money that has already changed hands.
   // Whoever was paid keeps it and ends up owing it back, which is right but
   // is not what anyone expects from editing a dropdown.
   const movedPayer = lines.filter((line) => line.payerId !== line.payerWas)
-  const alreadyPaid = preview.filter((row) => row.paid > 0)
+  const alreadyPaid = everyone.filter((row) => row.paid > 0)
 
   const changedAnything =
     date !== session.date ||
@@ -218,7 +229,7 @@ export function EditSessionForm() {
         line.note.trim() !== line.noteWas ||
         line.payerId !== line.payerWas
     ) ||
-    preview.some((row) => row.changed)
+    everyone.some((row) => row.changed)
 
   const blockedText = lineTotals.some((amount) => amount <= 0)
     ? lines.length === 1
@@ -268,8 +279,8 @@ export function EditSessionForm() {
       }
     })
 
-    const out = preview.filter((row) => row.isOut).map((row) => row.name)
-    const added = preview
+    const out = everyone.filter((row) => row.isOut).map((row) => row.name)
+    const added = everyone
       .filter((row) => !row.isOut && !currentById.has(row.memberId))
       .map((row) => row.name)
 
@@ -506,7 +517,11 @@ export function EditSessionForm() {
       />
 
       <section className={Style.section}>
-        <SectionHeader>What changes</SectionHeader>
+        <SectionHeader
+          meta={unchanged > 0 ? <>{unchanged} unchanged</> : null}
+        >
+          What changes
+        </SectionHeader>
 
         <ul className={Style.rows}>
           {preview.map((row) => (
@@ -523,10 +538,6 @@ export function EditSessionForm() {
           ))}
         </ul>
 
-        <p className={Style.hint}>
-          The original numbers stay recorded. This is saved as a separate edit, shown on
-          the session with your name on it.
-        </p>
       </section>
 
       {(warnings.length > 0 || (movedPayer.length > 0 && alreadyPaid.length > 0)) && (

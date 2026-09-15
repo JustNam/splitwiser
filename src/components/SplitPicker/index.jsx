@@ -91,16 +91,16 @@ export function SplitPicker({
         ))}
       </ChipGroup>
 
-      {multiLine && (
-        <p className={Style.hint}>Several costs: split by shares or percent.</p>
-      )}
-
       {missing ? (
         <p className={Style.hint}>{missing}</p>
       ) : method === SPLIT_EQUAL ? (
         <>
+          {/* The amount, not the roster. Naming everyone cost three wrapped
+              lines at ten people and said nothing the chips above had not
+              already said — and the count is in the footer. */}
           <p className={Style.sentence}>
-            {formatVnd(baseShare)} each for {participants.map(nameOf).join(', ')}.
+            {formatVnd(baseShare)} each for {participants.length}{' '}
+            {participants.length === 1 ? 'person' : 'people'}
           </p>
           {extraNames.length > 0 && (
             <p className={Style.hint}>
