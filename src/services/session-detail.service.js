@@ -90,11 +90,6 @@ export function sessionDetail({
     } played`,
     lines,
     people,
-    trail: `Logged by ${nameOf(session.createdByMemberId)}${
-      session.updatedByMemberId
-        ? ` · Last edited by ${nameOf(session.updatedByMemberId)}`
-        : ''
-    }`,
   }
 }
 

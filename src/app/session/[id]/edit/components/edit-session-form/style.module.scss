@@ -166,3 +166,22 @@
   width: 130px;
   flex: none;
 }
+
+/* --- Footer summary ------------------------------------------------------ */
+/* Deliberately identical to New session's. The two screens end in the same
+   running total, so they end in the same block. */
+
+.footerSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+.footerTotal {
+  font: var(--text-body-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}

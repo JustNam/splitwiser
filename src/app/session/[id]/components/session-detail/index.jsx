@@ -209,8 +209,6 @@ export function SessionDetail() {
         </section>
       )}
 
-      <p className={Style.trail}>{detail.trail}</p>
-
       {/* Both routes land on B5, which is where money is recorded either
           way — only the words change, because "pay" and "collect" are not the
           same errand. Neither is offered to somebody with nothing to do. */}

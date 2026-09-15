@@ -174,6 +174,12 @@ export function EditSessionForm() {
   const { lineShares, total } = plan
   const nextShares = plan.shares
 
+  // Only meaningful when everybody owes the same, which is only under an
+  // equal split — and even then the odd đồng makes one person differ, so it
+  // is the smallest.
+  const shareAmounts = Object.values(plan.shares)
+  const evenShare = shareAmounts.length > 0 ? Math.min(...shareAmounts) : null
+
   // Everyone the edit touches: who plays now, plus anyone who used to and
   // doesn't any more. The second half is what makes a removal visible.
   const touchedIds = [...new Set([...currentById.keys(), ...participantIds])]
@@ -463,7 +469,13 @@ export function EditSessionForm() {
       )}
 
       <section className={Style.section}>
-        <SectionHeader meta={<>{participants.length} playing</>}>
+        <SectionHeader
+          meta={
+            <>
+              {participants.length} of {members.length}
+            </>
+          }
+        >
           Who played
         </SectionHeader>
 
@@ -555,6 +567,19 @@ export function EditSessionForm() {
             {error}
           </p>
         )}
+
+        {/* The same running total New session ends with. Editing is where
+            the numbers are most likely to be wrong, so it is the screen that
+            needed it most and was the one without it. */}
+        <div className={Style.footerSummary}>
+          <span>
+            {participants.length} playing
+            {method === SPLIT_EQUAL && evenShare !== null
+              ? ` · ${formatVnd(evenShare)} each`
+              : ''}
+          </span>
+          <span className={Style.footerTotal}>{formatVnd(total)}</span>
+        </div>
 
         <Button type="submit" fullWidth disabled={Boolean(blockedText) || submitting}>
           {submitting && <CircularProgress size={16} color="inherit" />}
