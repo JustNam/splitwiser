@@ -15,7 +15,7 @@ import clsx from 'clsx'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { readFromPath } from '@/lib/next-path'
 import { formatVnd } from '@/services/money.service'
-import { formatMoment } from '@/services/activity.service'
+import { activityFeed, formatMoment } from '@/services/activity.service'
 import { sessionDetail } from '@/services/session-detail.service'
 import { LoadingRows } from '@/components/Loading'
 import { RetryMessage } from '@/components/RetryMessage'
@@ -25,6 +25,14 @@ import { SectionHeader } from '@/components/SectionHeader'
 import { TextLink } from '@/components/TextLink'
 import { LinkButton } from '@/components/LinkButton'
 import Style from './style.module.scss'
+
+/* On this screen the session is a given, so the labels say what happened to
+   it rather than repeating its date. */
+const KIND = {
+  logged: 'Created',
+  edited: 'Edited',
+  settled: 'Settled',
+}
 
 export function SessionDetail() {
   // The group comes from the shared copy. This screen used to fetch the whole
@@ -81,6 +89,19 @@ export function SessionDetail() {
   // Who still owes what, on THIS session. The footer button used to be
   // unconditional, so the person who paid for everybody — the one the others
   // owe — was invited to "Pay my share".
+  // Everything that has happened to THIS session, newest first. The same
+  // function the Activity screen uses, filtered — one definition of what an
+  // event is, so the two screens cannot come to disagree about the history
+  // of the same evening.
+  const history = activityFeed({
+    sessions: snapshot.sessions,
+    costLines: snapshot.costLines,
+    ledger: snapshot.ledger,
+    members: snapshot.members,
+    accounts: snapshot.accounts,
+    myMemberId: group.myMemberId,
+  }).filter((event) => event.sessionId === session.id)
+
   const me = detail.people.find((person) => person.memberId === group.myMemberId)
   const iOwe = (me?.outstanding ?? 0) > 0
   const othersOwe = detail.people.some(
@@ -156,25 +177,31 @@ export function SessionDetail() {
         </ul>
       </section>
 
-      {/* Nothing writes adjustment rows until B4 exists, so this section is
-          invisible for now. It is here because the rule it implements — the
-          original numbers stay, edits are listed apart — is the one thing the
-          whole data design was built around. */}
-      {detail.edits.length > 0 && (
+      {/* Not just the edits. Who logged it, who has settled against it and
+          who changed it are the same question asked three ways — "what has
+          happened to this session" — and splitting them across a section and
+          a footnote meant no single place answered it. */}
+      {history.length > 0 && (
         <section className={Style.section}>
-          <SectionHeader>Edits</SectionHeader>
+          <SectionHeader>Activity</SectionHeader>
 
           <ul className={Style.rows}>
-            {detail.edits.map((edit) => (
-              <li key={edit.id} className={Style.editRow}>
-                <span className={Style.editText}>{edit.text}</span>
+            {history.map((event) => (
+              <li key={event.id} className={Style.editRow}>
+                <span className={Style.editText}>
+                  {KIND[event.kind]}
+                  {event.kind === 'edited' && event.text !== 'edited a session'
+                    ? ` · ${event.text}`
+                    : ''}
+                  {event.kind === 'settled' ? ` · ${formatVnd(event.amount)}` : ''}
+                </span>
 
                 {/* Who and when on the same line as what. Stacked, two edits
-                    with no reason typed both read "Session edited" over a
-                    name, in two lines each, and the only thing telling them
-                    apart was missing. */}
+                    with no reason typed read the same thing twice over a
+                    name, and the one thing telling them apart was missing. */}
                 <span className={Style.editBy}>
-                  {edit.by} · <time dateTime={edit.at}>{formatMoment(edit.at)}</time>
+                  {event.actor} ·{' '}
+                  <time dateTime={event.at}>{formatMoment(event.at)}</time>
                 </span>
               </li>
             ))}

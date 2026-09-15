@@ -90,7 +90,6 @@ export function sessionDetail({
     } played`,
     lines,
     people,
-    edits: editEntries(sessionLedger, nameOf),
     trail: `Logged by ${nameOf(session.createdByMemberId)}${
       session.updatedByMemberId
         ? ` · Last edited by ${nameOf(session.updatedByMemberId)}`
@@ -220,38 +219,4 @@ function status({ charged, outstanding, overpaid, paidALine }) {
   if (outstanding === charged) return { status: 'unpaid', tone: 'muted' }
 
   return { status: 'short', statusAmount: outstanding, tone: 'muted' }
-}
-
-// ---------------------------------------------------------------------------
-// editEntries
-// ---------------------------------------------------------------------------
-/**
- * The Edits list. One entry per edit, not per ledger row.
- *
- * An edit that changes four people's shares writes four `adjustment` rows in
- * one transaction, so they share a `created_at` and a note. Grouping on those
- * turns them back into the single human action they came from.
- *
- * Deliberately no amounts per row: the spec forbids showing "adjustment
- * −24.000đ each" and requires the sentence the editor wrote instead.
- */
-function editEntries(sessionLedger, nameOf) {
-  const entries = new Map()
-
-  for (const row of sessionLedger) {
-    if (row.type !== 'adjustment') continue
-
-    const key = `${row.createdAt}|${row.createdByMemberId}`
-    if (entries.has(key)) continue
-
-    entries.set(key, {
-      id: key,
-      text: row.note ?? 'Session edited',
-      by: nameOf(row.createdByMemberId),
-      at: row.createdAt,
-    })
-  }
-
-  // Newest first.
-  return [...entries.values()].sort((a, b) => (a.at < b.at ? 1 : -1))
 }

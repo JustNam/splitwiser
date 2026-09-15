@@ -34,7 +34,6 @@ import { GroupsApi } from '@/api/groups'
 import { InvitesApi } from '@/api/invites'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
-import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { SplitPicker } from '@/components/SplitPicker'
 import { TextButton } from '@/components/TextButton'
@@ -43,6 +42,7 @@ import Collapse from '@mui/material/Collapse'
 import { LoadingForm } from '@/components/Loading'
 import { PageHeader } from '@/components/PageHeader'
 import { PayerPicker } from '@/components/PayerPicker'
+import { PlayerPicker } from '@/components/PlayerPicker'
 import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { LinkButton } from '@/components/LinkButton'
@@ -118,7 +118,6 @@ export function NewSessionForm() {
   const [addingGuest, setAddingGuest] = useState(false)
 
   // Only rendered once the roster is long enough to be worth searching.
-  const [search, setSearch] = useState('')
   const [guestClash, setGuestClash] = useState(null)
 
   // Guests typed in but not yet written. Each carries a temporary id of the
@@ -247,16 +246,6 @@ export function NewSessionForm() {
 
     return nameOf(a).localeCompare(nameOf(b))
   })
-
-  // A search box below this many people is a box nobody needs.
-  const SEARCHABLE_FROM = 8
-  const searchable = members.length >= SEARCHABLE_FROM
-
-  const query = search.trim().toLowerCase()
-  const visible =
-    query === ''
-      ? ordered
-      : ordered.filter((m) => nameOf(m).toLowerCase().includes(query))
 
   const lastSession = data.sessions[0]
 
@@ -606,76 +595,22 @@ export function NewSessionForm() {
           Who played
         </SectionHeader>
 
-        {/* Both, not a single toggle: with a long roster you sometimes want to
-            start from nobody and sometimes from everybody, and a toggle makes
-            you guess which one it will do.
-
-            Quiet, and only once the roster is long enough to need the search
-            box. At four people they save nobody a tap, and in brand red they
-            were a third different red in a block that already had the picked
-            chips and the focused field. */}
-        {(searchable || lastSession) && (
-          <div className={Style.pickRow}>
-            {searchable && (
-              <>
-                <TextButton
-                  tone="quiet"
-                  onClick={() => setAll(true)}
-                  disabled={submitting}
-                >
-                  Everyone
-                </TextButton>
-                <TextButton
-                  tone="quiet"
-                  onClick={() => setAll(false)}
-                  disabled={submitting}
-                >
-                  Nobody
-                </TextButton>
-              </>
-            )}
-
-            {/* Says what it means, and only while it is true.
-                "Starting from 14 Sep" named a date without saying what
-                started, and it stayed on screen after the line-up had been
-                changed — at which point it was simply wrong. `seed` is the
-                line-up this screen opened with, so comparing against it is
-                how the sentence knows to leave. */}
-            {lastSession && [...participantIds].sort().join(',') === seed && (
-              <p className={Style.pickNote}>
-                Same players as {formatSessionDate(lastSession.date)}
-              </p>
-            )}
-          </div>
-        )}
-
-        {searchable && (
-          <TextField
-            label="Search names"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            size="small"
-            fullWidth
-            disabled={submitting}
-          />
-        )}
-
-        <ChipGroup>
-          {visible.map((member) => (
-            <Chip
-              key={member.id}
-              selected={Boolean(present[member.id])}
-              onClick={() => toggle(member.id)}
-              disabled={submitting}
-            >
-              {nameOf(member)}
-            </Chip>
-          ))}
-
-          {visible.length === 0 && (
-            <p className={Style.hint}>Nobody here by that name.</p>
-          )}
-        </ChipGroup>
+        <PlayerPicker
+          members={ordered}
+          nameOf={nameOf}
+          present={present}
+          onToggle={toggle}
+          onSetAll={setAll}
+          // Only while it is true. "Starting from 14 Sep" named a date
+          // without saying what started, and it stayed on screen after the
+          // line-up had changed — at which point it was wrong.
+          note={
+            lastSession && [...participantIds].sort().join(',') === seed
+              ? `Same players as ${formatSessionDate(lastSession.date)}`
+              : null
+          }
+          disabled={submitting}
+        />
 
         {pendingGuests.length > 0 && (
           <p className={Style.hint}>

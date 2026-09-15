@@ -33,7 +33,6 @@ import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import { SessionsApi } from '@/api/sessions'
 import { Button } from '@/components/Button'
-import { Chip, ChipGroup } from '@/components/Chip'
 import { SplitPicker } from '@/components/SplitPicker'
 import { SectionHeader } from '@/components/SectionHeader'
 import { LoadingForm } from '@/components/Loading'
@@ -41,6 +40,7 @@ import { RetryMessage } from '@/components/RetryMessage'
 import { useToast } from '@/components/Toast'
 import { PageHeader } from '@/components/PageHeader'
 import { PayerPicker } from '@/components/PayerPicker'
+import { PlayerPicker } from '@/components/PlayerPicker'
 import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName, formatVnd } from '@/services/money.service'
 import { formatSessionDate } from '@/services/session.service'
@@ -306,6 +306,10 @@ export function EditSessionForm() {
     }))
   }
 
+  function setAll(value) {
+    setPresent(Object.fromEntries(members.map((member) => [member.id, value])))
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     if (blockedText) return
@@ -463,18 +467,17 @@ export function EditSessionForm() {
           Who played
         </SectionHeader>
 
-        <ChipGroup>
-          {members.map((member) => (
-            <Chip
-              key={member.id}
-              selected={Boolean(present[member.id])}
-              onClick={() => toggle(member.id)}
-              disabled={submitting}
-            >
-              {nameOf(member)}
-            </Chip>
-          ))}
-        </ChipGroup>
+        {/* The same control New session uses. This screen had a bare wall of
+            chips with no search and no Everyone/Nobody — the two screens
+            asked the same question and answered it differently. */}
+        <PlayerPicker
+          members={members}
+          nameOf={nameOf}
+          present={present}
+          onToggle={toggle}
+          onSetAll={setAll}
+          disabled={submitting}
+        />
       </section>
 
       <SplitPicker

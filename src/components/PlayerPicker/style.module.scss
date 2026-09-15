@@ -1,0 +1,27 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-12);
+}
+
+/* Takes the row so the buttons and the icon sit at the end. Wraps to its own
+   line only when there is genuinely no room. */
+.note {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
+
+/* Pushed to the end, and its own padding cancelled at the edge so the icon
+   lines up with the chips below rather than sitting inset from them. */
+.searchButton {
+  margin-left: auto;
+  margin-right: calc(var(--space-8) * -1);
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--text-muted);
+}
