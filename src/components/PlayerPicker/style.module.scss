@@ -1,24 +1,31 @@
 .toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4) var(--space-12);
+  gap: var(--space-12);
 }
 
-/* Takes the row so the buttons and the icon sit at the end. Wraps to its own
-   line only when there is genuinely no room. */
-.note {
-  flex: 1 1 auto;
+/* Eats the free space, which is what puts the search icon at the far edge.
+   Deliberately not `margin-left: auto` on the icon itself — that is a MUI
+   component, its class ties with ours, and the winner depends on the order
+   Emotion injects its styles. */
+.bulk {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
   min-width: 0;
+}
+
+/* Its own padding cancelled at the edge, so the icon lines up with the chips
+   below rather than sitting inset from them. */
+.searchButton {
+  flex: none;
+  margin-right: calc(var(--space-8) * -1);
+}
+
+.note {
   font: var(--text-caption);
   color: var(--text-muted);
-}
-
-/* Pushed to the end, and its own padding cancelled at the edge so the icon
-   lines up with the chips below rather than sitting inset from them. */
-.searchButton {
-  margin-left: auto;
-  margin-right: calc(var(--space-8) * -1);
 }
 
 .hint {

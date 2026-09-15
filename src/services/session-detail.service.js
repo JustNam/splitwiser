@@ -84,6 +84,9 @@ export function sessionDetail({
     date: session.date,
     dateLabel: formatSessionDate(session.date),
     total,
+    // More than one person paid, so "your share" no longer names a creditor.
+    payerCount: new Set(sessionCostLines.map((line) => line.payerMemberId)).size,
+
     // "1 cost · 2 played" — a one-line sanity check on the session.
     meta: `${lines.length} ${lines.length === 1 ? 'cost' : 'costs'} · ${
       playedIds.length
@@ -110,6 +113,13 @@ function buildPeople({ sessionCostLines, sessionLedger, playedIds }) {
 
   const payers = new Set(sessionCostLines.map((line) => line.payerMemberId))
 
+  // memberId -> payerId -> đồng. The loop below already knows which payer
+  // each cost belongs to; it used to add the amount to one running total and
+  // throw that away. With one payer nothing is lost by that — everybody owes
+  // the same person. With two, "your share is 103.333đ" stops answering the
+  // question anybody actually has, which is who to hand it to.
+  const owedTo = new Map(playedIds.map((id) => [id, new Map()]))
+
   for (const line of sessionCostLines) {
     const rows = sessionLedger.filter((row) => row.costLineId === line.id)
     const payerId = line.payerMemberId
@@ -122,6 +132,13 @@ function buildPeople({ sessionCostLines, sessionLedger, playedIds }) {
       if (memberId !== payerId) {
         share.set(memberId, share.get(memberId) + due)
         assigned += due
+
+        // A negative due is money owed BACK on this line, which is not a
+        // debt to the payer and does not belong in this breakdown.
+        if (due > 0) {
+          const mine = owedTo.get(memberId)
+          mine.set(payerId, (mine.get(payerId) ?? 0) + due)
+        }
       }
 
       // A charge, not a credit. Someone with a negative due is owed money on
@@ -151,6 +168,11 @@ function buildPeople({ sessionCostLines, sessionLedger, playedIds }) {
   return playedIds.map((memberId) => ({
     memberId,
     amount: share.get(memberId),
+    // [{ payerId, amount }], biggest first — read only when a session has
+    // more than one payer, because that is the only time it says anything.
+    owedTo: [...owedTo.get(memberId)]
+      .map(([payerId, amount]) => ({ payerId, amount }))
+      .sort((a, b) => b.amount - a.amount),
     // What this person still has to hand over. B3 reads it to decide whether
     // "Pay my share" is a button that means anything to the person looking.
     outstanding: outstanding.get(memberId),

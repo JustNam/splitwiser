@@ -72,8 +72,10 @@
   gap: var(--space-4);
 }
 .stepperButton {
-  width: 36px;
-  height: 36px;
+  /* 44, not 36. Nudging a share count is a repeated tap on a small target in
+     a list of them, which is the exact shape of a mis-tap. */
+  width: var(--control-h-44);
+  height: var(--control-h-44);
   border: 1px solid var(--border-default);
   border-radius: var(--radius);
   background: none;
@@ -115,4 +117,11 @@
 }
 .readoutBad {
   color: var(--feedback-error);
+}
+
+/* Wraps a chip that cannot be pressed, so the Tooltip has something that
+   still receives events. inline-flex keeps it the same size and shape as the
+   chip inside it — a block wrapper would stretch the row. */
+.blockedChip {
+  display: inline-flex;
 }

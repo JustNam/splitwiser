@@ -71,30 +71,38 @@ export function PlayerPicker({
 
   return (
     <>
-      {/* One row, not three. The note used to sit on a line of its own
-          between the heading and the buttons, right-aligned by a margin left
-          over from an older layout — so the block spent three rows before
-          reaching a single name. */}
-      {(searchable || note) && (
+      {/* Bulk on the left, search on the right, on every screen that shows
+          this. The position used to depend on whether a note happened to be
+          present — New session had one and Edit did not, so the same three
+          controls sat in two different places.
+
+          A spacer that grows, not `margin-left: auto` on the icon: the icon
+          is a MUI component whose own class ties with ours on specificity,
+          and which of the two wins depends on the order Emotion injects its
+          styles. A flex child that eats the free space does not care. */}
+      {searchable && (
         <div className={Style.toolbar}>
-          {note && <p className={Style.note}>{note}</p>}
+          <div className={Style.bulk}>
+            {onSetAll && (
+              <>
+                <TextButton
+                  tone="quiet"
+                  onClick={() => onSetAll(true)}
+                  disabled={disabled}
+                >
+                  Everyone
+                </TextButton>
+                <TextButton
+                  tone="quiet"
+                  onClick={() => onSetAll(false)}
+                  disabled={disabled}
+                >
+                  Nobody
+                </TextButton>
+              </>
+            )}
+          </div>
 
-          {searchable && onSetAll && (
-            <>
-              <TextButton tone="quiet" onClick={() => onSetAll(true)} disabled={disabled}>
-                Everyone
-              </TextButton>
-              <TextButton
-                tone="quiet"
-                onClick={() => onSetAll(false)}
-                disabled={disabled}
-              >
-                Nobody
-              </TextButton>
-            </>
-          )}
-
-          {searchable && (
           <Tooltip title="Search names">
             <IconButton
               className={Style.searchButton}
@@ -111,9 +119,12 @@ export function PlayerPicker({
               <SearchIcon />
             </IconButton>
           </Tooltip>
-          )}
         </div>
       )}
+
+      {/* Its own line, below the controls rather than among them, so it
+          cannot move them. */}
+      {note && <p className={Style.note}>{note}</p>}
 
       <Collapse in={searching} unmountOnExit>
         <TextField

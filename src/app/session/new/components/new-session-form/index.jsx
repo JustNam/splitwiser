@@ -141,6 +141,10 @@ export function NewSessionForm() {
   // the method changes, because 50 does not mean the same thing twice.
   const [inputs, setInputs] = useState({})
 
+  // Whether anybody has typed into the split. Decides if changing the line-up
+  // may re-seed it, or has to leave what was entered alone.
+  const [inputsTouched, setInputsTouched] = useState(false)
+
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -310,16 +314,42 @@ export function NewSessionForm() {
   }
 
   function toggle(memberId) {
-    setPresent((current) => ({ ...current, [memberId]: !current[memberId] }))
+    // Built here rather than in a setState updater: the updater has to stay
+    // a pure function, and React may run it twice.
+    const next = { ...present, [memberId]: !present[memberId] }
+    setPresent(next)
+    reseedFor(next)
+  }
+
+  /**
+   * Re-seed the split when the line-up changes.
+   *
+   * A percentage or a share count describes a SET of people. Tick somebody in
+   * afterwards and the old numbers no longer describe anybody: the newcomer
+   * sits at 0 and the column stops adding to 100, on a screen that then
+   * refuses to save and does not say the line-up is why.
+   *
+   * Only while nobody has typed. Numbers somebody entered on purpose are the
+   * one thing this must not quietly rewrite — there, the newcomer stays at 0,
+   * the readout says how far off the total is, and "Split the rest evenly" is
+   * the deliberate fix.
+   */
+  function reseedFor(nextPresent) {
+    if (inputsTouched) return
+
+    const nextIds = members.filter((m) => nextPresent[m.id]).map((m) => m.id)
+    setInputs(seedInputs(method, nextIds, total))
   }
 
   function changeMethod(nextMethod) {
     setMethod(nextMethod)
     setInputs(seedInputs(nextMethod, participantIds, total))
+    setInputsTouched(false)
   }
 
   function setInput(memberId, value) {
     setInputs((current) => ({ ...current, [memberId]: value }))
+    setInputsTouched(true)
   }
 
   function splitTheRest() {
@@ -327,7 +357,9 @@ export function NewSessionForm() {
   }
 
   function setAll(value) {
-    setPresent(Object.fromEntries(members.map((member) => [member.id, value])))
+    const next = Object.fromEntries(members.map((member) => [member.id, value]))
+    setPresent(next)
+    reseedFor(next)
   }
 
   function handleAddGuest() {
@@ -380,11 +412,11 @@ export function NewSessionForm() {
     const realId = new Map()
 
     for (const guest of pendingGuests) {
-      const { data: member, error: guestError } = await GroupsApi.addGuest(
-        data.group.id,
-        guest.name,
-        guest.email
-      )
+      const {
+        data: member,
+        account,
+        error: guestError,
+      } = await GroupsApi.addGuest(data.group.id, guest.name, guest.email)
 
       if (guestError) {
         setError(guestError)
@@ -400,15 +432,27 @@ export function NewSessionForm() {
       // Not awaited: the session is what the user pressed the button for, and
       // a mail server having a bad day must not stand between them and it.
       if (guest.email && member.type === 'guest') {
-        InvitesApi.send({ email: guest.email, groupId: data.group.id })
+        InvitesApi.send({
+          email: guest.email,
+          groupId: data.group.id,
+          name: guest.name,
+        })
       }
 
       // Into the shared copy, so the roster this screen shows and the one
       // every other screen shows stay the same list.
+      //
+      // The account too, when there is one: an email that already had an
+      // account comes back as a roster member, whose `name` is always null
+      // because the name lives on the account. Without it the chip that just
+      // appeared has nothing written on it.
       patch((current) => ({
         snapshot: {
           ...current.snapshot,
           members: [...current.snapshot.members, member],
+          accounts: account
+            ? [...current.snapshot.accounts, account]
+            : current.snapshot.accounts,
         },
       }))
       setPendingGuests((current) => current.filter((row) => row.id !== guest.id))
@@ -452,7 +496,13 @@ export function NewSessionForm() {
     // after logging a session. This used to go to Home because B3 did not
     // exist; it does now, and Home makes you hunt for the thing you just
     // saved in order to check it came out right.
-    router.push(`/session/${created.id}`)
+    //
+    // replace, not push: it lands on top of the spare history entry the leave
+    // guard pushed once this form had something worth losing, instead of
+    // leaving it in the stack for Back to walk through. It is also the right
+    // move on its own terms — Back after logging a session should not return
+    // to a form that would log a second one.
+    router.replace(`/session/${created.id}`)
   }
 
   // What leaving would throw away. Money typed and names typed, plus a
@@ -492,27 +542,33 @@ export function NewSessionForm() {
           concept at all. */}
       {lines.length === 1 ? (
         <>
-          <TextField
-            label="Amount"
-            value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
-            onChange={(event) => setLineAmount(lines[0].key, event.target.value)}
-            placeholder="0đ"
-            // A numeric keypad on a phone. type="number" gives one too, but it
-            // also allows "e", "-" and spinner arrows.
-            slotProps={{
-              htmlInput: { inputMode: 'numeric', className: Style.amountInput },
-            }}
-            fullWidth
-            disabled={submitting}
-          />
+          {/* Amount and who paid on one row, what it was for underneath.
+              The same shape a session with several costs uses, so the form
+              does not rearrange itself the moment a second cost is added. */}
+          <div className={Style.costRow}>
+            <TextField
+              label="Amount"
+              value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
+              onChange={(event) => setLineAmount(lines[0].key, event.target.value)}
+              placeholder="0đ"
+              className={Style.costAmount}
+              // A numeric keypad on a phone. type="number" gives one too, but
+              // it also allows "e", "-" and spinner arrows.
+              slotProps={{
+                htmlInput: { inputMode: 'numeric', className: Style.amountInput },
+              }}
+              disabled={submitting}
+            />
 
-          <PayerPicker
-            members={members}
-            nameOf={nameOf}
-            value={lines[0].payerId}
-            onChange={(payerId) => updateLine(lines[0].key, { payerId })}
-            disabled={submitting}
-          />
+            <PayerPicker
+              className={Style.costPayer}
+              members={members}
+              nameOf={nameOf}
+              value={lines[0].payerId}
+              onChange={(payerId) => updateLine(lines[0].key, { payerId })}
+              disabled={submitting}
+            />
+          </div>
 
           <TextField
             label="What for"
@@ -530,6 +586,31 @@ export function NewSessionForm() {
           <ul className={Style.costList}>
             {lines.map((line, index) => (
               <li key={line.key} className={Style.costLine}>
+                {/* How much, then who paid, then what it was for — the order
+                    somebody reads a receipt in, and the same order the
+                    single-cost layout above uses. */}
+                <div className={Style.costRow}>
+                  <TextField
+                    label="Amount"
+                    value={line.amountText === '' ? '' : formatVnd(lineTotals[index])}
+                    onChange={(event) => setLineAmount(line.key, event.target.value)}
+                    slotProps={{ htmlInput: { inputMode: 'numeric' } }}
+                    size="small"
+                    className={Style.costAmount}
+                    disabled={submitting}
+                  />
+
+                  <PayerPicker
+                    className={Style.costPayer}
+                    members={members}
+                    nameOf={nameOf}
+                    value={line.payerId}
+                    onChange={(payerId) => updateLine(line.key, { payerId })}
+                    size="small"
+                    disabled={submitting}
+                  />
+                </div>
+
                 <div className={Style.costRow}>
                   <TextField
                     label="What for"
@@ -540,26 +621,6 @@ export function NewSessionForm() {
                     placeholder="Courts"
                     size="small"
                     className={Style.costNote}
-                    disabled={submitting}
-                  />
-                  <TextField
-                    label="Amount"
-                    value={line.amountText === '' ? '' : formatVnd(lineTotals[index])}
-                    onChange={(event) => setLineAmount(line.key, event.target.value)}
-                    slotProps={{ htmlInput: { inputMode: 'numeric' } }}
-                    size="small"
-                    className={Style.costAmount}
-                    disabled={submitting}
-                  />
-                </div>
-
-                <div className={Style.costRow}>
-                  <PayerPicker
-                    members={members}
-                    nameOf={nameOf}
-                    value={line.payerId}
-                    onChange={(payerId) => updateLine(line.key, { payerId })}
-                    size="small"
                     disabled={submitting}
                   />
 

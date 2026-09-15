@@ -29,20 +29,6 @@
   gap: var(--space-8);
 }
 
-/* --- Picking who played --------------------------------------------------- */
-
-.pickRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-}
-
-.pickNote {
-  margin-left: auto;
-  font: var(--text-caption);
-  color: var(--text-muted);
-}
-
 /* --- Adding a guest ------------------------------------------------------- */
 
 .guestBlock {
@@ -106,6 +92,13 @@
   flex-direction: column;
   gap: var(--space-8);
   padding-top: var(--space-12);
+
+  /* The page's own bottom padding clears the home indicator, but a sticky
+     element sticks to the VIEWPORT, not to the padding box — so the Save
+     button sat under the bar on an iPhone. The padding goes on the bar
+     itself, so the background still runs to the edge of the screen. */
+  padding-bottom: var(--safe-bottom);
+
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-page);
 }
@@ -169,13 +162,28 @@
 
 .costNote {
   /* 160px basis, not `flex: 1` alone: the basis is what tells the row when
-     there is no longer space for the note and the amount side by side. */
+     there is no longer space for the note and the amount side by side.
+
+     Only ever inside .costRow. Dropped straight into .costLine — a COLUMN
+     flex — the basis becomes a 160px HEIGHT and the field grows to fill the
+     card, which is how the edit screen ended up with a hole in every cost. */
   flex: 1 1 160px;
   min-width: 0;
 }
 
-/* Fixed, so the amounts line up down the list even as the notes vary. */
+/* Amount keeps a fixed width so the numbers line up down a list of costs;
+   the payer takes whatever is left. 130px, not 120: the two forms had
+   different numbers for the same column and the wider one is the one that
+   fits "1.000.000đ".
+
+   `min-width: 0` on the payer because an Autocomplete will not shrink below
+   its content otherwise, and a long name would push the row sideways. */
 .costAmount {
-  width: 120px;
+  width: 130px;
   flex: none;
+}
+
+.costPayer {
+  flex: 1 1 180px;
+  min-width: 0;
 }

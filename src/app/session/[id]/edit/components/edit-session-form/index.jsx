@@ -45,7 +45,12 @@ import { useGroupData } from '@/components/GroupDataProvider'
 import { displayName, formatVnd } from '@/services/money.service'
 import { formatSessionDate } from '@/services/session.service'
 import { sessionDetail } from '@/services/session-detail.service'
-import { seedInputs, splitPlan, spreadTheRest } from '@/services/split-plan.service'
+import {
+  readBackSplit,
+  seedInputs,
+  splitPlan,
+  spreadTheRest,
+} from '@/services/split-plan.service'
 import { SPLIT_EQUAL } from '@/services/split.service'
 import Style from './style.module.scss'
 
@@ -83,6 +88,10 @@ export function EditSessionForm() {
   const [method, setMethod] = useState(SPLIT_EQUAL)
   const [inputs, setInputs] = useState({})
 
+  // Whether anybody has typed into the split. Decides if changing the line-up
+  // may re-seed it, or has to leave what was entered alone.
+  const [inputsTouched, setInputsTouched] = useState(false)
+
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -92,6 +101,22 @@ export function EditSessionForm() {
   const costLines = session
     ? snapshot.costLines.filter((line) => line.sessionId === session.id)
     : []
+
+  // What is recorded right now, from the same function B3 renders. Worked out
+  // before the seeding below rather than after it, because the split has to
+  // be read back out of these amounts — they are the only surviving record of
+  // how the session was divided.
+  const current = session
+    ? sessionDetail({
+        session,
+        costLines: snapshot.costLines,
+        participants: snapshot.participants,
+        ledger: snapshot.ledger,
+        members: snapshot.members,
+        accounts: snapshot.accounts,
+        myMemberId: group.myMemberId,
+      })
+    : null
 
   // Prefilled with what is recorded now — the point of the screen is to
   // change one thing, not to retype the session. During render rather than in
@@ -110,13 +135,37 @@ export function EditSessionForm() {
         payerWas: line.payerMemberId,
       }))
     )
-    setPresent(
-      Object.fromEntries(
-        snapshot.participants
-          .filter((row) => row.sessionId === session.id)
-          .map((row) => [row.memberId, true])
-      )
+
+    const playing = Object.fromEntries(
+      snapshot.participants
+        .filter((row) => row.sessionId === session.id)
+        .map((row) => [row.memberId, true])
     )
+    setPresent(playing)
+
+    // The split too. Without this the form opened on Equally regardless of
+    // how the session had actually been divided, so a 70/30 session became
+    // 50/50 the moment anything at all was saved — and the leave guard asked
+    // about unsaved changes on a form nobody had touched.
+    const seeded = readBackSplit({
+      lineTotals: costLines.map((line) => line.amount),
+      // The roster's order, which is the order the form itself builds
+      // participantIds in below — not the participants table's.
+      participantIds: snapshot.members
+        .filter((member) => playing[member.id])
+        .map((member) => member.id),
+      recorded: Object.fromEntries(
+        current.people.map((person) => [person.memberId, person.amount])
+      ),
+    })
+
+    setMethod(seeded.method)
+    setInputs(seeded.inputs)
+
+    // Recorded numbers are not numbers somebody has typed on this screen, so
+    // adding a player still re-seeds rather than leaving them on 0.
+    setInputsTouched(false)
+
     setSeededFor(session.id)
   }
 
@@ -143,17 +192,6 @@ export function EditSessionForm() {
     )
   }
 
-
-  // What is recorded right now, from the same function B3 renders.
-  const current = sessionDetail({
-    session,
-    costLines: snapshot.costLines,
-    participants: snapshot.participants,
-    ledger: snapshot.ledger,
-    members: snapshot.members,
-    accounts: snapshot.accounts,
-    myMemberId: group.myMemberId,
-  })
 
   const currentById = new Map(current.people.map((person) => [person.memberId, person]))
 
@@ -291,13 +329,35 @@ export function EditSessionForm() {
     return why.trim() === '' ? sentence : `${sentence} — ${why.trim()}`
   }
 
+  /**
+   * Re-seed the split when the line-up changes.
+   *
+   * A percentage or a share count describes a SET of people. Tick somebody in
+   * afterwards and the old numbers no longer describe anybody: the newcomer
+   * sits at 0 and the column stops adding to 100, on a screen that then
+   * refuses to save and does not say the line-up is why.
+   *
+   * Only while nobody has typed. Numbers somebody entered on purpose are the
+   * one thing this must not quietly rewrite — there, the newcomer stays at 0,
+   * the readout says how far off the total is, and "Split the rest evenly" is
+   * the deliberate fix.
+   */
+  function reseedFor(nextPresent) {
+    if (inputsTouched) return
+
+    const nextIds = members.filter((m) => nextPresent[m.id]).map((m) => m.id)
+    setInputs(seedInputs(method, nextIds, total))
+  }
+
   function changeMethod(nextMethod) {
     setMethod(nextMethod)
     setInputs(seedInputs(nextMethod, participantIds, total))
+    setInputsTouched(false)
   }
 
   function setInput(memberId, value) {
     setInputs((current) => ({ ...current, [memberId]: value }))
+    setInputsTouched(true)
   }
 
   function splitTheRest() {
@@ -317,14 +377,17 @@ export function EditSessionForm() {
   }
 
   function toggle(memberId) {
-    setPresent((currentPresent) => ({
-      ...currentPresent,
-      [memberId]: !currentPresent[memberId],
-    }))
+    // Built here rather than in a setState updater: the updater has to stay
+    // a pure function, and React may run it twice.
+    const next = { ...present, [memberId]: !present[memberId] }
+    setPresent(next)
+    reseedFor(next)
   }
 
   function setAll(value) {
-    setPresent(Object.fromEntries(members.map((member) => [member.id, value])))
+    const next = Object.fromEntries(members.map((member) => [member.id, value]))
+    setPresent(next)
+    reseedFor(next)
   }
 
   async function handleSubmit(event) {
@@ -357,7 +420,10 @@ export function EditSessionForm() {
 
     toast.success('Changes saved')
     revalidate()
-    router.push(`/session/${session.id}`)
+
+    // replace, not push — see the note on the same line in New session. The
+    // entry being replaced is the spare one the leave guard pushed.
+    router.replace(`/session/${session.id}`)
   }
 
   return (
@@ -370,11 +436,6 @@ export function EditSessionForm() {
           message: 'These changes haven’t been saved. The session stays as it was.',
         }}
       />
-
-      <p className={Style.lede}>
-        {current.dateLabel} · change anything below. Everyone’s share is worked out for
-        you.
-      </p>
 
       <TextField
         label="Date"
@@ -392,30 +453,38 @@ export function EditSessionForm() {
           in view while you type the new one. */}
       {lines.length === 1 ? (
         <>
-          <TextField
-            label="Amount"
-            value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
-            onChange={(event) => setLineAmount(lines[0].costLineId, event.target.value)}
-            placeholder="0đ"
-            slotProps={{
-              htmlInput: { inputMode: 'numeric', className: Style.amountInput },
-            }}
-            helperText={
-              lineTotals[0] !== lines[0].amountWas
-                ? `Was ${formatVnd(lines[0].amountWas)}`
-                : undefined
-            }
-            fullWidth
-            disabled={submitting}
-          />
+          {/* Amount and who paid on one row, what it was for underneath —
+              the same shape as a session with several costs, so the form does
+              not rearrange itself when a second one is added. */}
+          <div className={Style.costRow}>
+            <TextField
+              label="Amount"
+              value={lines[0].amountText === '' ? '' : formatVnd(lineTotals[0])}
+              onChange={(event) =>
+                setLineAmount(lines[0].costLineId, event.target.value)
+              }
+              placeholder="0đ"
+              className={Style.costAmount}
+              slotProps={{
+                htmlInput: { inputMode: 'numeric', className: Style.amountInput },
+              }}
+              helperText={
+                lineTotals[0] !== lines[0].amountWas
+                  ? `Was ${formatVnd(lines[0].amountWas)}`
+                  : undefined
+              }
+              disabled={submitting}
+            />
 
-          <PayerPicker
-            members={members}
-            nameOf={nameOf}
-            value={lines[0].payerId}
-            onChange={(payerId) => updateLine(lines[0].costLineId, { payerId })}
-            disabled={submitting}
-          />
+            <PayerPicker
+              className={Style.costPayer}
+              members={members}
+              nameOf={nameOf}
+              value={lines[0].payerId}
+              onChange={(payerId) => updateLine(lines[0].costLineId, { payerId })}
+              disabled={submitting}
+            />
+          </div>
 
           <TextField
             label="What for"
@@ -435,18 +504,10 @@ export function EditSessionForm() {
           <ul className={Style.costList}>
             {lines.map((line, index) => (
               <li key={line.costLineId} className={Style.costLine}>
+                {/* How much, then who paid, then what it was for — the same
+                    order as the single-cost layout above, and the order
+                    somebody reads a receipt in. */}
                 <div className={Style.costRow}>
-                  <TextField
-                    label="What for"
-                    value={line.note}
-                    onChange={(event) =>
-                      updateLine(line.costLineId, { note: event.target.value })
-                    }
-                    placeholder="Courts"
-                    size="small"
-                    className={Style.costNote}
-                    disabled={submitting}
-                  />
                   <TextField
                     label="Amount"
                     value={line.amountText === '' ? '' : formatVnd(lineTotals[index])}
@@ -463,16 +524,31 @@ export function EditSessionForm() {
                     className={Style.costAmount}
                     disabled={submitting}
                   />
+
+                  <PayerPicker
+                    className={Style.costPayer}
+                    members={members}
+                    nameOf={nameOf}
+                    value={line.payerId}
+                    onChange={(payerId) => updateLine(line.costLineId, { payerId })}
+                    size="small"
+                    disabled={submitting}
+                  />
                 </div>
 
-                <PayerPicker
-                  members={members}
-                  nameOf={nameOf}
-                  value={line.payerId}
-                  onChange={(payerId) => updateLine(line.costLineId, { payerId })}
-                  size="small"
-                  disabled={submitting}
-                />
+                <div className={Style.costRow}>
+                  <TextField
+                    label="What for"
+                    value={line.note}
+                    onChange={(event) =>
+                      updateLine(line.costLineId, { note: event.target.value })
+                    }
+                    placeholder="Courts"
+                    size="small"
+                    className={Style.costNote}
+                    disabled={submitting}
+                  />
+                </div>
               </li>
             ))}
           </ul>

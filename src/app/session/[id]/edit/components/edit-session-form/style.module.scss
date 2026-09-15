@@ -5,11 +5,6 @@
   gap: var(--space-16);
 }
 
-.lede {
-  font: var(--text-body-md);
-  color: var(--text-muted);
-}
-
 .amountInput {
   /* Applied to the <input> inside MUI's field, so it only sets type — the box,
      the label and the focus ring all come from the field. */
@@ -107,10 +102,27 @@
 
 .footer {
   margin-top: auto;
+
+  /* Sticky, like New session's. This screen is the longer of the two — costs,
+     a roster, a split, What changes, the warnings, Why — and its Save button
+     was the one that scrolled away. So was the running total, on the screen
+     where the numbers are most likely to be wrong. */
+  position: sticky;
+  bottom: 0;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
   padding-top: var(--space-12);
+
+  /* The page's own bottom padding clears the home indicator, but a sticky
+     element sticks to the VIEWPORT, not to the padding box — so the button
+     would sit under the bar on an iPhone. The padding goes on the footer
+     itself, so the background still runs to the edge of the screen. */
+  padding-bottom: var(--safe-bottom);
+
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-page);
 }
 
 .hint {
@@ -162,9 +174,21 @@
   min-width: 0;
 }
 
+/* Amount keeps a fixed width so the numbers line up down a list of costs;
+   the payer takes whatever is left. 130px, not 120: the two forms had
+   different numbers for the same column and the wider one is the one that
+   fits "1.000.000đ".
+
+   `min-width: 0` on the payer because an Autocomplete will not shrink below
+   its content otherwise, and a long name would push the row sideways. */
 .costAmount {
   width: 130px;
   flex: none;
+}
+
+.costPayer {
+  flex: 1 1 180px;
+  min-width: 0;
 }
 
 /* --- Footer summary ------------------------------------------------------ */

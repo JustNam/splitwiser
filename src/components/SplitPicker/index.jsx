@@ -1,9 +1,11 @@
 'use client'
 
+import { Fragment, useState } from 'react'
 import clsx from 'clsx'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
 import { Chip, ChipGroup } from '@/components/Chip'
 import { SectionHeader } from '@/components/SectionHeader'
 import { TextButton } from '@/components/TextButton'
@@ -16,6 +18,10 @@ import {
   SPLIT_SHARES,
 } from '@/services/split.service'
 import Style from './style.module.scss'
+
+// Above this, a share count stops being something you nudge and becomes
+// something you type.
+const STEPPER_MAX = 20
 
 /**
  * The Split block, shared by New session and Edit session.
@@ -43,6 +49,18 @@ export function SplitPicker({
   onSplitTheRest,
 }) {
   const { total, shares, problem, readout } = plan
+
+  // Whether the share counts are the kind of number you nudge.
+  //
+  // The stepper exists because shares are 1, 2, maybe 3 — typing is the wrong
+  // tool for that. It is the wrong tool for 18:41:41, which is what a real
+  // session reopened as: a + that moves 41 to 42 is not a nudge, it is a
+  // guess. Reducing the weights by their common divisor (readBackSplit) gets
+  // most splits back into nudging range; the ones it cannot are the ones that
+  // genuinely have no small ratio, and those want a field.
+  const nudgeable =
+    method === SPLIT_SHARES &&
+    participants.every((member) => (inputs[member.id] ?? 0) <= STEPPER_MAX)
 
   // Exact and Adjusted are typed in đồng, and computeSplit runs once per cost
   // line — so the same figure would be applied to every line whole, instead
@@ -89,21 +107,34 @@ export function SplitPicker({
           the first person to see it asked why. An option you can see and
           cannot press explains itself; one that is not there does not. */}
       <ChipGroup>
-        {SPLIT_METHODS.map((option) => (
-          <Chip
-            key={option.value}
-            selected={option.value === method}
-            onClick={() => onMethodChange(option.value)}
-            disabled={disabled || !allowed.has(option.value)}
-          >
-            {option.label}
-          </Chip>
-        ))}
-      </ChipGroup>
+        {SPLIT_METHODS.map((option) => {
+          const blocked = !allowed.has(option.value)
 
-      {multiLine && (
-        <p className={Style.hint}>Exact and Adjusted need a single cost.</p>
-      )}
+          const chip = (
+            <Chip
+              selected={option.value === method}
+              onClick={() => onMethodChange(option.value)}
+              disabled={disabled || blocked}
+            >
+              {option.label}
+            </Chip>
+          )
+
+          // The reason travels with the thing it is about, instead of a line
+          // under the row that is on screen whether or not anyone wondered.
+          //
+          // The <span> is not decoration: a disabled button emits no mouse or
+          // touch events at all, so a Tooltip wrapped straight around one
+          // never opens. The span does the listening.
+          return blocked ? (
+            <Tooltip key={option.value} title="Needs a single cost" placement="top">
+              <span className={Style.blockedChip}>{chip}</span>
+            </Tooltip>
+          ) : (
+            <Fragment key={option.value}>{chip}</Fragment>
+          )
+        })}
+      </ChipGroup>
 
       {missing ? (
         <p className={Style.hint}>{missing}</p>
@@ -134,6 +165,9 @@ export function SplitPicker({
                 value={inputs[member.id] ?? 0}
                 onChange={(value) => onInputChange(member.id, value)}
                 output={formatVnd(shares[member.id] ?? 0)}
+                // Decided once for the column. Per row, one person on 3 and
+                // another on 41 would get two different controls in one list.
+                nudgeable={nudgeable}
                 disabled={disabled}
               />
             ))}
@@ -166,7 +200,21 @@ export function SplitPicker({
  * a stepper rather than a text field because the numbers are 1, 2, maybe 3,
  * and typing is the wrong tool for a number you nudge.
  */
-function SplitRow({ name, method, value, onChange, output, disabled }) {
+function SplitRow({ name, method, value, onChange, output, nudgeable, disabled }) {
+  // What is in the box while it is being typed in, as a signed digit string.
+  //
+  // A number alone cannot hold the two states a half-typed entry passes
+  // through. "-" on its own parsed to 0 and the box redrew as "0", so leading
+  // with the minus — the natural way to type a negative — wiped the sign
+  // every time; the only route to −20.000đ was to type the digits and then
+  // go back to the front. And "" parsed to 0 too, so the box could never be
+  // cleared: deleting the last digit put a 0 straight back.
+  //
+  // Dropped on blur, so anything that changes the numbers from outside — a
+  // method change, ticking a player, Split the rest evenly — shows through.
+  // All of those are clicks, and a click blurs the field first.
+  const [typed, setTyped] = useState(null)
+
   // Digits only — except for `adjusted`, where a minus sign is the whole
   // point: it is the method for "everyone equally, but Nam owes 20.000đ less".
   function handleText(event) {
@@ -174,6 +222,8 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
     const signed = method === SPLIT_ADJUSTED && raw.trim().startsWith('-')
     const digits = raw.replace(/[^0-9]/g, '')
     const size = digits === '' ? 0 : Number(digits)
+
+    setTyped(`${signed ? '-' : ''}${digits}`)
     onChange(signed ? -size : size)
   }
 
@@ -181,7 +231,7 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
     <li className={Style.row}>
       <span className={Style.name}>{name}</span>
 
-      {method === SPLIT_SHARES ? (
+      {method === SPLIT_SHARES && nudgeable ? (
         <span className={Style.stepper}>
           <button
             type="button"
@@ -209,8 +259,9 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
               a floating label in each row would repeat it five times. The
               name is passed to the field so a screen reader gets it too. */}
           <TextField
-            value={method === SPLIT_ADJUSTED && value > 0 ? `+${value}` : String(value)}
+            value={display(typed ?? String(value), method)}
             onChange={handleText}
+            onBlur={() => setTyped(null)}
             slotProps={{
               htmlInput: {
                 inputMode: 'numeric',
@@ -228,4 +279,30 @@ function SplitRow({ name, method, value, onChange, output, disabled }) {
       <span className={Style.output}>{output}</span>
     </li>
   )
+}
+
+/**
+ * A signed digit string as it should appear in the box.
+ *
+ * Grouped, so a share reads 100.000 rather than 100000 — the Amount field a
+ * few rows up has always formatted itself, and the two sitting side by side
+ * in different notations made the smaller one look like a different kind of
+ * number. Percent goes through the same path and is simply never long enough
+ * for a separator to appear.
+ *
+ * Empty in, empty out: that is what lets the box be cleared.
+ */
+function display(text, method) {
+  const negative = text.startsWith('-')
+  const digits = text.replace(/[^0-9]/g, '')
+
+  if (digits === '') return negative ? '-' : ''
+
+  const grouped = new Intl.NumberFormat('vi-VN').format(Number(digits))
+
+  if (negative) return `-${grouped}`
+
+  // A plus in front, because `adjusted` is the one method whose numbers are
+  // a change to something rather than the thing itself.
+  return method === SPLIT_ADJUSTED && Number(digits) > 0 ? `+${grouped}` : grouped
 }

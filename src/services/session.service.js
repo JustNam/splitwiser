@@ -45,7 +45,7 @@ export function formatSessionDate(isoDate) {
  * @param {string} params.groupId
  * @returns {Array<{
  *   id: string, date: string, dateLabel: string, total: number,
- *   subtitle: string, isEdited: boolean, playerNames: string[],
+ *   subtitle: string, playerNames: string[],
  * }>}
  */
 export function sessionSummaries({
@@ -93,7 +93,6 @@ export function sessionSummaries({
         total,
         subtitle: notes ? `${notes} · ${who}` : who,
         playerNames,
-        isEdited: Boolean(session.updatedAt),
       }
     })
     // Newest first. `date` is the day the game was played and is what people

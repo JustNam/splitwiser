@@ -25,6 +25,7 @@ export function PayerPicker({
   value,
   onChange,
   label = 'Paid by',
+  className,
   size,
   disabled,
 }) {
@@ -32,6 +33,7 @@ export function PayerPicker({
 
   return (
     <Autocomplete
+      className={className}
       options={members}
       value={selected}
       onChange={(_event, member) => onChange(member?.id ?? '')}

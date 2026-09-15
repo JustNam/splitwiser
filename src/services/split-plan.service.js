@@ -51,6 +51,82 @@ export function methodsFor(multiLine) {
 }
 
 /**
+ * Re-open a recorded split in the controls that made it.
+ *
+ * The method itself is never stored — only the amounts, as ledger rows — so
+ * Edit session opened on Equally every time, whatever the session actually
+ * was. A 70/30 split reopened as 50/50 and saving anything at all, even just
+ * a corrected date, moved two people's money. It also meant the leave guard
+ * fired on a form nobody had touched, because the form disagreed with the
+ * database the moment it rendered.
+ *
+ * What CAN be recovered is the amounts, and a method that reproduces them:
+ *
+ *   already equal  → Equally. The overwhelmingly common case, and it opens
+ *                    looking exactly as it did when it was logged.
+ *   one cost       → Exact, holding the recorded đồng. Says what everybody
+ *                    owes, in the units the person reading it thinks in.
+ *   several costs  → Shares, weighted by the recorded đồng. Exact is barred
+ *                    with several costs (see methodsFor), and weights ARE
+ *                    what a multi-cost split is: distribute() divides each
+ *                    line in proportion, so weights of the recorded totals
+ *                    hand every line back the amounts it already had.
+ *
+ * Those weights are then reduced by their common divisor, because only the
+ * RATIO between them means anything. Reopening a real session handed the
+ * Shares control 72.800 and 127.100 — numbers that say nothing to the person
+ * reading them, and a readout of "Per share 1đ", which is what
+ * total ÷ total comes to. Divided through, the same split is 13:12 and
+ * 18:41:41, and the readout becomes the per-share rate it was meant to be.
+ *
+ * @param {object} params
+ * @param {number[]} params.lineTotals
+ * @param {string[]} params.participantIds - in the order the FORM builds
+ *   them, which is the roster's order. distribute() gives its leftover đồng
+ *   to the biggest loser to rounding, so a different order is a different
+ *   person getting the odd đồng — and the equality test below missing by 1.
+ * @param {Record<string, number>} params.recorded - memberId → đồng owed now
+ * @returns {{ method: string, inputs: Record<string, number> }}
+ */
+export function readBackSplit({ lineTotals, participantIds, recorded }) {
+  const equal = splitPlan({
+    lineTotals,
+    participantIds,
+    method: SPLIT_EQUAL,
+    inputs: {},
+  }).shares
+
+  const isEqual = participantIds.every(
+    (id) => (recorded[id] ?? 0) === (equal[id] ?? 0)
+  )
+
+  if (isEqual) return { method: SPLIT_EQUAL, inputs: {} }
+
+  const amounts = participantIds.map((id) => recorded[id] ?? 0)
+  const asInputs = (values) =>
+    Object.fromEntries(participantIds.map((id, index) => [id, values[index]]))
+
+  // One cost: the đồng each person owes, said in đồng.
+  if (lineTotals.length === 1) {
+    return { method: SPLIT_EXACT, inputs: asInputs(amounts) }
+  }
+
+  // `|| 1` for the all-zeros case, where there is nothing to divide through
+  // by. gcd(0, n) is n, so starting the fold at 0 is what makes it the gcd of
+  // the whole list rather than of a pair.
+  const divisor = amounts.reduce((run, n) => gcd(run, Math.abs(n)), 0) || 1
+
+  return {
+    method: SPLIT_SHARES,
+    inputs: asInputs(amounts.map((n) => n / divisor)),
+  }
+}
+
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b)
+}
+
+/**
  * What a method starts from when you switch to it: the equal split, said in
  * that method's own units. Switching never breaks a split that was already
  * correct — it just hands you the controls to change it.
