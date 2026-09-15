@@ -20,10 +20,6 @@ export default function SigninPage() {
       <header className={Style.header}>
         <p className={Style.wordmark}>SplitWiser</p>
         <h1 className={Style.title}>Welcome back</h1>
-        <p className={Style.pitch}>
-          Log a game session, split the cost, and see who owes who — without anyone
-          having to do the maths.
-        </p>
       </header>
 
       {/* The form reads ?next= from the URL, which isn't known when this

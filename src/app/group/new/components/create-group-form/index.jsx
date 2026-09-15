@@ -132,9 +132,7 @@ export function CreateGroupForm() {
           <p className={Style.linkText}>{inviteLink}</p>
         </div>
 
-        <p className={Style.hint}>
-          Send this link to your group chat — it’s how the others get in.
-        </p>
+        <p className={Style.hint}>Send this to your group chat.</p>
 
         {/* One button, two labels. The ternary swaps the copy in place rather
             than adding a second button to keep in sync. */}
@@ -163,10 +161,6 @@ export function CreateGroupForm() {
         required
         disabled={submitting}
       />
-
-      <p className={Style.hint}>
-        You’ll get an invite link right after — that’s how the others get in.
-      </p>
 
       {/* `error &&` renders the paragraph only when error is truthy. role="alert"
           makes a screen reader announce it the moment it appears. */}

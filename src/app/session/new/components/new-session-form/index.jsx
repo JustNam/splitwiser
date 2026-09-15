@@ -760,8 +760,7 @@ export function NewSessionForm() {
             </div>
 
             <p className={Style.hint}>
-              Email is optional, but worth adding: we’ll invite them, and when they sign
-              up everything they owe or are owed comes with them.
+              With an email we invite them, and their balance follows them.
             </p>
 
             <div className={Style.guestActions}>

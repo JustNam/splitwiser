@@ -384,13 +384,14 @@ export function SettleList() {
           {submitting ? 'Recording…' : 'Yes, it’s settled'}
           </Button>
 
-          <TextButton
-            tone="quiet"
+          <Button
+            variant="secondary"
+            fullWidth
             onClick={() => setConfirmOpen(false)}
             disabled={submitting}
           >
             Go back
-          </TextButton>
+          </Button>
         </div>
       </Dialog>
     </>

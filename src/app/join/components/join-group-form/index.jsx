@@ -85,7 +85,7 @@ export function JoinGroupForm() {
     return (
       <div className={Style.form}>
         <p className={Style.hint}>
-          Sign in to join this group — you’ll come right back here.
+You’ll come back here after.
         </p>
 
         <LinkButton href={withNextPath('/signin', returnTo)}>Sign in</LinkButton>
@@ -131,10 +131,6 @@ export function JoinGroupForm() {
         required
         disabled={submitting}
       />
-
-      <p className={Style.hint}>
-        Enter the code and you’re in right away — nobody has to approve you.
-      </p>
 
       {error && (
         <p className={Style.error} role="alert">

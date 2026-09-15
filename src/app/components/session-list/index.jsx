@@ -29,9 +29,7 @@ export function SessionList({ rows, limit, seeAllHref, from }) {
         <SectionHeader>Sessions</SectionHeader>
         <div className={Style.empty}>
           <p className={Style.emptyTitle}>No sessions yet</p>
-          <p className={Style.emptyText}>
-            Log a session after you play. SplitWiser works out who owes whom.
-          </p>
+          <p className={Style.emptyText}>Log one after you play.</p>
         </div>
       </section>
     )

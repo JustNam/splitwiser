@@ -304,8 +304,7 @@ export function GroupDetail() {
             </div>
 
             <p className={Style.note}>
-              Email is optional, but worth adding: we’ll invite them, and when they
-              sign up everything they owe or are owed comes with them.
+              With an email we invite them, and their balance follows them.
             </p>
 
             <div className={Style.inviteActions}>
@@ -360,10 +359,6 @@ export function GroupDetail() {
             </Button>
           </div>
 
-          <p className={Style.note}>
-            A new code makes the old link stop working for everyone.
-          </p>
-
           {/* The warning has to be read before the damage, not after — so the
               confirmation appears in place rather than as a toast afterwards. */}
           <Collapse in={confirming} unmountOnExit>
@@ -394,8 +389,6 @@ export function GroupDetail() {
         </p>
       )}
 
-      <p className={Style.note}>Anyone in the group can log and edit sessions.</p>
-
       {/* "New group" and "Join with a code" used to be repeated here. They
           now live in the group switcher on Home, next to the list of groups
           they add to — which is where the question "which group?" is already
@@ -406,10 +399,10 @@ export function GroupDetail() {
           overflow menu, which doesn't exist yet. It goes here because without
           it there is no way out of an account at all. */}
       <footer className={Style.actions}>
-        <TextButton tone="danger" onClick={handleSignOut}>
+        <Button variant="secondary" onClick={handleSignOut}>
           <LogoutIcon fontSize="small" />
           Sign out
-        </TextButton>
+        </Button>
       </footer>
     </>
   )

@@ -20,10 +20,6 @@ export default function SignupPage() {
       <header className={Style.header}>
         <p className={Style.wordmark}>SplitWiser</p>
         <h1 className={Style.title}>Create your account</h1>
-        <p className={Style.pitch}>
-          Takes a minute. After this you can join your group with an invite code, or
-          start one of your own.
-        </p>
       </header>
 
       {/* The form reads ?next= from the URL, which isn't known when this

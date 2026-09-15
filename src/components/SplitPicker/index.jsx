@@ -89,10 +89,7 @@ export function SplitPicker({
       </FormControl>
 
       {multiLine && (
-        <p className={Style.hint}>
-          With more than one cost, the split is set in shares or percentages — typing
-          exact đồng would mean typing them for each cost separately.
-        </p>
+        <p className={Style.hint}>Several costs: split by shares or percent.</p>
       )}
 
       {missing ? (

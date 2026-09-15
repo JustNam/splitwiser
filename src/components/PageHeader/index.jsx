@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import Dialog from '@mui/material/Dialog'
 import { Button } from '@/components/Button'
-import { TextButton } from '@/components/TextButton'
 import Style from './style.module.scss'
 
 /**
@@ -77,16 +76,16 @@ export function PageHeader({ backHref = '/', title, action, guard }) {
 
           <p className={Style.confirmText}>{guard?.message}</p>
 
-          {/* Staying is the safe answer, so it is the one under your thumb
-              and the one that looks like the button. Leaving is the quiet
-              text — findable, never tapped by accident. */}
+          {/* Both are buttons, because both are commands. Weight says which
+              is which: staying is filled, leaving is outlined. Text alone
+              reads as a link — somewhere to go, not something to do. */}
           <Button fullWidth onClick={() => setAsking(false)}>
             Keep editing
           </Button>
 
-          <TextButton tone="danger" onClick={() => router.push(backHref)}>
+          <Button variant="secondary" fullWidth onClick={() => router.push(backHref)}>
             Discard and leave
-          </TextButton>
+          </Button>
         </div>
       </Dialog>
     </header>

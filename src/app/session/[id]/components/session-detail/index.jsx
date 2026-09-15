@@ -216,10 +216,7 @@ export function SessionDetail() {
             ))}
           </ul>
 
-          <p className={Style.note}>
-            The original numbers above are what was first recorded. Edits are listed
-            separately — nothing is overwritten.
-          </p>
+          <p className={Style.note}>Nothing is overwritten — edits are listed here.</p>
         </section>
       )}
 

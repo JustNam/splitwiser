@@ -12,13 +12,15 @@
  * the second without refetching the first.
  */
 
-import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import GroupsIcon from '@mui/icons-material/Groups'
 import HistoryIcon from '@mui/icons-material/History'
 import Badge from '@mui/material/Badge'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
+import { SigninForm } from '@/app/signin/components/signin-form'
 import { GroupsApi } from '@/api/groups'
 import { useAuth } from '@/hooks/useAuth'
 import { pickCurrentGroup, writeCurrentGroupId } from '@/lib/current-group'
@@ -112,17 +114,35 @@ export default function HomePage() {
 
   if (authLoading) return <LoadingRows rows={3} />
 
+  // Signed out, Home IS the sign-in screen. Sending people to /signin first
+  // was a tap that asked nothing and told them nothing; /signin still exists
+  // because ?next= links point at it.
   if (!user) {
     return (
       <main className={Style.page}>
-        <div className={Style.empty}>
-          <p>
-            <TextLink href="/signin">Sign in</TextLink> to see your groups.
-          </p>
-          <p className={Style.emptySub}>
-            No account yet? <TextLink href="/signup">Create one</TextLink>.
-          </p>
+        <div className={Style.auth}>
+          <Image
+            className={Style.authArt}
+            src="/auth-illustration.png"
+            alt=""
+            width={539}
+            height={445}
+            priority
+          />
+
+          <p className={Style.wordmark}>SplitWiser</p>
+          <h1 className={Style.authTitle}>Welcome back</h1>
         </div>
+
+        {/* The form reads ?next= from the URL, which is not known while this
+            page is being prerendered. */}
+        <Suspense fallback={null}>
+          <SigninForm />
+        </Suspense>
+
+        <p className={Style.authFoot}>
+          No account yet? <TextLink href="/signup">Create one</TextLink>
+        </p>
       </main>
     )
   }
@@ -154,10 +174,7 @@ export default function HomePage() {
 
         <div className={Style.noGroup}>
           <p className={Style.noGroupTitle}>You’re not in a group yet</p>
-          <p className={Style.noGroupText}>
-            Start one and share the invite link, or join a group with a code someone
-            sent you.
-          </p>
+          <p className={Style.noGroupText}>Start one, or join with a code.</p>
         </div>
 
         <footer className={Style.actions}>
